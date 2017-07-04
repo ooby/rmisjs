@@ -1,0 +1,39 @@
+{
+  "name": "rmisjs",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">4.8.3"
+  },
+  "description": "RMIS WSDL javascript library",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test --timeout 10000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ooby/rmisjs.git"
+  },
+  "keywords": [
+    "RMIS",
+    "soap",
+    "integration",
+    "services"
+  ],
+  "author": "Afanasy Argunov <afanasy@argunov.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ooby/rmisjs/issues"
+  },
+  "homepage": "https://github.com/ooby/rmisjs#readme",
+  "dependencies": {
+    "soap": "^0.19.2",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "mocha": "^3.4.2"
+  }
+}
