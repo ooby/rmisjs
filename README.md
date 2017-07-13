@@ -1,8 +1,11 @@
-# JS-библиотеки для работы с WSDL [RMIS](https://www.rtlabs.ru/projects/regionalnaya-meditsinskaya-informatsionnaya-sistema-rmis/)
+# JS-обертка для работы с [RMIS](https://www.rtlabs.ru/projects/regionalnaya-meditsinskaya-informatsionnaya-sistema-rmis/)
 
-## Как использовать:
+### Начиная с версии `0.1.1` требуется [node.js](ttps://nodejs.org) версии 8.0.0 и выше
 
-1. Создать конфигурацию:
+### Как использовать:
+
+1. `npm install rmisjs`
+2. Создать конфигурацию:
 ```javascript
 var config = {
     rmis: {
@@ -20,14 +23,28 @@ var config = {
     }
 }
 ```
-2. Подключить модуль и установить конфигурацию:
+3. Подключить модуль и установить конфигурацию:
 ```javascript
-var rmis = require('rmisjs')(config);
+const rmis = require('rmisjs')(config);
 ```
-3. Вызвать необходимый модуль:
+4. Вызвать необходимый модуль:
 ```javascript
-rmis.resource(function (e, r) {
-    if (e) { console.log(e); return; }
-    console.log(r.describe());
-});
+rmis.resource()
+    .then(r => {
+        console.log(r.describe());
+    })
+    .catch(e => {
+        console.error(e);
+    });
+
+rmis.resource()
+    .then(r => {
+        return r.getLocations({ clinic: config.rmis.clinicId });
+    })
+    .then(r => {
+        console.log(r);
+    })
+    .catch(e => {
+        console.error(e);
+    });
 ```
