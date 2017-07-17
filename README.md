@@ -23,20 +23,14 @@ var config = {
     }
 }
 ```
-3. Подключить модуль и установить конфигурацию:
+3. Подключить модули и установить конфигурацию:
 ```javascript
-const rmis = require('rmisjs')(config);
+const rmisjs = require('rmisjs')(config);
+const rmis = rmisjs.rmis;
+const composer = rmisjs.composer;
 ```
 4. Вызвать необходимый модуль:
 ```javascript
-rmis.resource()
-    .then(r => {
-        console.log(r.describe());
-    })
-    .catch(e => {
-        console.error(e);
-    });
-
 rmis.resource()
     .then(r => {
         return r.getLocations({ clinic: config.rmis.clinicId });
@@ -47,4 +41,10 @@ rmis.resource()
     .catch(e => {
         console.error(e);
     });
+
+composer.getLocationsWithPortal()
+    .then(r => {
+        console.log(r);
+    })
+    .catch(e => { console.error(e); });
 ```

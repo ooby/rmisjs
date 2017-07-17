@@ -1,2 +1,6 @@
-const connectLib = config => require('./rmisjs')(config);
-module.exports = connectLib;
+module.exports = config => {
+    return {
+        rmis: require('./rmisjs')(config),
+        composer: require('./composer')(config)
+    };
+};
