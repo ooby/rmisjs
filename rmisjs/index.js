@@ -3,7 +3,7 @@ const composeLib = async (cfg, opt, lib) => {
     try {
         let client = await createClient(cfg, opt);
         return lib(client);
-    } catch (e) { console.error(e); return; }
+    } catch (e) { console.error(e); return e; }
 };
 module.exports = config => {
     let svc = config.rmis;
