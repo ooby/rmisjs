@@ -1,5 +1,5 @@
 const getEmp = async (s, id) => {
-    const rmisjs = require('../index')(s);
+    const rmisjs = require('../../index')(s);
     const rmis = rmisjs.rmis;
     try {
         let r = await rmis.employee();
@@ -9,7 +9,7 @@ const getEmp = async (s, id) => {
     } catch (e) { return e; };
 };
 const getEmps = async s => {
-    const rmisjs = require('../index')(s);
+    const rmisjs = require('../../index')(s);
     const rmis = rmisjs.rmis;
     try {
         let r = await rmis.employee();
@@ -18,7 +18,7 @@ const getEmps = async s => {
     } catch (e) { return e; }
 };
 const getInd = async (s, id) => {
-    const rmisjs = require('../index')(s);
+    const rmisjs = require('../../index')(s);
     const rmis = rmisjs.rmis;
     try {
         let r = await rmis.individual();

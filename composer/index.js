@@ -1,10 +1,12 @@
-const { getLocationsWithPortal } = require('./resource');
-const { getDetailedDepartments } = require('./department');
-const { getDetailedEmployees } = require('./employee');
+const { getLocationsWithPortal } = require('./libs/resource');
+const { getDetailedDepartments } = require('./libs/department');
+const { getDetailedEmployees } = require('./libs/employee');
+const { getDetailedRooms } = require('./libs/room');
 module.exports = s => {
     return {
-        getLocationsWithPortal: () => getLocationsWithPortal(s),
         getDetailedDepartments: () => getDetailedDepartments(s),
-        getDetailedEmployees: () => getDetailedEmployees(s)
+        getDetailedEmployees: () => getDetailedEmployees(s),
+        getDetailedRooms: () => getDetailedRooms(s),
+        getLocationsWithPortal: () => getLocationsWithPortal(s)
     };
 };
