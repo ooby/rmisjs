@@ -1,5 +1,4 @@
 const moment = require('moment');
-const uid = require('uuid/v4');
 const getLoc = async (s, id) => {
     const rmisjs = require('../../index')(s);
     const rmis = rmisjs.rmis;
@@ -89,23 +88,19 @@ exports.getLocationsWithPortal = s => {
                 Object.assign(c, { interval: rr });
                 return c;
             }), Promise.resolve());
+            /** Чистим то, что не нужно */
             r = r.filter(i => !!i.interval);
             r.forEach(i => {
                 i.interval.forEach(j => {
-                    j.timePeriod.filter(k => {
-                        if (!k.notAvailableSources) { return true; }
-                        else {
-                            if (k.notAvailableSources.notAvailableSources) {
-                                return !k.notAvailableSources.notAvailableSources.some(l => l.source === 'PORTAL');
-                            } else { return true; }
-                        }
-                    });
+                    j.timePeriod = j.timePeriod.filter(k => !k.notAvailableSources);
                     j.timePeriod.forEach(k => {
-                        let guid = uid();
-                        Object.assign(k, { guid: guid });
+                        delete k.availableServices;
+                        delete k.notAvailableSources;
                     });
                 });
+                i.interval = i.interval.filter(j => j.timePeriod.length > 0);
             });
+            r = r.filter(i => i.interval.length > 0);
             resolve(r);
         } catch (e) { reject(e); }
     });
