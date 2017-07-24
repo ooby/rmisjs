@@ -38,9 +38,19 @@ const getRoom = async (s, id) => {
         return r;
     } catch (e) { return e; };
 };
+const getEmpPos = async (s, id) => {
+    const rmisjs = require('../../index')(s);
+    const rmis = rmisjs.rmis;
+    try {
+        let r = await rmis.employee();
+        r = await r.getEmployeePosition({ id: id });
+        r = (r) ? r.employeePosition.position : null;
+        return r;
+    } catch (e) { return e; };
+};
 const createDates = () => {
     let dates = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 14; i++) {
         let d = moment().add(i, 'd');
         if (d.isoWeekday() !== 6 && d.isoWeekday() !== 7) {
             dates.push(d.format('YYYY-MM-DD'));
@@ -72,8 +82,25 @@ exports.getLocationsWithPortal = s => {
                     delete i.beginDate;
                     delete i.endDate;
                     delete i.system;
-                    return i
+                    delete i.employeePositionList;
+                    delete i.specializationList;
+                    return i;
                 });
+            /** Данные сотрудника - должность, специальносит, физлицо */
+            let de = await require('./employee').getDetailedEmployees(s);
+            await de.forEach(i => {
+                if (i.surname && i.name && i.patrName) {
+                    let fio = i.surname.toUpperCase() + ' ' + i.name.toUpperCase() + ' ' + i.patrName.toUpperCase();
+                    r.forEach(i => {
+                        if (i.name.toUpperCase().indexOf(fio) !== -1) {
+                            Object.assign(c, { speciality: i.speciality });
+                            Object.assign(c, { individual: i.individual });
+                            Object.assign(c, { position: i.position });
+                        }
+                    });
+                }
+            });
+            r = r.filter(i => !!i.speciality).filter(i => !!i.individual);
             /** Запрашиваем расписание на 7 дней вперед без выходных */
             await r.reduce((p, c) => p.then(async () => {
                 let rr = [];
@@ -90,12 +117,13 @@ exports.getLocationsWithPortal = s => {
             }), Promise.resolve());
             /** Чистим то, что не нужно */
             r = r.filter(i => !!i.interval);
+            r = r.filter(i => !!i.roomList);
             r.forEach(i => {
                 i.interval.forEach(j => {
                     j.timePeriod = j.timePeriod.filter(k => !k.notAvailableSources);
                     j.timePeriod.forEach(k => {
                         delete k.availableServices;
-                        delete k.notAvailableSources;
+                        //delete k.notAvailableSources;
                     });
                 });
                 i.interval = i.interval.filter(j => j.timePeriod.length > 0);
