@@ -1,4 +1,4 @@
-# JS-обертка для работы с [RMIS](https://www.rtlabs.ru/projects/regionalnaya-meditsinskaya-informatsionnaya-sistema-rmis/)
+## JS-обертка для работы с [RMIS](https://www.rtlabs.ru/projects/regionalnaya-meditsinskaya-informatsionnaya-sistema-rmis/)
 
 ### Начиная с версии `0.1.1` требуется [node.js](ttps://nodejs.org) версии 8.0.0 и выше
 

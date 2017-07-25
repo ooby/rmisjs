@@ -1,115 +1,53 @@
-const getEmp = async (s, id) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.employee();
-        r = await r.getEmployee({ id: id });
-        r = (r) ? r.employee : null;
-        return r;
-    } catch (e) { return e; };
-};
-const getEmps = async s => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.employee();
-        r = await r.getEmployees({ organization: s.rmis.clinicId });
-        return r;
-    } catch (e) { return e; }
-};
-const getEmpSpec = async (s, id) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.employee();
-        r = await r.getEmployeeSpecialities({ employee: id });
-        return r;
-    } catch (e) { return e; };
-};
-const getEmpPositions = async (s, id) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.employee();
-        r = await r.getEmployeePositions({ employee: id });
-        return r;
-    } catch (e) { return e; };
-};
-const getEmpPosition = async (s, id) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.employee();
-        r = await r.getEmployeePosition({ id: id });
-        r = (r) ? r.employeePosition : null;
-        return r;
-    } catch (e) { return e; };
-};
-const getInd = async (s, id) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.individual();
-        r = await r.getIndividual(id);
-        r = (r) ? r : null;
-        return r;
-    } catch (e) { return e; };
-};
-const getIndDocs = async (s, id) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.individual();
-        r = await r.getIndividualDocuments(id);
-        r = (r) ? r : null;
-        return r;
-    } catch (e) { return e; };
-};
-const getDoc = async (s, id) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.individual();
-        r = await r.getDocument(id);
-        r = (r) ? r : null;
-        return r;
-    } catch (e) { return e; };
-};
-const isSnils = s => (s.replace(/-/g, '').replace(/ /g, '').length === 11) ? true : false;
-const snils = s => s.replace(/-/g, '').replace(/ /g, '');
+const {
+    snils,
+    isSnils,
+    getDocument,
+    getEmployee,
+    getEmployees,
+    getEmployeePosition,
+    getEmployeePositions,
+    getEmployeeSpecialities,
+    getIndividual,
+    getIndividualDocuments
+} = require('./collect');
 exports.getDetailedEmployees = s => {
     return new Promise(async (resolve, reject) => {
         try {
-            let r = await getEmps(s);
+            let r = await getEmployees(s);
             let result = [];
             await r.employee.reduce((p, c) => p.then(async () => {
-                let k = await getEmp(s, c);
+                let k = await getEmployee(s, c);
                 result.push(Object.assign(k, { id: c }));
                 return c;
             }), Promise.resolve());
             r = result.filter(i => !!i).filter(i => !!i.individual);
             result = [];
             await r.reduce((p, c) => p.then(async () => {
-                let k = await getInd(s, c.individual);
+                let k = await getIndividual(s, c.individual);
                 result.push(Object.assign(c, k));
                 return c;
             }), Promise.resolve());
             r = result;
             result = [];
             await r.reduce((p, c) => p.then(async () => {
-                let k = await getEmpSpec(s, c.id);
+                let k = await getEmployeeSpecialities(s, c.id);
                 result.push(Object.assign(c, k));
                 return c;
             }), Promise.resolve());
             r = result;
             result = [];
             await r.reduce((p, c) => p.then(async () => {
-                let k = await getIndDocs(s, c.individual);
+                let k = await getIndividualDocuments(s, c.individual);
                 if (k) {
-                    if (Array.isArray(k.employeePosition)) {
-                        result.push(Object.assign(c, k));
+                    if (Array.isArray(k.document)) {
+                        k.document.forEach(async i => {
+                            let rr = await getDocument(s, i);
+                            if (isSnils(rr.number)) {
+                                result.push(Object.assign(c, { snils: snils(rr.number) }));
+                            }
+                        });
                     } else {
-                        k = await getDoc(s, k.document);
+                        k = await getDocument(s, k.document);
                         if (k.number && isSnils(k.number)) {
                             result.push(Object.assign(c, { snils: snils(k.number) }));
                         }
@@ -120,17 +58,17 @@ exports.getDetailedEmployees = s => {
             r = result;
             result = [];
             await r.reduce((p, c) => p.then(async () => {
-                let k = await getEmpPositions(s, c.id);
+                let k = await getEmployeePositions(s, c.id);
                 if (k) {
                     if (Array.isArray(k.employeePosition)) {
                         let rr = [];
                         k.employeePosition.forEach(async i => {
-                            let j = await getEmpPosition(s, i);
+                            let j = await getEmployeePosition(s, i);
                             rr.push(j.position);
                         });
                         result.push(Object.assign(c, { position: rr }));
                     } else {
-                        k = await getEmpPosition(s, k.employeePosition);
+                        k = await getEmployeePosition(s, k.employeePosition);
                         result.push(Object.assign(c, { position: k.position }));
                     }
                 }

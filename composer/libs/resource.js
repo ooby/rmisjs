@@ -1,107 +1,46 @@
-const moment = require('moment');
-const getLoc = async (s, id) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.resource();
-        r = await r.getLocation({ location: id });
-        r = (r) ? r.location : null;
-        return r;
-    } catch (e) { return e; };
-};
-const getLocs = async s => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.resource();
-        r = await r.getLocations({ clinic: s.rmis.clinicId });
-        return r;
-    } catch (e) { return e; }
-};
-const getTimes = async (s, id, date) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.appointment();
-        r = await r.getTimes({ location: id, date: date });
-        r = (r) ? r.interval : null;
-        return r;
-    } catch (e) { return e; }
-};
-const getRoom = async (s, id) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.room();
-        r = await r.getRoom({ roomId: id });
-        r = (r) ? r.room : null;
-        return r;
-    } catch (e) { return e; };
-};
-const getEmpPos = async (s, id) => {
-    const rmisjs = require('../../index')(s);
-    const rmis = rmisjs.rmis;
-    try {
-        let r = await rmis.employee();
-        r = await r.getEmployeePosition({ id: id });
-        r = (r) ? r.employeePosition.position : null;
-        return r;
-    } catch (e) { return e; };
-};
-const createDates = () => {
-    let dates = [];
-    for (let i = 0; i < 14; i++) {
-        let d = moment().add(i, 'd');
-        if (d.isoWeekday() !== 6 && d.isoWeekday() !== 7) {
-            dates.push(d.format('YYYY-MM-DD'));
-        }
-    }
-    return dates;
-};
-exports.getLocationsWithPortal = s => {
+const {
+    createDates,
+    isSnils,
+    snils,
+    getDepartment,
+    getDocument,
+    getEmployee,
+    getEmployees,
+    getEmployeePosition,
+    getEmployeeSpecialities,
+    getIndividual,
+    getIndividualDocuments,
+    getLocation,
+    getLocations,
+    getRoom,
+    getTimes
+} = require('./collect');
+exports.getDetailedLocations = s => {
     return new Promise(async (resolve, reject) => {
         try {
-            /** Получаем все ресурсы */
-            let r = await getLocs(s);
+            // Locations
+            let r = await getLocations(s);
             let result = [];
-            /** По каждому id ресурса получаем детализацию ресурса */
             await r.location.reduce((p, c) => p.then(async () => {
-                let k = await getLoc(s, c);
+                let k = await getLocation(s, c);
                 result.push(Object.assign(k, { location: c }));
                 return c;
             }), Promise.resolve());
-            /** Фильтр на доступные источники ставим на PORTAL и чистим ненужные свойства */
             r = result.filter(i => !!i)
-                .filter(i => i.source && i.source.indexOf('PORTAL') !== -1)
-                .filter(i => {
-                    delete i.service;
-                    delete i.equipmentUnitList;
-                    delete i.bedList;
-                    delete i.organization;
-                    delete i.source;
-                    delete i.beginDate;
-                    delete i.endDate;
-                    delete i.system;
-                    delete i.employeePositionList;
-                    delete i.specializationList;
-                    return i;
-                });
-            /** Данные сотрудника - должность, специальносит, физлицо */
-            let de = await require('./employee').getDetailedEmployees(s);
-            await de.forEach(i => {
-                if (i.surname && i.name && i.patrName) {
-                    let fio = i.surname.toUpperCase() + ' ' + i.name.toUpperCase() + ' ' + i.patrName.toUpperCase();
-                    r.forEach(i => {
-                        if (i.name.toUpperCase().indexOf(fio) !== -1) {
-                            Object.assign(c, { speciality: i.speciality });
-                            Object.assign(c, { individual: i.individual });
-                            Object.assign(c, { position: i.position });
-                        }
-                    });
-                }
+                .filter(i => !!i.roomList)
+                .filter(i => !!i.specializationList)
+                .filter(i => i.source && i.source.indexOf('PORTAL') !== -1);
+            r.forEach(i => {
+                delete i.service;
+                delete i.equipmentUnitList;
+                delete i.bedList;
+                delete i.organization;
+                delete i.source;
+                delete i.beginDate;
+                delete i.endDate;
+                delete i.system;
             });
-            r = r.filter(i => !!i.speciality).filter(i => !!i.individual);
-            /** Запрашиваем расписание на 7 дней вперед без выходных */
+            // Times
             await r.reduce((p, c) => p.then(async () => {
                 let rr = [];
                 for (let date of createDates()) {
@@ -115,20 +54,70 @@ exports.getLocationsWithPortal = s => {
                 Object.assign(c, { interval: rr });
                 return c;
             }), Promise.resolve());
-            /** Чистим то, что не нужно */
             r = r.filter(i => !!i.interval);
-            r = r.filter(i => !!i.roomList);
             r.forEach(i => {
                 i.interval.forEach(j => {
-                    j.timePeriod = j.timePeriod.filter(k => !k.notAvailableSources);
+                    j.timePeriod = j.timePeriod.filter(k => {
+                        let kns = k.notAvailableSources;
+                        let knsns = (kns) ? k.notAvailableSources.notAvailableSource : null;
+                        return (kns && Array.isArray(knsns)) ? !knsns.some(k => k.source === 'PORTAL') : true;
+                    });
                     j.timePeriod.forEach(k => {
                         delete k.availableServices;
-                        //delete k.notAvailableSources;
+                        delete k.notAvailableSources;
                     });
                 });
+                Object.assign(i, { speciality: i.specializationList.Specialization[0].profile });
+                delete i.specializationList;
                 i.interval = i.interval.filter(j => j.timePeriod.length > 0);
             });
             r = r.filter(i => i.interval.length > 0);
+            // Speciality, Position, Individual, Documents, Rooms
+            await r.reduce((p, c) => p.then(async () => {
+                let k = await getEmployeePosition(s, c.employeePositionList.EmployeePosition[0].employeePosition);
+                delete c.employeePositionList;
+                // TODO: position 4 && 48
+                if (parseInt(k.position) !== 4 && parseInt(k.position) !== 48) {
+                    Object.assign(c, { position: k.position });
+                }
+                Object.assign(c, { employee: k.employee });
+                k = await getEmployee(s, k.employee);
+                Object.assign(c, { individual: k.individual });
+                k = await getIndividual(s, k.individual);
+                Object.assign(c, { name: k.name, surname: k.surname, patrName: k.patrName });
+                k = await getIndividualDocuments(s, c.individual);
+                if (Array.isArray(k)) {
+                    k.some(async i => {
+                        let rr = await getDocument(s, i);
+                        if (rr && rr.number && isSnils(rr.number)) {
+                            Object.assign(c, { snils: snils(rr.number) });
+                            return true;
+                        }
+                    });
+                } else {
+                    let rr = await getDocument(s, k);
+                    if (rr && rr.number && isSnils(rr.number)) {
+                        Object.assign(c, { snils: snils(rr.number) });
+                    }
+                }
+                k = await getRoom(s, c.roomList.Room[0].room);
+                Object.assign(c, { room: k.name });
+                delete c.roomList;
+                k = await getEmployeeSpecialities(s, c.employee);
+                if (!Array.isArray(k)) {
+                    Object.assign(c, k);
+                }
+                k = await getDepartment(s, c.department);
+                Object.assign(c, { department: { code: k.code, name: k.name, type: k.departmentType } });
+                return c;
+            }), Promise.resolve());
+            r = r.filter(i => !!i.snils)
+                .filter(i => !!i.position)
+                .filter(i => !!i.name)
+                .filter(i => !!i.surname)
+                .filter(i => !!i.patrName)
+                .filter(i => !!i.speciality)
+                .filter(i => !!i.room);
             resolve(r);
         } catch (e) { reject(e); }
     });
