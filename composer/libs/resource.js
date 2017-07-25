@@ -67,7 +67,6 @@ exports.getDetailedLocations = s => {
                         delete k.notAvailableSources;
                     });
                 });
-                Object.assign(i, { speciality: i.specializationList.Specialization[0].profile });
                 delete i.specializationList;
                 i.interval = i.interval.filter(j => j.timePeriod.length > 0);
             });
@@ -76,10 +75,7 @@ exports.getDetailedLocations = s => {
             await r.reduce((p, c) => p.then(async () => {
                 let k = await getEmployeePosition(s, c.employeePositionList.EmployeePosition[0].employeePosition);
                 delete c.employeePositionList;
-                // TODO: position 4 && 48
-                if (parseInt(k.position) !== 4 && parseInt(k.position) !== 48) {
-                    Object.assign(c, { position: k.position });
-                }
+                Object.assign(c, { position: k.position });
                 Object.assign(c, { employee: k.employee });
                 k = await getEmployee(s, k.employee);
                 Object.assign(c, { individual: k.individual });

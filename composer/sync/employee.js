@@ -11,11 +11,11 @@ const empFormat = d => {
     }
 };
 exports.syncEmployees = s => {
-    const rmisjs = require('../../index')(s);
-    const composer = rmisjs.composer;
-    const er14 = rmisjs.integration.er14;
     return new Promise(async (resolve, reject) => {
         try {
+            const rmisjs = require('../../index')(s);
+            const composer = rmisjs.composer;
+            const er14 = await rmisjs.integration.er14.process();
             let r = await composer.getDetailedLocations();
             let result = [];
             await r.reduce((p, i) => p.then(async () => {
