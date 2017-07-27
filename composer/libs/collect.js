@@ -9,6 +9,34 @@ exports.getDepartment = async (s, id) => {
         return r;
     } catch (e) { return e; };
 };
+exports.getRefbook = async (s, id) => {
+    try {
+        const rmisjs = require('../../index')(s);
+        const rmis = rmisjs.rmis;
+        let r = await rmis.refbook();
+        r = await r.getRefbook({ refbookCode: id.code, version: id.version });
+        return r;
+    } catch (e) { return e; };
+};
+exports.getRefbookList = async (s) => {
+    try {
+        const rmisjs = require('../../index')(s);
+        const rmis = rmisjs.rmis;
+        let r = await rmis.refbook();
+        r = await r.getRefbookList();
+        return r;
+    } catch (e) { return e; };
+};
+exports.getVersionList = async (s, id) => {
+    try {
+        const rmisjs = require('../../index')(s);
+        const rmis = rmisjs.rmis;
+        let r = await rmis.refbook();
+        r = await r.getVersionList({ refbookCode: id });
+        r = (r) ? r.version : null;
+        return r;
+    } catch (e) { return e; };
+};
 exports.getDepartments = async (s) => {
     try {
         const rmisjs = require('../../index')(s);

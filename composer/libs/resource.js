@@ -12,13 +12,60 @@ const {
     getIndividualDocuments,
     getLocation,
     getLocations,
+    getRefbook,
+    getRefbookList,
     getRoom,
-    getTimes
+    getTimes,
+    getVersionList
 } = require('./collect');
+
+/** 
+ * Запрашивает и возвращает код справочника
+ * @param {object} s - конфигурация
+ * @param {string} ref - наименование справочника
+ */
+const getRefCode = async (s, ref) => {
+    try {
+        let k = await getRefbookList(s);
+        let specRefCode;
+        k.refbook.forEach(i => {
+            let code;
+            i.column.forEach(j => {
+                if (j.name === 'CODE') { code = j.data; }
+                if (j.name === 'NAME' && j.data === ref) {
+                    specRefCode = code;
+                }
+            });
+        });
+        return specRefCode;
+    } catch (e) { console.error(e); return e; }
+};
+
+/**
+ * Запрашивает и возвращает версию справочника
+ * @param {object} s - конфигурация
+ * @param {string} code - OID код справочника
+ */
+const getRefVersion = async (s, code) => {
+    try {
+        let specRefVersion;
+        let k = await getVersionList(s, code);
+        k[0].column.forEach(i => {
+            if (i.name === 'VERSION') { specRefVersion = i.data; }
+        });
+        return specRefVersion;
+    } catch (e) { console.error(e); return e; }
+};
+
+/**
+ * Формирует из ресурсов коллекцию детализированных данных
+ * для отправки в инетграционные сервисы, возвращает Promise
+ * @param {object} s - конфигурация
+ */
 exports.getDetailedLocations = s => {
     return new Promise(async (resolve, reject) => {
         try {
-            // Locations
+            /** Locations */
             let r = await getLocations(s);
             let result = [];
             await r.location.reduce((p, c) => p.then(async () => {
@@ -40,7 +87,7 @@ exports.getDetailedLocations = s => {
                 delete i.endDate;
                 delete i.system;
             });
-            // Times
+            /** Times */
             await r.reduce((p, c) => p.then(async () => {
                 let rr = [];
                 for (let date of createDates()) {
@@ -71,11 +118,11 @@ exports.getDetailedLocations = s => {
                 i.interval = i.interval.filter(j => j.timePeriod.length > 0);
             });
             r = r.filter(i => i.interval.length > 0);
-            // Speciality, Position, Individual, Documents, Rooms
+            /** SpecialityId, PositionId, Individual, Documents, Rooms */
             await r.reduce((p, c) => p.then(async () => {
                 let k = await getEmployeePosition(s, c.employeePositionList.EmployeePosition[0].employeePosition);
                 delete c.employeePositionList;
-                Object.assign(c, { position: k.position });
+                Object.assign(c, { position: k.position }); // TODO: k.position может быть массив
                 Object.assign(c, { employee: k.employee });
                 k = await getEmployee(s, k.employee);
                 Object.assign(c, { individual: k.individual });
@@ -100,11 +147,35 @@ exports.getDetailedLocations = s => {
                 Object.assign(c, { room: k.name });
                 delete c.roomList;
                 k = await getEmployeeSpecialities(s, c.employee);
-                if (!Array.isArray(k)) {
-                    Object.assign(c, k);
-                }
+                k = (Array.isArray(k.speciality)) ? k.speciality[0] : k.speciality;
+                Object.assign(c, { speciality: k });
                 k = await getDepartment(s, c.department);
                 Object.assign(c, { department: { code: k.code, name: k.name, type: k.departmentType } });
+                let specRefCode = await getRefCode(s, 'pim_speciality');
+                let specRefVersion = await getRefVersion(s, specRefCode);
+                let specRefBook = await getRefbook(s, { code: specRefCode, version: specRefVersion });
+                let x; let y;
+                specRefBook.row.forEach((i, idx) => {
+                    i.column.forEach((j, idy) => {
+                        if (j.name === 'ID' && parseInt(j.data) === parseInt(c.speciality)) {
+                            x = idx;
+                        }
+                        if (j.name === 'CODE') { y = idy; }
+                    });
+                });
+                Object.assign(c, { speciality: specRefBook.row[x].column[y].data });
+                let posRefCode = await getRefCode(s, 'pim_position_role');
+                let posRefVersion = await getRefVersion(s, posRefCode);
+                let posRefBook = await getRefbook(s, { code: posRefCode, version: posRefVersion });
+                posRefBook.row.forEach((i, idx) => {
+                    i.column.forEach((j, idy) => {
+                        if (j.name === 'ID' && parseInt(j.data) === parseInt(c.position)) {
+                            x = idx;
+                        }
+                        if (j.name === 'E_CODE') { y = idy; }
+                    });
+                })
+                Object.assign(c, { position: posRefBook.row[x].column[y].data });
                 return c;
             }), Promise.resolve());
             r = r.filter(i => !!i.snils)

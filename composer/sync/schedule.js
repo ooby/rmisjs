@@ -27,12 +27,11 @@ exports.syncSchedules = s => {
         try {
             const rmisjs = require('../../index')(s);
             const composer = rmisjs.composer;
-            const er14 = await rmisjs.integration.er14.process();
+            const er14 = await rmisjs.integration.er14;
             let r = await composer.getDetailedLocations();
-            let result = [];
-            let bb = '';
-            await r.reduce((p, i) => p.then(async () => {
-                await i.interval.reduce((g, j) => g.then(async () => {
+            let bb = [];
+            r.forEach(i => {
+                i.interval.forEach(j => {
                     let d = {
                         scheduleDate: j.date,
                         muCode: s.er14.muCode,
@@ -53,15 +52,11 @@ exports.syncSchedules = s => {
                         };
                         u = u + slotFormat(ts);
                     });
-                    bb = bb + u;
-                    let rr = await er14.updateSсhedule({ _xml: u });
-                    result.push(rr);
-                    return j;
-                }), Promise.resolve());
-                return i;
-            }), Promise.resolve());
-            fs.writeFileSync('debug.xml', bb);
-            resolve(result);
+                    bb.push(u);
+                });
+            });
+            //fs.writeFileSync('debug.1.json', JSON.stringify(bb));
+            resolve(bb);
         } catch (e) { reject(e); }
     });
 };
