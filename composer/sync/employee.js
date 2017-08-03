@@ -8,7 +8,7 @@ const empFormat = d => {
         'ct:specCode': d.specCode,
         'ct:positionCode': d.positionCode,
         'pt:muCode': d.muCode
-    }
+    };
 };
 exports.syncEmployees = s => {
     return new Promise(async (resolve, reject) => {

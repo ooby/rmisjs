@@ -6,7 +6,7 @@ const roomFormat = d => {
             'ct:roomNumber': d.roomNumber,
             'ct:deleted': d.deleted
         }
-    }
+    };
 };
 exports.syncRooms = s => {
     return new Promise(async (resolve, reject) => {

@@ -4,7 +4,7 @@ const deptFormat = d => {
         'ct:deptName': d.deptName,
         'ct:deptType': d.deptType,
         'ct:deleted': d.deleted
-    }
+    };
 };
 exports.syncDepartments = s => {
     return new Promise(async (resolve, reject) => {

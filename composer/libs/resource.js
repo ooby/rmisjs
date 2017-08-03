@@ -23,6 +23,7 @@ const {
  * Запрашивает и возвращает код справочника
  * @param {object} s - конфигурация
  * @param {string} ref - наименование справочника
+ * @return {string|object}
  */
 const getRefCode = async (s, ref) => {
     try {
@@ -45,6 +46,7 @@ const getRefCode = async (s, ref) => {
  * Запрашивает и возвращает версию справочника
  * @param {object} s - конфигурация
  * @param {string} code - OID код справочника
+ * @return {string|object}
  */
 const getRefVersion = async (s, code) => {
     try {
@@ -61,6 +63,7 @@ const getRefVersion = async (s, code) => {
  * Формирует из ресурсов коллекцию детализированных данных
  * для отправки в инетграционные сервисы, возвращает Promise
  * @param {object} s - конфигурация
+ * @return {string|object}
  */
 exports.getDetailedLocations = s => {
     return new Promise(async (resolve, reject) => {
@@ -174,7 +177,7 @@ exports.getDetailedLocations = s => {
                         }
                         if (j.name === 'E_CODE') { y = idy; }
                     });
-                })
+                });
                 Object.assign(c, { position: posRefBook.row[x].column[y].data });
                 return c;
             }), Promise.resolve());

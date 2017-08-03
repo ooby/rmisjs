@@ -10,4 +10,4 @@ module.exports = s => {
     return {
         process: () => composeLib(path, require('./libs/mu'))
     };
-}
+};

@@ -7,7 +7,7 @@ const schedFormat = d => {
         '<ct:roomNumber>' + d.roomNumber + '</ct:roomNumber>' +
         '<ct:docCode>' + d.docCode + '</ct:docCode>' +
         '<ct:specCode>' + d.specCode + '</ct:specCode>' +
-        '<ct:positionCode>' + d.positionCode + '</ct:positionCode>'
+        '<ct:positionCode>' + d.positionCode + '</ct:positionCode>';
 };
 const slotFormat = d => {
     return '<pt:SlotElement>' +
@@ -20,7 +20,7 @@ const slotFormat = d => {
         '<ct:GUID>' + d.GUID + '</ct:GUID>' +
         '<ct:SlotState>' + d.SlotState + '</ct:SlotState>' +
         '</ct:slotInfo>' +
-        '</pt:SlotElement>'
+        '</pt:SlotElement>';
 };
 exports.syncSchedules = s => {
     return new Promise(async (resolve, reject) => {
@@ -55,7 +55,7 @@ exports.syncSchedules = s => {
                     bb.push(u);
                 });
             });
-            //fs.writeFileSync('debug.1.json', JSON.stringify(bb));
+            // fs.writeFileSync('debug.1.json', JSON.stringify(bb));
             resolve(bb);
         } catch (e) { reject(e); }
     });
