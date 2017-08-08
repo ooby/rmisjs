@@ -6,6 +6,7 @@
         "brace-style": "off",
         "comma-dangle": "off",
         "max-len": "off",
+        "new-cap": "off",
         "no-unused-vars": "off",
         "no-invalid-this": "off",
         "object-curly-spacing": [

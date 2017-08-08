@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.2.1-a",
+  "version": "0.3.2-a",
   "engines": {
     "node": ">8.0.0"
   },
