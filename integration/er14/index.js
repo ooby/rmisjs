@@ -7,7 +7,7 @@ const composeLib = async (path, lib) => {
 };
 module.exports = s => {
     let path = s.er14.path;
-    let refbook = s.er14.refbook;
+    let refbook = s.er14.refbooks;
     return {
         process: () => composeLib(path, require('./libs/mu')),
         refbook: () => composeLib(refbook, require('./libs/refbook'))

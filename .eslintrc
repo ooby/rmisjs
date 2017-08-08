@@ -7,11 +7,13 @@
         "comma-dangle": "off",
         "max-len": "off",
         "no-unused-vars": "off",
+        "no-invalid-this": "off",
         "object-curly-spacing": [
             1,
             "always"
         ],
-        "require-jsdoc": "off"
+        "require-jsdoc": "off",
+        "space-before-function-paren": "off"
     },
     "parserOptions": {
         "ecmaVersion": 8,
