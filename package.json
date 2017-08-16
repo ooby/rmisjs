@@ -35,6 +35,7 @@
   "dependencies": {
     "moment": "^2.18.1",
     "nconf": "^0.8.4",
+    "refbooks": "0.0.2",
     "soap": "^0.19.2",
     "uuid": "^3.1.0"
   },

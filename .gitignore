@@ -1,3 +1,6 @@
+.DS_Store
+.eslintrc
+.gitignore
 npm-debug.log
 node_modules
 config/config.json
