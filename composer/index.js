@@ -1,4 +1,4 @@
-const { getDetailedLocations } = require('./libs/resource');
+const { getDetailedLocations, getLocations } = require('./libs/resource');
 const { getDetailedDepartments, getPortalDepartments } = require('./libs/department');
 const { getDetailedEmployees } = require('./libs/employee');
 const { getDetailedRooms } = require('./libs/room');
@@ -13,6 +13,7 @@ module.exports = s => {
         getDetailedRooms: () => getDetailedRooms(s),
         getDetailedLocations: () => getDetailedLocations(s),
         getPortalDepartments: () => getPortalDepartments(s),
+        getLocations: () => getLocations(s),
         syncDepartments: () => syncDepartments(s),
         syncRooms: () => syncRooms(s),
         syncEmployees: () => syncEmployees(s),
