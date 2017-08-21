@@ -1,3 +1,4 @@
+const ss = require('string-similarity');
 const {
     createDates,
     isSnils,
@@ -18,6 +19,8 @@ const {
     getTimes,
     getVersionList
 } = require('./collect');
+
+const { getDetailedEmployees } = require('./employee');
 
 /** 
  * Запрашивает и возвращает код справочника
@@ -59,26 +62,6 @@ const getRefVersion = async (s, code) => {
     } catch (e) { console.error(e); return e; }
 };
 
-
-exports.getLocations = async s => {
-    try {
-        /** Locations */
-        let r = await getLocations(s);
-        let result = [];
-        await r.location.reduce((p, c) => p.then(async () => {
-            let k = await getLocation(s, c);
-            result.push(Object.assign(k, { location: c }));
-            return c;
-        }), Promise.resolve());
-        await result.reduce((p, c) => p.then(async () => {
-            let k = await getEmployeePosition(s, c.employeePositionList.EmployeePosition[0].employeePosition);
-            delete c.employeePositionList;
-            Object.assign(c, { position: k });
-            return c;
-        }), Promise.resolve());
-        return result;
-    } catch (e) { return e; }
-};
 /**
  * Формирует из ресурсов коллекцию детализированных данных
  * для отправки в инетграционные сервисы, возвращает Promise
@@ -90,16 +73,16 @@ exports.getDetailedLocations = async s => {
         /** Locations */
         let r = await getLocations(s);
         let result = [];
-        await r.location.reduce((p, c) => p.then(async () => {
-            let k = await getLocation(s, c);
-            result.push(Object.assign(k, { location: c }));
-            return c;
-        }), Promise.resolve());
+        for (let i of r.location) {
+            let k = await getLocation(s, i);
+            result.push(Object.assign(k, { location: i }));
+        }
         r = result.filter(i => !!i)
             .filter(i => !!i.roomList)
-            .filter(i => !!i.specializationList)
             .filter(i => i.source && i.source.indexOf('PORTAL') !== -1);
         r.forEach(i => {
+            delete i.employeePositionList;
+            delete i.specializationList;
             delete i.service;
             delete i.equipmentUnitList;
             delete i.bedList;
@@ -110,19 +93,18 @@ exports.getDetailedLocations = async s => {
             delete i.system;
         });
         /** Times */
-        await r.reduce((p, c) => p.then(async () => {
+        for (let i of r) {
             let rr = [];
             for (let date of createDates()) {
-                let k = await getTimes(s, c.location, date);
+                let k = await getTimes(s, i.location, date);
                 if (k && k.timePeriod) {
                     k.date = date;
                     rr.push(k);
                 }
             }
             if (rr.length === 0) { rr = null; }
-            Object.assign(c, { interval: rr });
-            return c;
-        }), Promise.resolve());
+            Object.assign(i, { interval: rr });
+        }
         r = r.filter(i => !!i.interval);
         r.forEach(i => {
             i.interval.forEach(j => {
@@ -136,12 +118,69 @@ exports.getDetailedLocations = async s => {
                     delete k.notAvailableSources;
                 });
             });
-            delete i.specializationList;
             i.interval = i.interval.filter(j => j.timePeriod.length > 0);
         });
         r = r.filter(i => i.interval.length > 0);
+        let emps = await getDetailedEmployees(s);
+        for (let e of emps) {
+            for (let i of r) {
+                if (i.name.toUpperCase().indexOf(e.fio) !== -1) {
+                    Object.assign(i, e);
+                }
+                let csFio = i.surname + ' ' + i.firstName + ' ' + i.patrName;
+                let positionName = i.name.toUpperCase().replace(csFio.toUpperCase(), '').trim();
+                Object.assign(i, { positionName: positionName });
+            }
+        }
+        r = r.filter(i => !!i.positionName);
+        for (let i of r) {
+            let k = await getIndividualDocuments(s, i.individual);
+            if (Array.isArray(k)) {
+                await k.some(async j => {
+                    let rr = await getDocument(s, j);
+                    if (rr && rr.number && isSnils(rr.number)) {
+                        Object.assign(i, { snils: snils(rr.number) });
+                        return true;
+                    }
+                });
+            } else {
+                let rr = await getDocument(s, k);
+                if (rr && rr.number && isSnils(rr.number)) {
+                    Object.assign(i, { snils: snils(rr.number) });
+                }
+            }
+            k = await getRoom(s, i.roomList.Room[0].room);
+            Object.assign(i, { room: k.name });
+            delete i.roomList;
+            let specRefCode = await getRefCode(s, 'pim_speciality');
+            let specRefVersion = await getRefVersion(s, specRefCode);
+            let specRefBook = await getRefbook(s, { code: specRefCode, version: specRefVersion });
+            let x; let y;
+            specRefBook.row.forEach((ii, idx) => {
+                ii.column.forEach((jj, idy) => {
+                    if (jj.name === 'ID' && parseInt(jj.data) === parseInt(i.speciality)) {
+                        x = idx;
+                    }
+                    if (jj.name === 'CODE') { y = idy; }
+                });
+            });
+            Object.assign(i, { speciality: specRefBook.row[x].column[y].data });
+            let posRefCode = await getRefCode(s, 'pim_position_role');
+            let posRefVersion = await getRefVersion(s, posRefCode);
+            let posRefBook = await getRefbook(s, { code: posRefCode, version: posRefVersion });
+            posRefBook.row.forEach((ii, idx) => {
+                ii.column.forEach((jj, idy) => {
+                    if (jj.name === 'NAME'
+                        && ss.compareTwoStrings(jj.data.toUpperCase(), i.positionName.toUpperCase()) > 0.9) {
+                        x = idx;
+                    }
+                    if (jj.name === 'CODE') { y = idy; }
+                });
+            });
+            Object.assign(i, { position: posRefBook.row[x].column[y].data });
+        }
         /** SpecialityId, PositionId, Individual, Documents, Rooms */
-        await r.reduce((p, c) => p.then(async () => {
+        /* await r.reduce((p, c) => p.then(async () => {
             let k = await getEmployeePosition(s, c.employeePositionList.EmployeePosition[0].employeePosition);
             delete c.employeePositionList;
             Object.assign(c, { position: k.position }); // TODO: k.position может быть массив
@@ -149,7 +188,7 @@ exports.getDetailedLocations = async s => {
             k = await getEmployee(s, k.employee);
             Object.assign(c, { individual: k.individual });
             k = await getIndividual(s, k.individual);
-            Object.assign(c, { name: k.name, surname: k.surname, patrName: k.patrName });
+            Object.assign(c, { firstname: k.name, surname: k.surname, patrName: k.patrName });
             k = await getIndividualDocuments(s, c.individual);
             if (Array.isArray(k)) {
                 k.some(async i => {
@@ -199,10 +238,10 @@ exports.getDetailedLocations = async s => {
             });
             Object.assign(c, { position: posRefBook.row[x].column[y].data });
             return c;
-        }), Promise.resolve());
+        }), Promise.resolve());*/
         r = r.filter(i => !!i.snils)
-            .filter(i => !!i.position)
             .filter(i => !!i.name)
+            .filter(i => !!i.firstName)
             .filter(i => !!i.surname)
             .filter(i => !!i.patrName)
             .filter(i => !!i.speciality)

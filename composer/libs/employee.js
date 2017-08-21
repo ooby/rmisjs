@@ -1,81 +1,57 @@
 const {
-    snils,
-    isSnils,
-    getDocument,
     getEmployee,
     getEmployees,
+    getEmployeeSpecialities,
     getEmployeePosition,
     getEmployeePositions,
-    getEmployeeSpecialities,
     getIndividual,
-    getIndividualDocuments
+    getRefbook,
+    getRefbookList,
+    getVersionList
 } = require('./collect');
 exports.getDetailedEmployees = async s => {
     try {
         let r = await getEmployees(s);
         let result = [];
-        await r.employee.reduce((p, c) => p.then(async () => {
-            let k = await getEmployee(s, c);
-            result.push(Object.assign(k, { id: c }));
-            return c;
-        }), Promise.resolve());
+        for (let i of r.employee) {
+            let k = await getEmployee(s, i);
+            result.push(Object.assign(k, { id: i }));
+        }
         r = result.filter(i => !!i).filter(i => !!i.individual);
         result = [];
-        await r.reduce((p, c) => p.then(async () => {
-            let k = await getIndividual(s, c.individual);
-            result.push(Object.assign(c, k));
-            return c;
-        }), Promise.resolve());
-        r = result;
+        for (let i of r) {
+            let k = await getIndividual(s, i.individual);
+            result.push(Object.assign(i, k));
+        }
+        r = result.filter(i => !!i.surname)
+            .filter(i => !!i.name)
+            .filter(i => !!i.patrName);
+        for (let i of r) {
+            Object.assign(i, { firstName: i.name });
+            delete i.name;
+        }
         result = [];
-        await r.reduce((p, c) => p.then(async () => {
-            let k = await getEmployeeSpecialities(s, c.id);
-            result.push(Object.assign(c, k));
-            return c;
-        }), Promise.resolve());
-        r = result;
-        result = [];
-        await r.reduce((p, c) => p.then(async () => {
-            let k = await getIndividualDocuments(s, c.individual);
+        for (let i of r) {
+            let k = await getEmployeeSpecialities(s, i.id);
+            let obj = { speciality: '' };
             if (k) {
-                if (Array.isArray(k.document)) {
-                    k.document.forEach(async i => {
-                        let rr = await getDocument(s, i);
-                        if (isSnils(rr.number)) {
-                            result.push(Object.assign(c, { snils: snils(rr.number) }));
-                        }
-                    });
+                if (Array.isArray(k.speciality)) {
+                    Object.assign(obj, { speciality: k.speciality[0] });
                 } else {
-                    k = await getDocument(s, k.document);
-                    if (k.number && isSnils(k.number)) {
-                        result.push(Object.assign(c, { snils: snils(k.number) }));
-                    }
+                    Object.assign(obj, { speciality: k.speciality });
                 }
             }
-            return c;
-        }), Promise.resolve());
-        r = result;
-        result = [];
-        await r.reduce((p, c) => p.then(async () => {
-            let k = await getEmployeePositions(s, c.id);
-            if (k) {
-                if (Array.isArray(k.employeePosition)) {
-                    let rr = [];
-                    k.employeePosition.forEach(async i => {
-                        let j = await getEmployeePosition(s, i);
-                        rr.push(j.position);
-                    });
-                    result.push(Object.assign(c, { position: rr }));
-                } else {
-                    k = await getEmployeePosition(s, k.employeePosition);
-                    result.push(Object.assign(c, { position: k.position }));
-                }
-            }
-            return c;
-        }), Promise.resolve());
-        r = result;
-        r = r.filter(i => !!i.speciality).filter(i => !!i.position)
-            .filter(i => !!(Array.isArray(i.position) && i.position.length > 0));
+            result.push(Object.assign(i, obj));
+        }
+        r = result.filter(i => !!i.speciality);
+        for (let i of r) {
+            let fio = i.surname.toUpperCase() + ' ' + i.firstName.toUpperCase() + ' ' + i.patrName.toUpperCase();
+            Object.assign(i, { fio: fio });
+            delete i.number;
+            delete i.dismissed;
+            delete i.gender;
+            delete i.note;
+        }
         return r;
     } catch (e) { return e; }
 };

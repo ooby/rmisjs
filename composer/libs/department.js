@@ -3,27 +3,23 @@ exports.getDetailedDepartments = async s => {
     try {
         let r = await getDepartments(s);
         let result = [];
-        await r.department.reduce((p, c) => p.then(async () => {
-            let k = await getDepartment(s, c);
+        for (let i of r.department) {
+            let k = await getDepartment(s, i);
             result.push(k);
-            return c;
-        }), Promise.resolve());
-        r = result;
-        return r;
+        }
+        return result;
     } catch (e) { return e; }
 };
 exports.getPortalDepartments = async s => {
     try {
         let r = await getDepartments(s);
         let result = [];
-        await r.department.reduce((p, c) => p.then(async () => {
-            let k = await getDepartment(s, c);
+        for (let i of r.department) {
+            let k = await getDepartment(s, i);
             if (k.portalDepartment && k.portalDepartment.isVisible) {
-                result.push(Object.assign(k, { id: c }));
+                result.push(Object.assign(k, { id: i }));
             }
-            return c;
-        }), Promise.resolve());
-        r = result;
-        return r;
+        }
+        return result;
     } catch (e) { return e; }
 };

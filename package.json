@@ -37,6 +37,7 @@
     "nconf": "^0.8.4",
     "refbooks": "0.0.2",
     "soap": "^0.19.2",
+    "string-similarity": "^1.2.0",
     "uuid": "^3.1.0"
   },
   "devDependencies": {
