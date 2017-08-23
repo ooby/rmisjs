@@ -66,9 +66,10 @@ const getRefVersion = async (s, code) => {
  * Формирует из ресурсов коллекцию детализированных данных
  * для отправки в инетграционные сервисы, возвращает Promise
  * @param {object} s - конфигурация
+ * @param {object} m - справочник MDP365
  * @return {string|object}
  */
-exports.getDetailedLocations = async s => {
+exports.getDetailedLocations = async (s, m) => {
     try {
         /** Locations */
         let r = await getLocations(s);
@@ -152,7 +153,12 @@ exports.getDetailedLocations = async s => {
             k = await getRoom(s, i.roomList.Room[0].room);
             Object.assign(i, { room: k.name });
             delete i.roomList;
-            let specRefCode = await getRefCode(s, 'pim_speciality');
+            k = m.map(i => i.name.toUpperCase());
+            k = ss.findBestMatch(i.positionName.toUpperCase(), k);
+            k = m.map(i => i.name.toUpperCase()).indexOf(k.bestMatch.target);
+            k = m[k].code;
+            Object.assign(i, { position: k });
+            /* let specRefCode = await getRefCode(s, 'pim_speciality');
             let specRefVersion = await getRefVersion(s, specRefCode);
             let specRefBook = await getRefbook(s, { code: specRefCode, version: specRefVersion });
             let x; let y;
@@ -177,7 +183,9 @@ exports.getDetailedLocations = async s => {
                     if (jj.name === 'CODE') { y = idy; }
                 });
             });
-            Object.assign(i, { position: posRefBook.row[x].column[y].data });
+            Object.assign(i, { position: posRefBook.row[x].column[y].data }); */
+            k = await getDepartment(s, i.department);
+            Object.assign(i, { department: { code: k.code, name: k.name, type: k.departmentType } });
         }
         /** SpecialityId, PositionId, Individual, Documents, Rooms */
         /* await r.reduce((p, c) => p.then(async () => {

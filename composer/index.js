@@ -11,12 +11,12 @@ module.exports = s => {
         getDetailedDepartments: () => getDetailedDepartments(s),
         getDetailedEmployees: () => getDetailedEmployees(s),
         getDetailedRooms: () => getDetailedRooms(s),
-        getDetailedLocations: () => getDetailedLocations(s),
+        getDetailedLocations: (d) => getDetailedLocations(s, d),
         getPortalDepartments: () => getPortalDepartments(s),
         getLocations: () => getLocations(s),
-        syncDepartments: () => syncDepartments(s),
-        syncRooms: () => syncRooms(s),
-        syncEmployees: () => syncEmployees(s),
-        syncSchedules: () => syncSchedules(s)
+        syncDepartments: (d) => syncDepartments(s, d),
+        syncRooms: (d) => syncRooms(s, d),
+        syncEmployees: (d) => syncEmployees(s, d),
+        syncSchedules: (d) => syncSchedules(s, d)
     };
 };

@@ -1,22 +1,19 @@
 const uid = require('uuid/v4');
 const { getSchedFormat, schedFormat, slotFormat } = require('./format');
-exports.syncSchedules = async s => {
+exports.syncSchedules = async (s, d) => {
     try {
         const rmisjs = require('../../index')(s);
-        const composer = rmisjs.composer;
         const er14 = await rmisjs.integration.er14.process();
-        let r = await composer.getDetailedLocations();
+        let r = d;
         let bb = [];
-        await r.reduce((p, i) => p.then(async () => {
-            await i.interval.reduce((p, j) => p.then(async () => {
+        for (let i of r) {
+            for (let j of i.interval) {
                 let data = getSchedFormat({
                     scheduleDate: j.date,
                     muCode: s.er14.muCode,
                     needFIO: false
                 });
-                let d = await er14.getSheduleInfo(data);
-                bb.push(d);
-                /* let d = {
+                let d = {
                     scheduleDate: j.date,
                     muCode: s.er14.muCode,
                     deptCode: i.department.code,
@@ -36,11 +33,10 @@ exports.syncSchedules = async s => {
                     };
                     u = u + slotFormat(ts);
                 });
-                bb.push(u);*/
-                return j;
-            }), Promise.resolve());
-            return i;
-        }), Promise.resolve());
+                let rr = await er14.updateSchedule({ $xml: u });
+                bb.push(rr);
+            }
+        }
         return bb;
     } catch (e) { return e; }
 };

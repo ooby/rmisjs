@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "engines": {
     "node": ">8.0.0"
   },
@@ -35,7 +35,7 @@
   "dependencies": {
     "moment": "^2.18.1",
     "nconf": "^0.8.4",
-    "refbooks": "0.0.2",
+    "refbooks": "^0.0.5",
     "soap": "^0.19.2",
     "string-similarity": "^1.2.0",
     "uuid": "^3.1.0"

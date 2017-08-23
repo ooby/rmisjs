@@ -1,12 +1,11 @@
 const { roomFormat } = require('./format');
-exports.syncRooms = async s => {
+exports.syncRooms = async (s, d) => {
     try {
         const rmisjs = require('../../index')(s);
-        const composer = rmisjs.composer;
         const er14 = await rmisjs.integration.er14.process();
         let r = await er14.getMuInfo({ 'pt:muCode': s.er14.muCode });
         let rs = [];
-        await r.muInfo.department.reduce((p, i) => p.then(async () => {
+        for (let i of r.muInfo.department) {
             if (!i.deleted && i.room) {
                 if (Array.isArray(i.room)) {
                     i.room.forEach(j => {
@@ -34,31 +33,24 @@ exports.syncRooms = async s => {
                     }
                 }
             }
-            return i;
-        }), Promise.resolve());
+        }
         let result = [];
-        await rs.reduce((p, i) => p.then(async () => {
-            try {
-                let res = await er14.updateCabinetInfo(i);
-                result.push(res);
-            } catch (e) { console.error(e); }
-            return i;
-        }), Promise.resolve());
-        r = await composer.getDetailedLocations();
-        await r.reduce((p, i) => p.then(async () => {
-            try {
-                let d = {
-                    muCode: s.er14.muCode,
-                    deptCode: i.department.code,
-                    roomNumber: i.room,
-                    deleted: false
-                };
-                let u = roomFormat(d);
-                let res = await er14.updateCabinetInfo(u);
-                result.push(res);
-            } catch (e) { console.error(e); }
-            return i;
-        }), Promise.resolve());
+        for (let i of rs) {
+            let res = await er14.updateCabinetInfo(i);
+            result.push(res);
+        }
+        r = d;
+        for (let i of r) {
+            let d = {
+                muCode: s.er14.muCode,
+                deptCode: i.department.code,
+                roomNumber: i.room,
+                deleted: false
+            };
+            let u = roomFormat(d);
+            let res = await er14.updateCabinetInfo(u);
+            result.push(res);
+        }
         return result;
     } catch (e) { return e; }
 };
