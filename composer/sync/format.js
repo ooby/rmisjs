@@ -1,8 +1,8 @@
 exports.getSchedFormat = d => {
     return {
-        'pt:scheduleDate': d.scheduleDate,
-        'pt:muCode': d.muCode,
-        'pt:needFIO': d.needFIO
+        'ct:scheduleDate': d.scheduleDate,
+        'ct:muCode': d.muCode,
+        'ct:needFIO': d.needFIO
     };
 };
 exports.schedFormat = d => {
