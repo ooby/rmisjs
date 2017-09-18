@@ -6,7 +6,6 @@ exports.syncSchedules = async (s, d) => {
         const er14 = await rmisjs.integration.er14.process();
         let r = d;
         let bb = [];
-        debugger;
         for (let i of r) {
             for (let j of i.interval) {
                 let data = getSchedFormat({
@@ -15,20 +14,21 @@ exports.syncSchedules = async (s, d) => {
                     needFIO: false
                 });
                 let schedules = await er14.getScheduleInfo(data);
+                let rmIds = [];
+                let count = 0;
                 if (schedules.scheduleInfo) {
                     schedules = schedules.scheduleInfo.schedule;
-                    let rmIds = [];
                     for (let k of schedules) {
                         if (k.docCode === i.snils) {
                             let slots = (Array.isArray(k.slot)) ? k.slot : new Array(k.slot);
                             for (let l of slots) {
-                                let tptpt = j.timePeriod.entries();
-                                for (let [tpId, tp] of tptpt) {
+                                for (let tp of j.timePeriod) {
                                     let from = l.timeInterval.timeStart;
                                     let to = l.timeInterval.timeFinish;
-                                    if (from === tp.from.replace(/\+09:00/g, 'Z') &&
-                                        to === tp.to.replace(/\+09:00/g, 'Z')) {
-                                        rmIds.push(tpId);
+                                    let lfrom = tp.from.replace(/\.000\+09:00/g, 'Z');
+                                    let lto = tp.to.replace(/\.000\+09:00/g, 'Z');
+                                    if (from === lfrom && to === lto) {
+                                        rmIds.push(j.timePeriod.indexOf(tp));
                                     }
                                 }
                             }
