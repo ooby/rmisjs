@@ -18,6 +18,7 @@ exports.syncSchedules = async (s, d) => {
                 let count = 0;
                 if (schedules.scheduleInfo) {
                     schedules = schedules.scheduleInfo.schedule;
+                    schedules = (Array.isArray(schedules)) ? schedules : new Array(schedules);
                     for (let k of schedules) {
                         if (k.docCode === i.snils) {
                             let slots = (Array.isArray(k.slot)) ? k.slot : new Array(k.slot);
