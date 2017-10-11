@@ -25,10 +25,8 @@ exports.syncSchedules = async (s, d) => {
                             for (let l of slots) {
                                 for (let tp of j.timePeriod) {
                                     let from = l.timeInterval.timeStart;
-                                    let to = l.timeInterval.timeFinish;
                                     let lfrom = tp.from.replace(/\.000\+09:00/g, 'Z');
-                                    let lto = tp.to.replace(/\.000\+09:00/g, 'Z');
-                                    if (from === lfrom && to === lto) {
+                                    if (from === lfrom) {
                                         rmIds.push(j.timePeriod.indexOf(tp));
                                     }
                                 }
