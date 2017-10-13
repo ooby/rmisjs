@@ -13,6 +13,12 @@ module.exports = c => {
                 else { resolve(r); }
             });
         }),
+        searchIndividual: d => new Promise((resolve, reject) => {
+            c.searchIndividual(d, (e, r) => {
+                if (e) { reject(e); }
+                else { resolve(r); }
+            });
+        }),
         getIndividualDocuments: d => new Promise((resolve, reject) => {
             c.getIndividualDocuments(d, (e, r) => {
                 if (e) { reject(e); }

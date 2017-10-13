@@ -11,6 +11,53 @@ const rmisjs = s => {
 };
 
 /**
+ * Получение информации о прикреплениях пациента
+ * @param {object} s - конфигурация
+ * @param {object} id - идентификатор физического лица
+ * @return {object}
+ */
+exports.getPatientRegs = async (s, id) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.patient();
+        r = await r.getPatientRegs(id);
+        r = (r) ? r.registration : null;
+        return r;
+    } catch (e) { return e; };
+};
+
+/**
+ * Получение информации о прикреплении пациента
+ * @param {object} s - конфигурация
+ * @param {object} id - идентификатор прикрепления
+ * @return {object}
+ */
+exports.getPatientReg = async (s, id) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.patient();
+        r = await r.getPatientReg(id);
+        return r;
+    } catch (e) { return e; };
+};
+
+/**
+ * Поиск физического лица по параметрам
+ * @param {object} s - конфигурация
+ * @param {object} params - параметры поиска
+ * @return {object}
+ */
+exports.searchIndividual = async (s, params) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.individual();
+        r = await r.searchIndividual(params);
+        r = (r) ? r.individual : null;
+        return r;
+    } catch (e) { return e; };
+};
+
+/**
  * Запрашивает подразделение по идентификатору
  * @param {object} s - конфигурация
  * @param {number} id - идентификатор подразделения
