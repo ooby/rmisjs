@@ -8,6 +8,7 @@ const composeLib = async (cfg, opt, lib) => {
 module.exports = config => {
     let svc = config.rmis;
     return {
+        address: () => composeLib(svc, 'address', require('./libs/address')),
         appointment: () => composeLib(svc, 'appointment', require('./libs/appointment')),
         department: () => composeLib(svc, 'department', require('./libs/department')),
         district: () => composeLib(svc, 'district', require('./libs/district')),
