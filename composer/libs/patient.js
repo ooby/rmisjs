@@ -17,8 +17,10 @@ const {
 exports.validatePatient = async (s, m) => {
     try {
         let r = await searchIndividual(s, m);
-        r = await getPatientRegs(s, r);
-        r = await getPatientReg(s, r);
-        return r;
+        if (r) {
+            r = await getPatientRegs(s, r);
+            r = await getPatientReg(s, r);
+        }
+        return (r) ? r : null;
     } catch (e) { return e; }
 };
