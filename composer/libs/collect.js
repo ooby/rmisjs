@@ -11,6 +11,54 @@ const rmisjs = s => {
 };
 
 /**
+ * Создание талона по данным пациента
+ * @param {object} s - конфигурация
+ * @param {object} d - данные пациента
+ * @return {object}
+ */
+exports.postReserve = async (s, d) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.appointment();
+        r = await r.postReserve(d);
+        // r = (r) ? r.note : null;
+        return r;
+    } catch (e) { return e; };
+};
+
+/**
+ * Создание записи пациента по номеру физлица
+ * @param {object} s - конфигурация
+ * @param {object} d - данные пациента
+ * @return {object}
+ */
+exports.createPatient = async (s, d) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.patient();
+        r = await r.createPatient(d);
+        // r = (r) ? r.note : null;
+        return r;
+    } catch (e) { return e; };
+};
+
+/**
+ * Получение пациента по номеру физлица
+ * @param {object} s - конфигурация
+ * @param {object} id - идентификатор физического лица
+ * @return {object}
+ */
+exports.getPatient = async (s, id) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.patient();
+        r = await r.getPatient(id);
+        // r = (r) ? r.note : null;
+        return r;
+    } catch (e) { return e; };
+};
+
+/**
  * Получение информации о прикреплениях пациента
  * @param {object} s - конфигурация
  * @param {object} id - идентификатор физического лица
@@ -158,6 +206,21 @@ exports.getLocations = async s => {
     try {
         let r = await rmis.resource();
         r = await r.getLocations({ clinic: s.rmis.clinicId });
+        return r;
+    } catch (e) { return e; }
+};
+
+/**
+ * Запрашивает и возвращает список идентификаторов ресурсов
+ * @param {object} s - конфигурация
+ * @param {object} d - параметры запроса
+ * @return {object}
+ */
+exports.getLocationsWithOptions = async (s, d) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.resource();
+        r = await r.getLocations(d);
         return r;
     } catch (e) { return e; }
 };
@@ -354,6 +417,27 @@ exports.createDates = () => {
     }
     return dates;
 };
+
+/**
+ * Форматирует время
+ * @param {string} t - время
+ * @return {string}
+ */
+exports.timeFormat = t => moment(t).format('HH:mm:ss');
+
+/**
+ * Форматирует дату
+ * @param {string} t - дата
+ * @return {string}
+ */
+exports.dateFormat = t => moment(t).format('YYYY-MM-DD');
+
+/**
+ * Форматирует дату
+ * @param {string} t - дата
+ * @return {string}
+ */
+exports.isoTimeFormat = t => moment(t).format();
 
 /**
  * Проверяет равна ли длина строки 11 символам
