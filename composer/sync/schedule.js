@@ -98,7 +98,6 @@ exports.deleteShedules = async s => {
             }
         }
         let res = [];
-        debugger;
         for (let i of result) {
             for (let j of i.scheduleInfo.schedule) {
                 let data = schedFormatStruct({

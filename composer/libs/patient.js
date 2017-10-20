@@ -8,6 +8,7 @@ const {
     getPatient,
     getPatientReg,
     getPatientRegs,
+    getSlot,
     getTimes,
     isoTimeFormat,
     postReserve,

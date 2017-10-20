@@ -21,7 +21,23 @@ exports.postReserve = async (s, d) => {
     try {
         let r = await rmis.appointment();
         r = await r.postReserve(d);
-        // r = (r) ? r.note : null;
+        r = (r) ? r.slot : null;
+        return r;
+    } catch (e) { return e; };
+};
+
+/**
+ * Получение информации талона по id
+ * @param {object} s - конфигурация
+ * @param {string} id - id слота
+ * @return {object}
+ */
+exports.getSlot = async (s, id) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.appointment();
+        r = await r.getSlot({ slot: id });
+        // r = (r) ? r.slot : null;
         return r;
     } catch (e) { return e; };
 };
