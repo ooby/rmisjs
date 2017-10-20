@@ -1,5 +1,6 @@
 const uid = require('uuid/v4');
-const { getSchedFormat, schedFormat, slotFormat } = require('./format');
+const { getSchedFormat, schedFormat, schedFormatStruct, slotFormat } = require('./format');
+const { createDates } = require('../libs/collect');
 exports.syncSchedules = async (s, d) => {
     try {
         const rmisjs = require('../../index')(s);
@@ -64,5 +65,55 @@ exports.syncSchedules = async (s, d) => {
             }
         }
         return bb;
+    } catch (e) { return e; }
+};
+exports.getSchedules = async (s, d) => {
+    try {
+        const rmisjs = require('../../index')(s);
+        const er14 = await rmisjs.integration.er14.process();
+        let data = getSchedFormat({
+            scheduleDate: d,
+            muCode: s.er14.muCode,
+            needFIO: false
+        });
+        let schedule = await er14.getScheduleInfo(data);
+        return schedule;
+    } catch (e) { return e; }
+};
+exports.deleteShedules = async s => {
+    try {
+        const rmisjs = require('../../index')(s);
+        const er14 = await rmisjs.integration.er14.process();
+        const dates = createDates();
+        let result = [];
+        for (let d of dates) {
+            let data = getSchedFormat({
+                scheduleDate: d,
+                muCode: s.er14.muCode,
+                needFIO: false
+            });
+            let schedule = await er14.getScheduleInfo(data);
+            if (schedule.scheduleInfo) {
+                result.push(schedule);
+            }
+        }
+        let res = [];
+        debugger;
+        for (let i of result) {
+            for (let j of i.scheduleInfo.schedule) {
+                let data = schedFormatStruct({
+                    scheduleDate: j.scheduleDate,
+                    muCode: j.muCode,
+                    deptCode: j.deptCode,
+                    roomNumber: j.roomNumber,
+                    docCode: j.docCode,
+                    specCode: j.specCode,
+                    positionCode: j.positionCode
+                });
+                let d = await er14.deleteSchedule(data);
+                res.push(d);
+            }
+        }
+        return res;
     } catch (e) { return e; }
 };
