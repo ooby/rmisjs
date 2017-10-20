@@ -2,6 +2,7 @@ const {
     createDates,
     createPatient,
     dateFormat,
+    getLocation,
     getLocations,
     getLocationsWithOptions,
     getPatient,
@@ -49,6 +50,7 @@ exports.createVisit = async (s, m) => {
     try {
         let pi = { birthDate: m.birthDate, searchDocument: m.searchDocument };
         let r = await searchIndividual(s, pi);
+        let individual = r;
         let result = [];
         let schedule;
         let slot;
@@ -89,6 +91,7 @@ exports.createVisit = async (s, m) => {
         result = [];
         for (let i of r.location) {
             let dd = await getTimes(s, i, schedule.scheduleDate);
+            Object.assign(dd, { location: i, individual: individual });
             result.push(dd);
         }
         result = result.filter(i => !!i.timePeriod);
@@ -104,12 +107,20 @@ exports.createVisit = async (s, m) => {
                 let tpTo = j.to.replace(/\.000\+09:00/g, '');
                 let tsFrom = slot.timeInterval.timeStart.replace(/Z/g, '');
                 let tsTo = slot.timeInterval.timeFinish.replace(/Z/g, '');
-                return (tpFrom === tsFrom) ? true : false;
+                return (tpFrom === tsFrom && tpTo === tsTo) ? true : false;
             });
             i = (i.timePeriod.length > 0) ? i : null;
             return i;
         });
         result = result.filter(i => !!i);
-        return result;
+        let reserve = {
+            location: result[0].location,
+            dateTime: schedule.scheduleDate + 'T' + slot.timeInterval.timeStart.replace(/Z/g, ''),
+            service: result[0].timePeriod[0].availableServices.service[0],
+            urgency: false,
+            patient: result[0].individual
+        };
+        let slip = await postReserve(s, reserve);
+        return slip;
     } catch (e) { return e; }
 };

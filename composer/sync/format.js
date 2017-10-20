@@ -14,6 +14,17 @@ exports.schedFormat = d => {
         '<ct:specCode>' + d.specCode + '</ct:specCode>' +
         '<ct:positionCode>' + d.positionCode + '</ct:positionCode>';
 };
+exports.schedFormatStruct = d => {
+    return {
+        'ct:scheduleDate': d.scheduleDate,
+        'ct:muCode': d.muCode,
+        'ct:deptCode': d.deptCode,
+        'ct:roomNumber': d.roomNumber,
+        'ct:docCode': d.docCode,
+        'ct:specCode': d.specCode,
+        'ct:positionCode': d.positionCode
+    };
+};
 exports.slotFormat = d => {
     return '<pt:SlotElement>' +
         '<ct:timeInterval>' +

@@ -80,7 +80,7 @@ exports.getDetailedLocations = async (s, m) => {
         }
         r = result.filter(i => !!i)
             .filter(i => !!i.roomList)
-            .filter(i => i.source && i.source.indexOf('PORTAL') !== -1);
+            .filter(i => i.source && i.source.indexOf('MIS') !== -1);
         r.forEach(i => {
             delete i.employeePositionList;
             delete i.specializationList;
