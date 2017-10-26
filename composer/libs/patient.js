@@ -8,6 +8,7 @@ const {
     getPatient,
     getPatientReg,
     getPatientRegs,
+    getReserve,
     getSlot,
     getTimes,
     isoTimeFormat,
@@ -129,5 +130,21 @@ exports.createVisit = async (s, m) => {
         let slip = await postReserve(s, reserve);
         // let appNumber = await appointmentService(s, { id: slip });
         return slip;
+    } catch (e) { return e; }
+};
+exports.getVisit = async (s, m) => {
+    try {
+        let pi = { birthDate: m.birthDate, searchDocument: m.searchDocument };
+        let r = await searchIndividual(s, pi);
+        r = await getReserve(s, { patient: r });
+        let result = [];
+        for (let i of r) {
+            let dd = await getSlot(s, { slot: i });
+            if (parseInt(dd.status) !== 4 && parseInt(dd.status) !== 6) {
+                result.push(i);
+            }
+        }
+        // TODO: Исправить на правильный
+        return result[0];
     } catch (e) { return e; }
 };
