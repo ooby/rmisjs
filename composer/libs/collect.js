@@ -27,16 +27,32 @@ exports.postReserve = async (s, d) => {
 };
 
 /**
- * Получение информации талона по id
+ * Получение списка записей по данным пациента
  * @param {object} s - конфигурация
- * @param {string} id - id слота
+ * @param {object} d - данные пациента
  * @return {object}
  */
-exports.getSlot = async (s, id) => {
+exports.getReserve = async (s, d) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.appointment();
-        r = await r.getSlot({ slot: id });
+        r = await r.getReserve(d);
+        r = (r) ? r.slot : null;
+        return r;
+    } catch (e) { return e; };
+};
+
+/**
+ * Получение информации талона по id
+ * @param {object} s - конфигурация
+ * @param {object} d - объект слота
+ * @return {object}
+ */
+exports.getSlot = async (s, d) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.appointment();
+        r = await r.getSlot(d);
         // r = (r) ? r.slot : null;
         return r;
     } catch (e) { return e; };
