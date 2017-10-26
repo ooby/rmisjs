@@ -6,7 +6,7 @@ const { getDetailedRooms } = require('./libs/room');
 const { syncDepartments } = require('./sync/department');
 const { syncRooms } = require('./sync/room');
 const { syncEmployees } = require('./sync/employee');
-const { getSchedules, deleteShedules, syncSchedules } = require('./sync/schedule');
+const { getSchedules, deleteSchedules, syncSchedules } = require('./sync/schedule');
 module.exports = s => {
     return {
         getDetailedDepartments: () => getDetailedDepartments(s),
@@ -22,6 +22,6 @@ module.exports = s => {
         syncRooms: (d) => syncRooms(s, d),
         syncEmployees: (d) => syncEmployees(s, d),
         syncSchedules: (d) => syncSchedules(s, d),
-        deleteShedules: () => deleteShedules(s)
+        deleteSchedules: () => deleteSchedules(s)
     };
 };

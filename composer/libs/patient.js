@@ -15,6 +15,7 @@ const {
     searchIndividual,
     timeFormat
 } = require('./collect');
+// const appointmentService = require('./appointmentHelper');
 
 /**
  * Валидация пациента о наличии и прикреплении в больнице
@@ -126,6 +127,7 @@ exports.createVisit = async (s, m) => {
             patient: result[0].individual
         };
         let slip = await postReserve(s, reserve);
+        // let appNumber = await appointmentService(s, { id: slip });
         return slip;
     } catch (e) { return e; }
 };

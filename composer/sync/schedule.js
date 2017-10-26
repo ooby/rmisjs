@@ -80,7 +80,7 @@ exports.getSchedules = async (s, d) => {
         return schedule;
     } catch (e) { return e; }
 };
-exports.deleteShedules = async s => {
+exports.deleteSchedules = async s => {
     try {
         const rmisjs = require('../../index')(s);
         const er14 = await rmisjs.integration.er14.process();
