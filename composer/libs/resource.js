@@ -112,7 +112,7 @@ exports.getDetailedLocations = async (s, m) => {
                 j.timePeriod = j.timePeriod.filter(k => {
                     let kns = k.notAvailableSources;
                     let knsns = (kns) ? k.notAvailableSources.notAvailableSource : null;
-                    return (kns && Array.isArray(knsns)) ? !knsns.some(k => k.source === 'PORTAL') : true;
+                    return (kns && Array.isArray(knsns)) ? !knsns.some(k => k.source === 'MIS') : true;
                 });
                 j.timePeriod.forEach(k => {
                     delete k.availableServices;
