@@ -145,6 +145,6 @@ exports.getVisit = async (s, m) => {
             }
         }
         // TODO: Исправить на правильный
-        return result[0];
+        return (result[0]) ? result[0] : '';
     } catch (e) { return e; }
 };
