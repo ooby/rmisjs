@@ -7,6 +7,7 @@ const { syncDepartments } = require('./sync/department');
 const { syncRooms } = require('./sync/room');
 const { syncEmployees } = require('./sync/employee');
 const { getSchedules, deleteSchedules, syncSchedules } = require('./sync/schedule');
+const syncMongo = require('./mongo/sync');
 module.exports = s => {
     return {
         getDetailedDepartments: () => getDetailedDepartments(s),
@@ -23,6 +24,7 @@ module.exports = s => {
         syncRooms: (d) => syncRooms(s, d),
         syncEmployees: (d) => syncEmployees(s, d),
         syncSchedules: (d) => syncSchedules(s, d),
-        deleteSchedules: () => deleteSchedules(s)
+        deleteSchedules: () => deleteSchedules(s),
+        syncMongo: () => syncMongo(s)
     };
 };
