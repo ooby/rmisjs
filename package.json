@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.4.15",
+  "version": "0.4.16",
   "engines": {
     "node": ">8.0.0"
   },
@@ -34,6 +34,8 @@
   "homepage": "https://github.com/ooby/rmisjs#readme",
   "dependencies": {
     "moment": "^2.18.1",
+    "mongoose": "^4.13.1",
+    "mongoose-uuid2": "^2.0.1",
     "nconf": "^0.8.4",
     "refbooks": "^0.0.5",
     "soap": "git+https://github.com/raviolin/node-soap.git#fix-checking-response-body",
