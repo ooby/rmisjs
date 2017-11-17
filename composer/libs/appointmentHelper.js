@@ -1,7 +1,7 @@
 const soap = require('soap');
 const url = 'https://14.is-mis.ru/ei/services/appointment?wsdl';
 const createClient = cfg => new Promise((resolve, reject) => {
-    soap.createClient(url, opts, (e, c) => {
+    soap.createClient(url, (e, c) => {
         if (e) { reject(e); }
         else {
             c.setSecurity(new soap.BasicAuthSecurity(cfg.rmis.auth.username, cfg.rmis.auth.password));

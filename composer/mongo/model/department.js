@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const DepartmentSchema = new Schema({
-    rmisId: { type: Number, unique: true },
-    name: String
+    rmisId: Number,
+    code: Number,
+    name: String,
+    type: Number
 });
 
 DepartmentSchema.statics.getById = function (rmisId, ...args) {

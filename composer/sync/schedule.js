@@ -25,9 +25,7 @@ exports.syncSchedules = async (s, d) => {
                             let slots = (Array.isArray(k.slot)) ? k.slot : new Array(k.slot);
                             for (let l of slots) {
                                 for (let tp of j.timePeriod) {
-                                    let from = l.timeInterval.timeStart;
-                                    let lfrom = tp.from.replace(/\.000\+09:00/g, 'Z');
-                                    if (from === lfrom) {
+                                    if (l.timeInterval.GUID === tp.uuid) {
                                         rmIds.push(j.timePeriod.indexOf(tp));
                                     }
                                 }
@@ -54,7 +52,7 @@ exports.syncSchedules = async (s, d) => {
                             timeStart: k.from.replace(/\+09:00/g, 'Z'),
                             timeFinish: k.to.replace(/\+09:00/g, 'Z'),
                             slotType: 2,
-                            GUID: uid(),
+                            GUID: k.uuid,
                             SlotState: 1
                         };
                         u = u + slotFormat(ts);

@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-mongoose.Promise = Promise;
 
 const RoomSchema = new Schema({
     rmisId: { type: Number, unique: true, required: true },
