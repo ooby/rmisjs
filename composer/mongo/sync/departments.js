@@ -7,6 +7,7 @@ module.exports = async (composer) => {
     }).exec();
     for (let dept of depts) {
         dept.rmisId = dept.id;
+        dept.type = dept.departmentType;
         await Department.update({
             rmisId: dept.id
         }, dept, {
