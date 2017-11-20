@@ -10,18 +10,16 @@ const objectProperties = (obj, ...props) => {
     return true;
 };
 
-const createConnectionString = ({ mongoose }) => {
+const createConnectionString = config => {
     let result = 'mongodb://';
     if (objectProperties(mongoose, 'username', 'password')) {
-        let { username, password } = mongoose;
-        result += `${username}:${password}@`;
+        result += `${config.mongoose.username}:${config.mongoose.password}@`;
     }
-    let { host, db } = mongoose;
-    result += `${host}`;
-    if (objectProperties(mongoose, 'port')) {
-        result += `:${mongoose.port}`;
+    result += config.mongoose.host;
+    if (objectProperties(config.mongoose, 'port')) {
+        result += ':' + config.mongoose.port;
     }
-    return result + `/${db}`;
+    return result + '/' + config.mongoose.db;
 };
 
 module.exports = config => {

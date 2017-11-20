@@ -20,7 +20,9 @@ const {
     getVersionList
 } = require('./collect');
 
-const { getDetailedEmployees } = require('./employee');
+const {
+    getDetailedEmployees
+} = require('./employee');
 const moment = require('moment');
 const connect = require('../mongo/connect');
 const model = () => require('../mongo/model');
@@ -31,21 +33,26 @@ const model = () => require('../mongo/model');
  * @param {string} ref - наименование справочника
  * @return {string|object}
  */
-const getRefCode = async (s, ref) => {
+const getRefCode = async(s, ref) => {
     try {
         let k = await getRefbookList(s);
         let specRefCode;
         k.refbook.forEach(i => {
             let code;
             i.column.forEach(j => {
-                if (j.name === 'CODE') { code = j.data; }
+                if (j.name === 'CODE') {
+                    code = j.data;
+                }
                 if (j.name === 'NAME' && j.data === ref) {
                     specRefCode = code;
                 }
             });
         });
         return specRefCode;
-    } catch (e) { console.error(e); return e; }
+    } catch (e) {
+        console.error(e);
+        return e;
+    }
 };
 
 /**
@@ -54,15 +61,20 @@ const getRefCode = async (s, ref) => {
  * @param {string} code - OID код справочника
  * @return {string|object}
  */
-const getRefVersion = async (s, code) => {
+const getRefVersion = async(s, code) => {
     try {
         let specRefVersion;
         let k = await getVersionList(s, code);
         k[0].column.forEach(i => {
-            if (i.name === 'VERSION') { specRefVersion = i.data; }
+            if (i.name === 'VERSION') {
+                specRefVersion = i.data;
+            }
         });
         return specRefVersion;
-    } catch (e) { console.error(e); return e; }
+    } catch (e) {
+        console.error(e);
+        return e;
+    }
 };
 
 /**
@@ -72,10 +84,11 @@ const getRefVersion = async (s, code) => {
  * @param {object} m - справочник MDP365
  * @return {string|object}
  */
-exports.getDetailedLocations = async (s, m) => {
+exports.getDetailedLocations = async(s, m) => {
+    let mongoose;
     try {
-        const mongoose = connect(s);
-        const { Location } = model();
+        mongoose = connect(s);
+        const Location = model().Location;
         const format = 'HH:mm:ss.SSSZ';
         const dateToTime = date => moment(date).format(format);
         let data = await Location.getDetailedLocationsBySource('MIS', 'PORTAL').exec();
@@ -92,17 +105,23 @@ exports.getDetailedLocations = async (s, m) => {
                     return {
                         from: dateToTime(i.from),
                         to: dateToTime(i.to),
-                        uuid: i.uuid
+                        uuid: i.uuid,
+                        status: i.status
                     };
                 });
             }
-            let k = m.map(i => i.name.toUpperCase());
-            k = ss.findBestMatch(location.positionName.toUpperCase(), k);
-            k = m.map(i => i.name.toUpperCase()).indexOf(k.bestMatch.target);
-            k = m[k].code;
-            Object.assign(location, { position: k });
+            let position = m.map(i => i.name.toUpperCase());
+            position = ss.findBestMatch(location.positionName.toUpperCase(), position);
+            position = m.map(i => i.name.toUpperCase()).indexOf(position.bestMatch.target);
+            position = m[position].code;
+            Object.assign(location, {
+                position
+            });
         }
-        mongoose.disconnect();
         return data;
-    } catch (e) { return e; }
+    } catch (e) {
+        return e;
+    } finally {
+        if (mongoose) mongoose.disconnect();
+    }
 };

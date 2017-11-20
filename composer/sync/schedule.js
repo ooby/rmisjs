@@ -1,7 +1,12 @@
 const uid = require('uuid/v4');
-const { getSchedFormat, schedFormat, schedFormatStruct, slotFormat } = require('./format');
-const { createDates } = require('../libs/collect');
-exports.syncSchedules = async (s, d) => {
+const {
+    getSchedFormat,
+    schedFormat,
+    schedFormatStruct,
+    slotFormat
+} = require('./format');
+const createDates = require('../libs/collect').createDates;
+exports.syncSchedules = async(s, d) => {
     try {
         const rmisjs = require('../../index')(s);
         const er14 = await rmisjs.integration.er14.process();
@@ -53,19 +58,23 @@ exports.syncSchedules = async (s, d) => {
                             timeFinish: k.to.replace(/\+09:00/g, 'Z'),
                             slotType: 2,
                             GUID: k.uuid,
-                            SlotState: 1
+                            SlotState: k.status
                         };
                         u = u + slotFormat(ts);
                     });
-                    let rr = await er14.updateSchedule({ $xml: u });
+                    let rr = await er14.updateSchedule({
+                        $xml: u
+                    });
                     bb.push(rr);
                 }
             }
         }
         return bb;
-    } catch (e) { return e; }
+    } catch (e) {
+        return e;
+    }
 };
-exports.getSchedules = async (s, d) => {
+exports.getSchedules = async(s, d) => {
     try {
         const rmisjs = require('../../index')(s);
         const er14 = await rmisjs.integration.er14.process();
@@ -76,7 +85,9 @@ exports.getSchedules = async (s, d) => {
         });
         let schedule = await er14.getScheduleInfo(data);
         return schedule;
-    } catch (e) { return e; }
+    } catch (e) {
+        return e;
+    }
 };
 exports.deleteSchedules = async s => {
     try {
@@ -112,5 +123,7 @@ exports.deleteSchedules = async s => {
             }
         }
         return res;
-    } catch (e) { return e; }
+    } catch (e) {
+        return e;
+    }
 };

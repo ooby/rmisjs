@@ -1,19 +1,33 @@
-const { Location, Employee } = require('../model');
+const {
+    Location,
+    Employee
+} = require('../model');
 
-module.exports = async (rmis) => {
+module.exports = async(rmis) => {
     let [emp, ind] = await Promise.all([
         rmis.employee(),
         rmis.individual()
     ]);
     let positions = await Location.distinct('positions').exec();
     await Employee.remove({
-        position: { $nin: positions }
+        position: {
+            $nin: positions
+        }
     }).exec();
     for (let positionId of positions) {
-        let { employeePosition } = await emp.getEmployeePosition({ id: positionId });
-        let { position } = await emp.getPosition({ id: employeePosition.position });
+        let employeePosition = await emp.getEmployeePosition({
+            id: positionId
+        });
+        employeePosition = employeePosition.employeePosition;
+        let position = await emp.getPosition({
+            id: employeePosition.position
+        });
+        position = position.position;
         if (!position.speciality) continue;
-        let { employee } = await emp.getEmployee({ id: employeePosition.employee });
+        let employee = await emp.getEmployee({
+            id: employeePosition.employee
+        });
+        employee = employee.employee;
         let individual = await ind.getIndividual(employee.individual);
         let documents = await ind.getIndividualDocuments(employee.individual);
         if (!documents) continue;

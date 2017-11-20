@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const Schema = mongoose.Schema;
 
 const DepartmentSchema = new Schema({
     rmisId: Number,
@@ -9,7 +9,9 @@ const DepartmentSchema = new Schema({
 });
 
 DepartmentSchema.statics.getById = function (rmisId, ...args) {
-    return this.findOne({ rmisId }, ...args);
+    return this.findOne({
+        rmisId
+    }, ...args);
 };
 
 module.exports = DepartmentSchema;

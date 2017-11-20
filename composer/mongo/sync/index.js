@@ -8,14 +8,17 @@ const updateTimeSlots = require('./timeslots');
 
 const rmisjs = require('../../../index');
 
-module.exports = async (config, m) => {
-    const { clinicId } = config.rmis;
-    const { rmis, composer } = rmisjs(config);
+module.exports = async(config, m) => {
+    const clinicId = config.rmis.clinicId;
+    const {
+        rmis,
+        composer
+    } = rmisjs(config);
     const mongoose = connect(config);
     await updateDepartments(composer);
     await updateLocations(rmis, clinicId);
     await updateRooms(rmis);
     await updateEmployees(rmis);
-    await updateTimeSlots(rmis);
+    await updateTimeSlots(rmis, clinicId);
     mongoose.disconnect();
 };
