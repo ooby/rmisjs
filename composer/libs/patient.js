@@ -31,7 +31,7 @@ const moment = require('moment');
  * @param {number} m.searchDocument.docNumber - номер документа
  * @return {Promise|object}
  */
-exports.validatePatient = async (s, m) => {
+exports.validatePatient = async(s, m) => {
     try {
         let r = await searchIndividual(s, m);
         if (r) {
@@ -43,7 +43,9 @@ exports.validatePatient = async (s, m) => {
             }
         }
         return (r) ? r : null;
-    } catch (e) { return e; }
+    } catch (e) {
+        return e;
+    }
 };
 
 /**
@@ -56,14 +58,19 @@ exports.validatePatient = async (s, m) => {
  * @param {number} m.searchDocument.docNumber - номер документа
  * @return {Promise|object}
  */
-exports.createVisit = async (s, m) => {
+exports.createVisit = async(s, m) => {
+    let mongoose;
     try {
-        const mongoose = connect(s);
-        const { TimeSlot } = model();
+        mongoose = connect(s);
+        const TimeSlot = model().TimeSlot;
         let slot = await TimeSlot.findOne({
             'uuid': m.GUID,
-            'unabailable': { $ne: 'PORTAL' },
-            'services.0': { $exists: true }
+            'unabailable': {
+                $ne: 'PORTAL'
+            },
+            'services.0': {
+                $exists: true
+            }
         }).exec();
         if (!slot) return Promise.reject('The slot doesn\'t exist.');
         let patient = await searchIndividual(s, {
@@ -77,24 +84,51 @@ exports.createVisit = async (s, m) => {
             urgency: false,
             patient
         };
-        let slip = await postReserve(s, reserve);
-        let { number } = await appointmentService(s, { id: slip });
-        return number.number;
-    } catch (e) { return e; }
+        let slipId = await postReserve(s, reserve);
+        let slip = await appointmentService(s, {
+            id: slipId
+        });
+        return slipId.number.number;
+    } catch (e) {
+        return e;
+    } finally {
+        if (mongoose) mongoose.disconnect();
+    }
 };
-exports.getVisit = async (s, m) => {
+exports.getVisit = async(s, m) => {
+    let mongoose;
     try {
-        let pi = { birthDate: m.birthDate, searchDocument: m.searchDocument };
-        let r = await searchIndividual(s, pi);
-        r = await getReserve(s, { patient: r });
-        let result = [];
-        for (let i of r) {
-            let dd = await getSlot(s, { slot: i });
-            if (parseInt(dd.status) !== 4 && parseInt(dd.status) !== 6) {
-                result.push(i);
-            }
+        mongoose = connect(s);
+        const TimeSlot = model().TimeSlot;
+        let timeslot = await TimeSlot.getByUUID(m.GUID).lean().exec();
+        if (!timeslot) return '';
+        const from = timeslot.from.valueOf();
+        const location = timeslot.location.toString();
+        const status = timeslot.status.toString();
+        let patient = await searchIndividual(s, {
+            birthDate: m.birthDate,
+            searchDocument: m.searchDocument
+        });
+        let slots = await getReserve(s, {
+            patient
+        });
+        for (let id of slots.reverse()) {
+            let slot = await getSlot(s, {
+                slot: id
+            });
+            if (slot.locationId !== location ||
+                new Date(slot.date).valueOf() !== from ||
+                slot.status !== status
+            ) continue;
+            let slip = await appointmentService(s, {
+                id
+            });
+            return slip.number.number;
         }
-        // TODO: Исправить на правильный
-        return (result[0]) ? result[0] : '';
-    } catch (e) { return e; }
+        return '';
+    } catch (e) {
+        return e;
+    } finally {
+        if (mongoose) mongoose.disconnect();
+    }
 };

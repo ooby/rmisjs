@@ -1,11 +1,21 @@
-const { Room, Location } = require('../model');
+const {
+    Room,
+    Location
+} = require('../model');
 
-module.exports = async (rmis) => {
+module.exports = async(rmis) => {
     const roomService = await rmis.room();
     let rooms = await Location.distinct('rooms').exec();
-    await Room.remove({ rmisId: { $nin: rooms } }).exec();
+    await Room.remove({
+        rmisId: {
+            $nin: rooms
+        }
+    }).exec();
     for (let roomId of rooms) {
-        let { room } = await roomService.getRoom({ roomId });
+        let room = await roomService.getRoom({
+            roomId
+        });
+        room = room.room;
         room.rmisId = roomId;
         await Room.update({
             rmisId: roomId
