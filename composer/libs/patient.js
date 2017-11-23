@@ -98,7 +98,7 @@ exports.createVisit = async(s, m) => {
 exports.getVisit = async(s, m) => {
     let mongoose;
     try {
-        mongoose = connect(s);
+        mongoose = await connect(s);
         const TimeSlot = model().TimeSlot;
         let timeslot = await TimeSlot.getByUUID(m.GUID).lean().exec();
         if (!timeslot) return '';
