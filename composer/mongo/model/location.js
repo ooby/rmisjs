@@ -1,13 +1,29 @@
 const mongoose = require('mongoose');
 const moment = require('moment');
-const { Schema } = mongoose;
+const Schema = mongoose.Schema;
 
 const LocationSchema = new Schema({
-    rmisId: { type: Number, unique: true, required: true },
-    department: Number,
-    source: [String],
-    positions: [Number],
-    rooms: [Number]
+    rmisId: {
+        type: Number,
+        unique: true,
+        required: true
+    },
+    department: {
+        type: Number,
+        required: true
+    },
+    source: {
+        type: [String],
+        default: []
+    },
+    positions: {
+        type: [Number],
+        default: []
+    },
+    rooms: {
+        type: [Number],
+        default: []
+    }
 });
 
 const timeTableWithSlots = (pipeline, keepSensetive = false) => {
@@ -19,12 +35,20 @@ const timeTableWithSlots = (pipeline, keepSensetive = false) => {
             foreignField: 'location',
             as: 'times'
         })
-        .match({ 'times.0': { $exists: true } })
+        .match({
+            'times.0': {
+                $exists: true
+            }
+        })
         .project({
             rmisId: '$rmisId',
             department: '$department',
-            room: { $arrayElemAt: ['$rooms', 0] },
-            position: { $arrayElemAt: ['$positions', 0] },
+            room: {
+                $arrayElemAt: ['$rooms', 0]
+            },
+            position: {
+                $arrayElemAt: ['$positions', 0]
+            },
             source: '$source',
             times: '$times'
         })
@@ -68,12 +92,18 @@ const timeTableWithDuration = (pipeline, keepSensetive) => (
             rmisId: '$rmisId',
             date: '$times.date'
         },
-        location: { $first: '$$ROOT' },
-        interval: { $push: '$times' }
+        location: {
+            $first: '$$ROOT'
+        },
+        interval: {
+            $push: '$times'
+        }
     })
     .group({
         _id: '$_id.rmisId',
-        location: { $first: '$location' },
+        location: {
+            $first: '$location'
+        },
         interval: {
             $push: {
                 date: '$_id.date',
@@ -91,7 +121,9 @@ LocationSchema.statics.timeTableWithSlots = function (department) {
     return (
         timeTableWithSlots(
             this.aggregate()
-            .match({ department })
+            .match({
+                department
+            })
         )
         .project({
             '_id': false,
@@ -104,7 +136,6 @@ LocationSchema.statics.timeTableWithSlots = function (department) {
             'room.department': false,
             'employee._id': false,
             'employee.__v': false,
-            'times._id': false,
             'times.__v': false,
             'times.pair': false,
             'times.location': false
@@ -112,11 +143,13 @@ LocationSchema.statics.timeTableWithSlots = function (department) {
     );
 };
 
-LocationSchema.statics.timeTableWithDuration = async function(department) {
+LocationSchema.statics.timeTableWithDuration = async function (department) {
     return (
         timeTableWithDuration(
             this.aggregate()
-            .match({ department })
+            .match({
+                department
+            })
         )
         .project({
             '_id': false,
@@ -130,20 +163,23 @@ LocationSchema.statics.timeTableWithDuration = async function(department) {
             'location.room.__v': false,
             'location.employee._id': false,
             'location.employee.__v': false,
-            'interval.timePeriod._id': false,
             'interval.timePeriod.__v': false,
             'interval.timePeriod.location': false
         })
     );
 };
 
-LocationSchema.statics.getById = function(rmisId, ...args) {
-    return this.findOne({ rmisId }, ...args);
+LocationSchema.statics.getById = function (rmisId, ...args) {
+    return this.findOne({
+        rmisId
+    }, ...args);
 };
 
-LocationSchema.statics.getDetailedLocationsBySource = function(...sources) {
+LocationSchema.statics.getDetailedLocationsBySource = function (...sources) {
     let pre = this.aggregate().match({
-        source: { $in: sources }
+        source: {
+            $in: sources
+        }
     });
     return (
         timeTableWithDuration(pre, true)
@@ -185,4 +221,4 @@ LocationSchema.statics.getDetailedLocationsBySource = function(...sources) {
     );
 };
 
-module.exports = LocationSchema;
+module.exports = mongoose.model('Location', LocationSchema);

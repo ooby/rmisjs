@@ -1,16 +1,31 @@
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const Schema = mongoose.Schema;
 
 const RoomSchema = new Schema({
-    rmisId: { type: Number, unique: true, required: true },
-    department: Number,
+    rmisId: {
+        type: Number,
+        unique: true,
+        required: true
+    },
+    department: {
+        type: Number,
+        required: true
+    },
     parentRoom: Number,
-    name: String,
-    code: String
+    name: {
+        type: String,
+        required: true
+    },
+    code: {
+        type: String,
+        required: true
+    }
 });
 
 RoomSchema.statics.getbyId = function (rmisId, ...args) {
-    return this.findOne({ rmisId }, ...args);
+    return this.findOne({
+        rmisId
+    }, ...args);
 };
 
-module.exports = RoomSchema;
+module.exports = mongoose.model('Room', RoomSchema);

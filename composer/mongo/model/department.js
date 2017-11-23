@@ -2,10 +2,20 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const DepartmentSchema = new Schema({
-    rmisId: Number,
-    code: Number,
+    rmisId: {
+        type: Number,
+        unique: true,
+        required: true
+    },
+    code: {
+        type: Number,
+        required: true
+    },
     name: String,
-    type: Number
+    type: {
+        type: Number,
+        required: true
+    }
 });
 
 DepartmentSchema.statics.getById = function (rmisId, ...args) {
@@ -14,4 +24,4 @@ DepartmentSchema.statics.getById = function (rmisId, ...args) {
     }, ...args);
 };
 
-module.exports = DepartmentSchema;
+module.exports = mongoose.model('Department', DepartmentSchema);

@@ -20,12 +20,11 @@ const {
     getVersionList
 } = require('./collect');
 
-const {
-    getDetailedEmployees
-} = require('./employee');
+const getDetailedEmployees = require('./employee').getDetailedEmployees;
 const moment = require('moment');
 const connect = require('../mongo/connect');
-const model = () => require('../mongo/model');
+const uuid = require('uuid/v4');
+const Location = require('../mongo/model/location');
 
 /**
  * Запрашивает и возвращает код справочника
@@ -87,28 +86,28 @@ const getRefVersion = async(s, code) => {
 exports.getDetailedLocations = async(s, m) => {
     let mongoose;
     try {
-        mongoose = connect(s);
-        const Location = model().Location;
-        const format = 'HH:mm:ss.SSSZ';
-        const dateToTime = date => moment(date).format(format);
+        mongoose = await connect(s);
+        const dateToTime = date => moment(date).format('HH:mm:ss.SSSZ');
         let data = await Location.getDetailedLocationsBySource('MIS', 'PORTAL').exec();
         for (let location of data) {
             for (let key of Object.keys(location)) {
-                if (!location[key]) {
+                if (key === 'interval') {
+                    for (let interval of location.interval) {
+                        interval.date = moment(interval.date).format('GGGG-MM-DD');
+                        interval.timePeriod = interval.timePeriod.map(i => {
+                            return {
+                                from: dateToTime(i.from),
+                                to: dateToTime(i.to),
+                                uuid: uuid({ random: i._id.buffer }),
+                                status: i.status
+                            };
+                        });
+                    }
+                } else if (!location[key]) {
                     delete location[key];
                 } else if (typeof location[key] !== 'object') {
                     location[key] = location[key].toString();
                 }
-            }
-            for (let date of location.interval) {
-                date.timePeriod = date.timePeriod.map(i => {
-                    return {
-                        from: dateToTime(i.from),
-                        to: dateToTime(i.to),
-                        uuid: i.uuid,
-                        status: i.status
-                    };
-                });
             }
             let position = m.map(i => i.name.toUpperCase());
             position = ss.findBestMatch(location.positionName.toUpperCase(), position);

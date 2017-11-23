@@ -1,15 +1,15 @@
-const {
-    TimeSlot,
-    Location
-} = require('../model');
-const {
-    createDates
-} = require('../../libs/collect');
+const createDates = require('../../libs/collect').createDates;
+const TimeSlot = require('../model/timeslot');
+const Location = require('../model/location');
+const moment = require('moment');
 
 module.exports = async(rmis, clinicId) => {
-    const appointmentService = await rmis.appointment();
+    let promises = [];
     let dates = createDates();
-    let locations = await Location.find().distinct('rmisId').exec();
+    let [appointmentService, locations] = await Promise.all([
+        rmis.appointment(),
+        Location.find().distinct('rmisId').exec()
+    ]);
     await TimeSlot.remove({
         $or: [{
                 location: {
@@ -25,30 +25,34 @@ module.exports = async(rmis, clinicId) => {
     }).exec();
     for (let location of locations) {
         for (let date of dates) {
-            let existing = await TimeSlot.distinct('pair', {
-                location,
-                date
-            }).exec();
             let pairs = [];
-            let interval = await appointmentService.getTimes({
+            let scope = {
                 location,
                 date
-            });
+            };
+            let docScope = {
+                location,
+                date: moment(date + 'T00:00:00.00' + moment().format('Z'))
+            };
+            let [existing, interval] = await Promise.all([
+                TimeSlot.distinct('pair', scope).exec(),
+                appointmentService.getTimes(scope)
+            ]);
+            interval = interval || {};
             interval = !!interval.interval.timePeriod ? interval.interval.timePeriod : [];
             for (let slot of interval) {
-                let doc = new TimeSlot({
-                    location,
-                    date,
+                let doc = Object.assign({
                     from: new Date(`${date}T${slot.from}`),
                     to: new Date(`${date}T${slot.to}`)
-                });
-                pairs.push(doc.createPair());
-                if (existing.indexOf(doc.pair) > -1) continue;
+                }, docScope);
+                let pair = TimeSlot.createPair(doc);
+                pairs.push(pair);
+                if (existing.indexOf(pair) > -1) continue;
                 doc.unavailable = !!slot.notAvailableSources ? slot.notAvailableSources.notAvailableSource : [];
                 doc.unavailable = doc.unavailable.map(i => i.source);
                 doc.services = !!slot.availableServices ? slot.availableServices.service : [];
-                doc.createUUID();
-                await doc.save();
+                doc = new TimeSlot(doc);
+                promises.push(doc.save());
             }
             let reserve = await appointmentService.getReserveFiltered({
                 date,
@@ -59,36 +63,36 @@ module.exports = async(rmis, clinicId) => {
             reserve = !!reserve.slot ? reserve.slot : [];
             for (let slot of reserve) {
                 if ('to' in slot.timePeriod === false) continue;
-                let doc = new TimeSlot({
-                    location,
-                    date,
+                let doc = Object.assign({
                     from: new Date(`${date}T${slot.timePeriod.from}`),
                     to: new Date(`${date}T${slot.timePeriod.to}`),
                     status: slot.status
-                });
-                pairs.push(doc.createPair());
-                if (existing.indexOf(doc.pair) > -1) {
-                    await TimeSlot.update({
-                        location,
-                        pair: doc.pair,
-                        date,
-                    }, {
-                        $set: {
-                            status: doc.status
+                }, docScope);
+                let pair = TimeSlot.createPair(doc);
+                pairs.push(pair);
+                promises.push(
+                    existing.indexOf(pair) < 0 ? new TimeSlot(doc).save() : TimeSlot.update(
+                        Object.assign({
+                            pair
+                        }, scope), {
+                            $set: {
+                                status: doc.status
+                            }
                         }
-                    }).exec();
-                } else {
-                    doc.createUUID();
-                    await doc.save();
-                }
+                    ).exec()
+                );
             }
-            await TimeSlot.remove({
-                location,
-                date,
-                pair: {
-                    $nin: pairs
-                }
-            }).exec();
+            promises.push(
+                TimeSlot.remove(
+                    Object.assign({
+                        status: 1,
+                        pair: {
+                            $nin: pairs
+                        }
+                    }, scope)
+                ).exec()
+            );
         }
     }
+    await Promise.all(promises);
 };

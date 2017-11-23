@@ -1,4 +1,3 @@
-const uid = require('uuid/v4');
 const {
     getSchedFormat,
     schedFormat,

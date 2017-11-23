@@ -1,28 +1,27 @@
 const mongoose = require('mongoose');
+require('mongoose-uuid2')(mongoose);
 mongoose.Promise = Promise;
 
-const objectProperties = (obj, ...props) => {
-    for (let prop of props) {
-        if (prop in obj === false) {
-            return false;
-        }
-    }
-    return true;
-};
-
 const createConnectionString = config => {
+    let opts = config.mongoose;
     let result = 'mongodb://';
-    if (objectProperties(mongoose, 'username', 'password')) {
-        result += `${config.mongoose.username}:${config.mongoose.password}@`;
+    if ('username' in opts && 'password' in opts) {
+        result += `${opts.username}:${opts.password}@`;
     }
-    result += config.mongoose.host;
-    if (objectProperties(config.mongoose, 'port')) {
-        result += ':' + config.mongoose.port;
+    result += opts.host;
+    if ('port' in opts) {
+        result += ':' + opts.port;
     }
-    return result + '/' + config.mongoose.db;
+    result += '/';
+    if ('db' in opts) {
+        result += opts.db;
+    }
+    return result;
 };
 
-module.exports = config => {
-    mongoose.connect(createConnectionString(config), config.mongoose.options);
-    return mongoose;
-};
+module.exports = config =>
+    new Promise((resolve, reject) =>
+        mongoose.connect(createConnectionString(config), config.mongoose.options)
+        .then(() => resolve(mongoose))
+        .catch(e => reject(e))
+    );

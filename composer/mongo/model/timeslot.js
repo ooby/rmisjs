@@ -1,37 +1,48 @@
 const mongoose = require('mongoose');
 const uuid = require('uuid/v4');
-const moment = require('moment');
 const Schema = mongoose.Schema;
+require('mongoose-uuid2')(mongoose);
 
 const toMinutes = a => Math.floor(a / 60000);
 const cantor = (x, y) => (x + y) * (x + y + 1) * .5 + y;
 
 const TimeSlotSchema = new Schema({
+    _id: {
+        type: mongoose.Types.UUID,
+        default: uuid
+    },
     from: {
         type: Date,
-        required: true
+        required: true,
     },
     to: {
         type: Date,
         required: true
     },
-    pair: Number,
-    date: {
-        type: String,
+    pair: {
+        type: Number,
         required: true
     },
-    unavailable: [String],
-    services: [Number],
+    date: {
+        type: Date,
+        required: true
+    },
+    unavailable: {
+        type: [String],
+        default: [],
+    },
+    services: {
+        type: [Number],
+        default: [],
+    },
     location: {
         type: Number,
         required: true
     },
     status: {
         type: Number,
-        default: 1,
-        required: true
-    },
-    uuid: String
+        default: 1
+    }
 });
 
 TimeSlotSchema.statics.getByLocation = function (location, ...args) {
@@ -40,21 +51,23 @@ TimeSlotSchema.statics.getByLocation = function (location, ...args) {
     }, ...args);
 };
 
-TimeSlotSchema.statics.getByUUID = function (uuid, ...args) {
+TimeSlotSchema.statics.getByUUID = function (_id, ...args) {
     return this.findOne({
-        uuid
+        _id
     }, ...args);
 };
 
+TimeSlotSchema.statics.createPair = function (slot) {
+    let x = toMinutes(slot.from - new Date(slot.date));
+    let y = toMinutes(slot.to - slot.from);
+    return slot.pair = cantor(x, y);
+};
+
 TimeSlotSchema.methods.createPair = function () {
-    let date = new Date(moment(this.from).format('GGGG-MM-DD')).valueOf();
-    let x = toMinutes(this.from - date);
-    let y = toMinutes(this.to - date) - x;
-    return this.pair = cantor(x, y);
+    return TimeSlotSchema.statics.createPair(this);
 };
 
-TimeSlotSchema.methods.createUUID = function () {
-    this.uuid = uuid();
-};
+TimeSlotSchema.set('toObject', { getters: true });
+TimeSlotSchema.set('toJSON', { getters: true });
 
-module.exports = TimeSlotSchema;
+module.exports = mongoose.model('TimeSlot', TimeSlotSchema);
