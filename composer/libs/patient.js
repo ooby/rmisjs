@@ -61,7 +61,7 @@ exports.validatePatient = async(s, m) => {
 exports.createVisit = async(s, m) => {
     let mongoose;
     try {
-        mongoose = connect(s);
+        mongoose = await connect(s);
         const TimeSlot = model().TimeSlot;
         let slot = await TimeSlot.findOne({
             'uuid': m.GUID,
