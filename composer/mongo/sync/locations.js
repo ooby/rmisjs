@@ -4,7 +4,7 @@ const Department = require('../model/department');
 module.exports = async(rmis, clinic) => {
     let [resourceService, depts] = await Promise.all([
         rmis.resource(),
-        Department.distinct('rmisId').exec()
+        Department.distinct('_id').exec()
     ]);
     let promises = [
         Location.remove({
@@ -22,7 +22,7 @@ module.exports = async(rmis, clinic) => {
         promises.push(
             Location.remove({
                 department: departmentId,
-                rmisId: {
+                _id: {
                     $nin: ids
                 }
             }).exec()
@@ -36,10 +36,10 @@ module.exports = async(rmis, clinic) => {
             location.positions = location.employeePositionList.EmployeePosition.map(i => i.employeePosition);
             location.rooms = !!location.roomList ? location.roomList.Room : [];
             location.rooms = location.rooms.map(i => i.room);
-            location.rmisId = id;
+            location._id = id;
             promises.push(
                 Location.update({
-                    rmisId: id
+                    _id: id
                 }, location, {
                     upsert: true
                 }).exec()

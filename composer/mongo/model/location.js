@@ -3,11 +3,7 @@ const moment = require('moment');
 const Schema = mongoose.Schema;
 
 const LocationSchema = new Schema({
-    rmisId: {
-        type: Number,
-        unique: true,
-        required: true
-    },
+    _id: Number,
     department: {
         type: Number,
         required: true
@@ -31,7 +27,7 @@ const timeTableWithSlots = (pipeline, keepSensetive = false) => {
         pipeline
         .lookup({
             from: 'timeslots',
-            localField: 'rmisId',
+            localField: '_id',
             foreignField: 'location',
             as: 'times'
         })
@@ -41,7 +37,7 @@ const timeTableWithSlots = (pipeline, keepSensetive = false) => {
             }
         })
         .project({
-            rmisId: '$rmisId',
+            _id: '$_id',
             department: '$department',
             room: {
                 $arrayElemAt: ['$rooms', 0]
@@ -55,13 +51,13 @@ const timeTableWithSlots = (pipeline, keepSensetive = false) => {
         .lookup({
             from: 'departments',
             localField: 'department',
-            foreignField: 'rmisId',
+            foreignField: '_id',
             as: 'department'
         })
         .lookup({
             from: 'rooms',
             localField: 'room',
-            foreignField: 'rmisId',
+            foreignField: '_id',
             as: 'room'
         })
         .lookup({
@@ -89,7 +85,7 @@ const timeTableWithDuration = (pipeline, keepSensetive) => (
     .unwind('times')
     .group({
         _id: {
-            rmisId: '$rmisId',
+            id: '$_id',
             date: '$times.date'
         },
         location: {
@@ -100,7 +96,7 @@ const timeTableWithDuration = (pipeline, keepSensetive) => (
         }
     })
     .group({
-        _id: '$_id.rmisId',
+        _id: '$_id',
         location: {
             $first: '$location'
         },
@@ -126,18 +122,13 @@ LocationSchema.statics.timeTableWithSlots = function (department) {
             })
         )
         .project({
-            '_id': false,
             '__v': false,
             'position': false,
-            'department._id': false,
             'department.__v': false,
-            'room._id': false,
             'room.__v': false,
             'room.department': false,
-            'employee._id': false,
             'employee.__v': false,
             'times.__v': false,
-            'times.pair': false,
             'times.location': false
         })
     );
@@ -152,16 +143,11 @@ LocationSchema.statics.timeTableWithDuration = async function (department) {
             })
         )
         .project({
-            '_id': false,
-            'location._id': false,
             'location.__v': false,
             'location.times': false,
             'location.position': false,
-            'location.department._id': false,
             'location.department.__v': false,
-            'location.room._id': false,
             'location.room.__v': false,
-            'location.employee._id': false,
             'location.employee.__v': false,
             'interval.timePeriod.__v': false,
             'interval.timePeriod.location': false
@@ -184,7 +170,7 @@ LocationSchema.statics.getDetailedLocationsBySource = function (...sources) {
     return (
         timeTableWithDuration(pre, true)
         .project({
-            id: '$location.employee.rmisId',
+            id: '$location.employee._id',
             room: '$location.room.code',
             snils: '$location.employee.snils',
             surname: '$location.employee.surname',

@@ -64,7 +64,7 @@ exports.createVisit = async(s, m) => {
         mongoose = await connect(s);
         const TimeSlot = model().TimeSlot;
         let slot = await TimeSlot.findOne({
-            'uuid': m.GUID,
+            '_id': m.GUID,
             'unabailable': {
                 $ne: 'PORTAL'
             },
@@ -92,7 +92,7 @@ exports.createVisit = async(s, m) => {
     } catch (e) {
         return e;
     } finally {
-        if (mongoose) mongoose.disconnect();
+        if (mongoose) await mongoose.disconnect();
     }
 };
 exports.getVisit = async(s, m) => {
@@ -129,6 +129,6 @@ exports.getVisit = async(s, m) => {
     } catch (e) {
         return e;
     } finally {
-        if (mongoose) mongoose.disconnect();
+        if (mongoose) await mongoose.disconnect();
     }
 };

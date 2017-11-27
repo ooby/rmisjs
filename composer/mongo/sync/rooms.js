@@ -8,7 +8,7 @@ module.exports = async(rmis) => {
     ]);
     let promises = [
         Room.remove({
-            rmisId: {
+            _id: {
                 $nin: rooms
             }
         }).exec()
@@ -18,10 +18,10 @@ module.exports = async(rmis) => {
             roomId
         });
         room = room.room;
-        room.rmisId = roomId;
+        room._id = roomId;
         promises.push(
             Room.update({
-                rmisId: roomId
+                _id: roomId
             }, room, {
                 upsert: true
             }).exec()
