@@ -25,6 +25,6 @@ module.exports = async(config, m) => {
             updateTimeSlots(rmis, clinicId)
         ]);
     } finally {
-        if (mongoose) mongoose.disconnect();
+        if (mongoose) await mongoose.disconnect();
     }
 };

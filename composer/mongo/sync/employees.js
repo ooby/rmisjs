@@ -22,7 +22,7 @@ module.exports = async(rmis) => {
             id: positionId
         });
         employeePosition = employeePosition.employeePosition;
-        data.rmisId = employeePosition.employee;
+        data._id = employeePosition.employee;
         let position = await emp.getPosition({
             id: employeePosition.position
         });
@@ -51,7 +51,7 @@ module.exports = async(rmis) => {
         if (!!employee.birthDate) data.birthDate = new Date(employee.birthDate);
         promises.push(
             Employee.update({
-                rmisId: employeePosition.employee
+                _id: employeePosition.employee
             }, data, {
                 upsert: true
             }).exec()

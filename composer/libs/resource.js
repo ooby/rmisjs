@@ -121,6 +121,6 @@ exports.getDetailedLocations = async(s, m) => {
     } catch (e) {
         return e;
     } finally {
-        if (mongoose) mongoose.disconnect();
+        if (mongoose) await mongoose.disconnect();
     }
 };

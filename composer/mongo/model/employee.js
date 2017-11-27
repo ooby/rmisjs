@@ -2,11 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const EmployeeSchema = new Schema({
-    rmisId: {
-        type: Number,
-        unique: true,
-        required: true
-    },
+    _id: Number,
     position: {
         type: Number,
         required: true,

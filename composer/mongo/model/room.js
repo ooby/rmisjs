@@ -2,11 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const RoomSchema = new Schema({
-    rmisId: {
-        type: Number,
-        unique: true,
-        required: true
-    },
+    _id: Number,
     department: {
         type: Number,
         required: true

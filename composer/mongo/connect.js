@@ -19,9 +19,7 @@ const createConnectionString = config => {
     return result;
 };
 
-module.exports = config =>
-    new Promise((resolve, reject) =>
-        mongoose.connect(createConnectionString(config), config.mongoose.options)
-        .then(() => resolve(mongoose))
-        .catch(e => reject(e))
-    );
+module.exports = async (config) => {
+    await mongoose.connect(createConnectionString(config), config.mongoose.options);
+    return mongoose;
+};
