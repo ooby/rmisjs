@@ -4,6 +4,7 @@
 npm-debug.log
 node_modules
 config/config.json
+debug
 debug.js
 debug.xml
 debug.json
