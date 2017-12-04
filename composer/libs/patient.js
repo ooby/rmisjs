@@ -88,7 +88,7 @@ exports.createVisit = async(s, m) => {
         let slip = await appointmentService(s, {
             id: slipId
         });
-        return slipId.number.number;
+        return slip.number.number;
     } catch (e) {
         return e;
     } finally {
