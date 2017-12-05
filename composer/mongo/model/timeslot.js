@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
 const uuid = require('uuid/v4');
 const Schema = mongoose.Schema;
-require('mongoose-uuid2')(mongoose);
 
 const TimeSlotSchema = new Schema({
     _id: {
-        type: mongoose.Types.UUID,
+        type: String,
         default: uuid
     },
     from: {

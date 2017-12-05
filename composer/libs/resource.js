@@ -88,7 +88,7 @@ exports.getDetailedLocations = async(s, m) => {
     try {
         mongoose = await connect(s);
         const dateToTime = date => moment(date).format('HH:mm:ss.SSSZ');
-        let data = await Location.getDetailedLocationsBySource('MIS', 'PORTAL').exec();
+        let data = await Location.getDetailedLocationsBySource('MIS').exec();
         for (let location of data) {
             for (let key of Object.keys(location)) {
                 if (key === 'interval') {
@@ -98,7 +98,7 @@ exports.getDetailedLocations = async(s, m) => {
                             return {
                                 from: dateToTime(i.from),
                                 to: dateToTime(i.to),
-                                uuid: uuid({ random: i._id.buffer }),
+                                uuid: i._id,
                                 status: i.status
                             };
                         });

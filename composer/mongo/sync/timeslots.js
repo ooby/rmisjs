@@ -3,7 +3,7 @@ const TimeSlot = require('../model/timeslot');
 const Location = require('../model/location');
 const moment = require('moment');
 
-const toMidnight = dateString => moment(dateString + 'T00:00:00.000' + moment().format('Z')).toDate();
+const toMidnight = dateString => moment(dateString).toDate();
 
 const update = async(date, location, organization, appointmentService) => {
     let midnight = toMidnight(date);
@@ -18,6 +18,7 @@ const update = async(date, location, organization, appointmentService) => {
                 from: new Date(`${date}T${i.from}`),
                 to: new Date(`${date}T${i.to}`),
                 date: midnight,
+                status: 1,
                 location,
                 unavailable: i.notAvailableSources ? i.notAvailableSources.notAvailableSource.map(i => i.source) : [],
                 services: i.availableServices ? i.availableServices.service : []
@@ -29,6 +30,7 @@ const update = async(date, location, organization, appointmentService) => {
         organization,
         location
     });
+    let froms = times.map(i => i.from);
     times = (
         (times || [])
         .concat(
@@ -43,9 +45,10 @@ const update = async(date, location, organization, appointmentService) => {
                     status: i.status
                 };
             })
+            .filter(i => froms.indexOf(i.from.valueOf()) < 0)
         )
     );
-    let froms = times.map(i => i.from);
+    froms = times.map(i => i.from);
     await TimeSlot.remove({
         location,
         date: midnight,
@@ -53,32 +56,36 @@ const update = async(date, location, organization, appointmentService) => {
             $nin: froms
         }
     }).exec();
-    let existing = await Location.distinct('from', {
+    let existing = await TimeSlot.distinct('from', {
         date: midnight,
         location
-    }).lean().exec();
+    }).exec();
     existing = existing.map(i => i.valueOf());
+    let promises = [];
     for (let time of times) {
         try {
             let from = time.from.valueOf();
             if (existing.indexOf(from) < 0) {
-                await new TimeSlot(time).save();
+                promises.push(new TimeSlot(time).save());
                 existing.push(from);
             } else {
-                await TimeSlot.update({
-                    from: time.from,
-                    location
-                }, {
-                    $set: {
-                        to: time.to,
-                        status: time.status
-                    }
-                }).exec();
+                promises.push(
+                    TimeSlot.update({
+                        from: time.from,
+                        location
+                    }, {
+                        $set: {
+                            to: time.to,
+                            status: time.status
+                        }
+                    }).exec()
+                );
             }
         } catch (e) {
             console.error(e);
         }
     }
+    await Promise.all(promises);
 };
 
 module.exports = async(rmis, clinicId) => {
@@ -89,7 +96,7 @@ module.exports = async(rmis, clinicId) => {
         $or: [
             {
                 date: {
-                    $nin: dates
+                    $nin: dates.map(i => toMidnight(i))
                 }
             },
             {

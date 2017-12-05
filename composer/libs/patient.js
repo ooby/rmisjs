@@ -63,16 +63,8 @@ exports.createVisit = async(s, m) => {
     try {
         mongoose = await connect(s);
         const TimeSlot = model().TimeSlot;
-        let slot = await TimeSlot.findOne({
-            '_id': m.GUID,
-            'unabailable': {
-                $ne: 'PORTAL'
-            },
-            'services.0': {
-                $exists: true
-            }
-        }).exec();
-        if (!slot) return Promise.reject('The slot doesn\'t exist.');
+        let slot = await TimeSlot.getByUUID(m.GUID).exec();
+        if (!slot) return Promise.reject('The slot doesn\'t exisit');
         let patient = await searchIndividual(s, {
             birthDate: m.birthDate,
             searchDocument: m.searchDocument

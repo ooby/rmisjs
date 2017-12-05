@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-require('mongoose-uuid2')(mongoose);
 mongoose.Promise = Promise;
 
 const createConnectionString = config => {
