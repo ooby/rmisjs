@@ -80,47 +80,6 @@ const timeTableWithSlots = (pipeline, keepSensetive = false) => {
     return pipeline;
 };
 
-const timeTableWithDuration = (pipeline, sources, keepSensetive) => (
-    timeTableWithSlots(pipeline, keepSensetive)
-    .unwind('times')
-    .match({
-        'times.unavailable': {
-            $nin: sources
-        },
-        'times.services.0': {
-            $exists: true
-        }
-    })
-    .group({
-        _id: {
-            id: '$_id',
-            date: '$times.date'
-        },
-        location: {
-            $first: '$$ROOT'
-        },
-        interval: {
-            $push: '$times'
-        }
-    })
-    .group({
-        _id: '$_id',
-        location: {
-            $first: '$location'
-        },
-        interval: {
-            $push: {
-                date: '$_id.date',
-                timePeriod: '$interval'
-            }
-        }
-    })
-    .project({
-        '_id': false,
-        'location.times': false
-    })
-);
-
 LocationSchema.statics.timeTableWithSlots = function (department) {
     return (
         timeTableWithSlots(
@@ -142,27 +101,6 @@ LocationSchema.statics.timeTableWithSlots = function (department) {
     );
 };
 
-LocationSchema.statics.timeTableWithDuration = async function (department) {
-    return (
-        timeTableWithDuration(
-            this.aggregate()
-            .match({
-                department
-            })
-        )
-        .project({
-            'location.__v': false,
-            'location.times': false,
-            'location.position': false,
-            'location.department.__v': false,
-            'location.room.__v': false,
-            'location.employee.__v': false,
-            'interval.timePeriod.__v': false,
-            'interval.timePeriod.location': false
-        })
-    );
-};
-
 LocationSchema.statics.getById = function (rmisId, ...args) {
     return this.findOne({
         rmisId
@@ -176,7 +114,44 @@ LocationSchema.statics.getDetailedLocationsBySource = function (...sources) {
         }
     });
     return (
-        timeTableWithDuration(pre, sources, true)
+        timeTableWithSlots(pre, true)
+        .unwind('times')
+        .match({
+            'times.unavailable': {
+                $nin: sources
+            },
+            'times.services.0': {
+                $exists: true
+            }
+        })
+        .group({
+            _id: {
+                id: '$_id',
+                date: '$times.date'
+            },
+            location: {
+                $first: '$$ROOT'
+            },
+            interval: {
+                $push: '$times'
+            }
+        })
+        .group({
+            _id: '$_id',
+            location: {
+                $first: '$location'
+            },
+            interval: {
+                $push: {
+                    date: '$_id.date',
+                    timePeriod: '$interval'
+                }
+            }
+        })
+        .project({
+            '_id': false,
+            'location.times': false
+        })
         .project({
             id: '$location.employee._id',
             room: '$location.room.code',
