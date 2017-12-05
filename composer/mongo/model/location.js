@@ -80,9 +80,17 @@ const timeTableWithSlots = (pipeline, keepSensetive = false) => {
     return pipeline;
 };
 
-const timeTableWithDuration = (pipeline, keepSensetive) => (
+const timeTableWithDuration = (pipeline, sources, keepSensetive) => (
     timeTableWithSlots(pipeline, keepSensetive)
     .unwind('times')
+    .match({
+        'times.unavailable': {
+            $nin: sources
+        },
+        'times.services.0': {
+            $exists: true
+        }
+    })
     .group({
         _id: {
             id: '$_id',
@@ -168,7 +176,7 @@ LocationSchema.statics.getDetailedLocationsBySource = function (...sources) {
         }
     });
     return (
-        timeTableWithDuration(pre, true)
+        timeTableWithDuration(pre, sources, true)
         .project({
             id: '$location.employee._id',
             room: '$location.room.code',
