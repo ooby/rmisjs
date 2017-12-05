@@ -63,25 +63,30 @@ exports.createVisit = async(s, m) => {
     try {
         mongoose = await connect(s);
         const TimeSlot = model().TimeSlot;
-        let slot = await TimeSlot.getByUUID(m.GUID).exec();
-        if (!slot) return Promise.reject('The slot doesn\'t exisit');
-        let patient = await searchIndividual(s, {
-            birthDate: m.birthDate,
-            searchDocument: m.searchDocument
-        });
-        let reserve = {
-            location: slot.location,
-            dateTime: moment(slot.from).format('GGGG-MM-DDTHH:mm:ss.SSSZ'),
-            service: slot.services[0],
+        let [timeslot, patient] = await Promise.all([
+            TimeSlot.getByUUID(m.GUID).exec(),
+            searchIndividual(s, {
+                birthDate: m.birthDate,
+                searchDocument: m.searchDocument
+            })
+        ]);
+        let slotId = await postReserve(s, {
+            location: timeslot.location,
+            dateTime: moment(timeslot.from).format('GGGG-MM-DDTHH:mm:ss.SSSZ'),
+            service: timeslot.services[0],
             urgency: false,
-            patient
-        };
-        let slipId = await postReserve(s, reserve);
-        let slip = await appointmentService(s, {
-            id: slipId
+            patient: patient
         });
-        return slip.number.number;
+        let slip = appointmentService(s, {
+            id: slotId
+        });
+        let slot = await getSlot(s, {
+            slot: slotId
+        });
+        await timeslot.updateStatus(slot.status).exec();
+        return (await slip).number.number;
     } catch (e) {
+        console.error(e);
         return e;
     } finally {
         if (mongoose) await mongoose.disconnect();
@@ -92,7 +97,7 @@ exports.getVisit = async(s, m) => {
     try {
         mongoose = await connect(s);
         const TimeSlot = model().TimeSlot;
-        let timeslot = await TimeSlot.getByUUID(m.GUID).lean().exec();
+        let timeslot = await TimeSlot.getByUUID(m.GUID).exec();
         if (!timeslot) return '';
         const from = timeslot.from.valueOf();
         const location = timeslot.location.toString();
@@ -119,6 +124,7 @@ exports.getVisit = async(s, m) => {
         }
         return '';
     } catch (e) {
+        console.error(e);
         return e;
     } finally {
         if (mongoose) await mongoose.disconnect();
