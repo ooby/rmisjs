@@ -1,7 +1,7 @@
 const { getDetailedLocations, getLocations } = require('./libs/resource');
 const { getDetailedDepartments, getPortalDepartments } = require('./libs/department');
 const { getDetailedEmployees } = require('./libs/employee');
-const { createVisit, getVisit, validatePatient } = require('./libs/patient');
+const { createVisit, getVisit, validatePatient, deleteVisit } = require('./libs/patient');
 const { getDetailedRooms } = require('./libs/room');
 const { syncDepartments } = require('./sync/department');
 const { syncRooms } = require('./sync/room');
@@ -19,6 +19,7 @@ module.exports = s => {
         getSchedules: (d) => getSchedules(s, d),
         validatePatient: (d) => validatePatient(s, d),
         createVisit: (d) => createVisit(s, d),
+        deleteVisit: (d) => deleteVisit(s, d),
         getVisit: (d) => getVisit(s, d),
         syncDepartments: (d) => syncDepartments(s, d),
         syncRooms: (d) => syncRooms(s, d),
