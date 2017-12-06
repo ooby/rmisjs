@@ -10,6 +10,7 @@ const {
     getPatientRegs,
     getReserve,
     getSlot,
+    deleteSlotByRefusal,
     getTimes,
     isoTimeFormat,
     postReserve,
@@ -49,6 +50,93 @@ exports.validatePatient = async(s, m) => {
 };
 
 /**
+ * Поиск записи к врачу
+ * @param {object} s - конфигурация
+ * @param {object} m - парамаетры для записи
+ * @param {string} m.birthDate - дата рождения - '1980-01-31'
+ * @param {object} m.searchDocument - параметры документа
+ * @param {number} m.searchDocument.docTypeId - тип документа - 26 для полиса
+ * @param {number} m.searchDocument.docNumber - номер документа
+ * @param {string} m.GUID - UUID талона
+ * @return {Promise|object}
+ */
+exports.searchVisit = async(s, m) => {
+    let mongoose;
+    try {
+        mongoose = await connect(s);
+        const TimeSlot = model().TimeSlot;
+        let timeslot = await TimeSlot.getByUUID(m.GUID).exec();
+        if (!timeslot) return '';
+        const from = timeslot.from.valueOf();
+        const location = timeslot.location.toString();
+        const status = timeslot.status.toString();
+        let patient = await searchIndividual(s, {
+            birthDate: m.birthDate,
+            searchDocument: m.searchDocument
+        });
+        let slots = await getReserve(s, {
+            patient
+        });
+        for (let id of slots.reverse()) {
+            let slot = await getSlot(s, {
+                slot: id
+            });
+            if (slot.locationId !== location ||
+                new Date(slot.date).valueOf() !== from ||
+                slot.status !== status
+            ) continue;
+            return {
+                slot: Object.assign(slot, {
+                    id
+                }),
+                timeslot,
+                mongoose
+            };
+        }
+        return null;
+    } catch (e) {
+        if (mongoose) await mongoose.disconnect();
+        console.error(e);
+        return e;
+    }
+};
+
+/**
+ * Удаление записи к врачу
+ * @param {object} s - конфигурация
+ * @param {object} m - парамаетры для записи
+ * @param {string} m.birthDate - дата рождения - '1980-01-31'
+ * @param {object} m.searchDocument - параметры документа
+ * @param {number} m.searchDocument.docTypeId - тип документа - 26 для полиса
+ * @param {number} m.searchDocument.docNumber - номер документа
+ * @param {string} m.GUID - UUID талона
+ * @return {Promise|object}
+ */
+exports.deleteVisit = async(s, m) => {
+    let mongoose;
+    try {
+        let visit = await exports.searchVisit(s, m);
+        if (!visit) return '';
+        mongoose = visit.mongoose;
+        let slip = await appointmentService(s, {
+            id: visit.slot.id
+        });
+        if (!slip) return '';
+        await deleteSlotByRefusal(s, visit.slot.id);
+        let slot = await getSlot(s, {
+            slot: visit.slot.id
+        });
+        await visit.timeslot.updateStatus(slot.status).exec();
+        return slip.number.number;
+    } catch (e) {
+        console.error(e);
+        return e;
+    } finally {
+        if (mongoose) await mongoose.disconnect();
+    }
+};
+
+/**
  * Создание записи к врачу
  * @param {object} s - конфигурация
  * @param {object} m - парамаетры для записи
@@ -56,6 +144,7 @@ exports.validatePatient = async(s, m) => {
  * @param {object} m.searchDocument - параметры документа
  * @param {number} m.searchDocument.docTypeId - тип документа - 26 для полиса
  * @param {number} m.searchDocument.docNumber - номер документа
+ * @param {string} m.GUID - UUID талона
  * @return {Promise|object}
  */
 exports.createVisit = async(s, m) => {
@@ -92,37 +181,29 @@ exports.createVisit = async(s, m) => {
         if (mongoose) await mongoose.disconnect();
     }
 };
+
+/**
+ * Получение номера талона
+ * @param {object} s - конфигурация
+ * @param {object} m - парамаетры для записи
+ * @param {string} m.birthDate - дата рождения - '1980-01-31'
+ * @param {object} m.searchDocument - параметры документа
+ * @param {number} m.searchDocument.docTypeId - тип документа - 26 для полиса
+ * @param {number} m.searchDocument.docNumber - номер документа
+ * @param {string} m.GUID - UUID талона
+ * @return {Promise|object}
+ */
 exports.getVisit = async(s, m) => {
     let mongoose;
     try {
-        mongoose = await connect(s);
-        const TimeSlot = model().TimeSlot;
-        let timeslot = await TimeSlot.getByUUID(m.GUID).exec();
-        if (!timeslot) return '';
-        const from = timeslot.from.valueOf();
-        const location = timeslot.location.toString();
-        const status = timeslot.status.toString();
-        let patient = await searchIndividual(s, {
-            birthDate: m.birthDate,
-            searchDocument: m.searchDocument
+        let visit = await exports.searchVisit(s, m);
+        if (!visit) return '';
+        mongoose = visit.mongoose;
+        let slip = await appointmentService(s, {
+            id: visit.slot.id
         });
-        let slots = await getReserve(s, {
-            patient
-        });
-        for (let id of slots.reverse()) {
-            let slot = await getSlot(s, {
-                slot: id
-            });
-            if (slot.locationId !== location ||
-                new Date(slot.date).valueOf() !== from ||
-                slot.status !== status
-            ) continue;
-            let slip = await appointmentService(s, {
-                id
-            });
-            return slip.number.number;
-        }
-        return '';
+        if (!slip) return '';
+        return slip.number.number;
     } catch (e) {
         console.error(e);
         return e;

@@ -59,6 +59,24 @@ exports.getSlot = async (s, d) => {
 };
 
 /**
+ * Освобождение талона по отказу пациента
+ * @param {object} s - конфигурация
+ * @param {object} d - id слота
+ * @return {object}
+ */
+exports.deleteSlotByRefusal = async (s, d) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.appointment();
+        r = await r.deleteSlot({
+            slot: d,
+            cause: 0
+        });
+        return r;
+    } catch (e) { return e; };
+};
+
+/**
  * Создание записи пациента по номеру физлица
  * @param {object} s - конфигурация
  * @param {object} d - данные пациента
@@ -352,7 +370,7 @@ exports.getEmployeePosition = async (s, id) => {
 };
 
 /**
- * Запрашивает и возвращает список идентификаторов должностей сотрудника 
+ * Запрашивает и возвращает список идентификаторов должностей сотрудника
  * по идентификатору сотрудника
  * @param {object} s - конфигурация
  * @param {number} id - идентификатор сотрудника
@@ -368,7 +386,7 @@ exports.getEmployeePositions = async (s, id) => {
 };
 
 /**
- * Запрашивает и возвращает список идентификаторов специальностей сотрудника 
+ * Запрашивает и возвращает список идентификаторов специальностей сотрудника
  * по идентификатору сотрудника
  * @param {object} s - конфигурация
  * @param {number} id - идентификатор сотрудника
