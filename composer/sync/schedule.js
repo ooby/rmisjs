@@ -88,11 +88,11 @@ exports.getSchedules = async(s, d) => {
         return e;
     }
 };
-exports.deleteSchedules = async s => {
+exports.deleteSchedules = async (s, from, to) => {
     try {
         const rmisjs = require('../../index')(s);
         const er14 = await rmisjs.integration.er14.process();
-        const dates = createDates();
+        const dates = createDates(from, to);
         let result = [];
         for (let d of dates) {
             let data = getSchedFormat({

@@ -453,13 +453,14 @@ exports.getIndividualDocuments = async (s, id) => {
 };
 
 /**
- * Формирует и возвращает список дат на 14 дней вперед
- * в формате YYYY-MM-DD
+ * Формирует и возвращает список дат в формате YYYY-MM-DD
+ * @param {number} from
+ * @param {number} to
  * @return {array}
  */
-exports.createDates = () => {
+exports.createDates = (from = 0, to = 14) => {
     let dates = [];
-    for (let i = 0; i < 14; i++) {
+    for (let i = from; i < to; i++) {
         let d = moment().add(i, 'd');
         if (d.isoWeekday() !== 6 && d.isoWeekday() !== 7) {
             dates.push(d.format('YYYY-MM-DD'));
