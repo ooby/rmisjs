@@ -1,5 +1,6 @@
 const ss = require('string-similarity');
 const {
+    dateFormat,
     createDates,
     isSnils,
     snils,
@@ -24,7 +25,7 @@ const getDetailedEmployees = require('./employee').getDetailedEmployees;
 const moment = require('moment');
 const connect = require('../mongo/connect');
 const uuid = require('uuid/v4');
-const Location = require('../mongo/model/location');
+const TimeSlot = require('../mongo/model/timeslot');
 
 /**
  * Запрашивает и возвращает код справочника
@@ -76,6 +77,8 @@ const getRefVersion = async(s, code) => {
     }
 };
 
+const timeFormat = date => moment(date).format('HH:mm:ss.SSSZ');
+
 /**
  * Формирует из ресурсов коллекцию детализированных данных
  * для отправки в инетграционные сервисы, возвращает Promise
@@ -87,35 +90,20 @@ exports.getDetailedLocations = async(s, m) => {
     let mongoose;
     try {
         mongoose = await connect(s);
-        const dateToTime = date => moment(date).format('HH:mm:ss.SSSZ');
-        let data = await Location.getDetailedLocationsBySource('MIS').exec();
+        let data = await TimeSlot.getDetailedLocationsBySource('MIS').exec();
         for (let location of data) {
-            for (let key of Object.keys(location)) {
-                if (key === 'interval') {
-                    for (let interval of location.interval) {
-                        interval.date = moment(interval.date).format('GGGG-MM-DD');
-                        interval.timePeriod = interval.timePeriod.map(i => {
-                            return {
-                                from: dateToTime(i.from),
-                                to: dateToTime(i.to),
-                                uuid: i._id,
-                                status: i.status
-                            };
-                        });
-                    }
-                } else if (!location[key]) {
-                    delete location[key];
-                } else if (typeof location[key] !== 'object') {
-                    location[key] = location[key].toString();
+            for (let interval of location.interval) {
+                interval.date = dateFormat(interval.date);
+                for (let period of interval.timePeriod) {
+                    period.from = timeFormat(period.from);
+                    period.to = timeFormat(period.to);
                 }
             }
             let position = m.map(i => i.name.toUpperCase());
             position = ss.findBestMatch(location.positionName.toUpperCase(), position);
             position = m.map(i => i.name.toUpperCase()).indexOf(position.bestMatch.target);
             position = m[position].code;
-            Object.assign(location, {
-                position
-            });
+            location.position = parseInt(position);
         }
         return data;
     } catch (e) {

@@ -85,10 +85,9 @@ exports.searchVisit = async(s, m) => {
                 new Date(slot.date).valueOf() !== from ||
                 slot.status !== status
             ) continue;
+            slot.id = id;
             return {
-                slot: Object.assign(slot, {
-                    id
-                }),
+                slot,
                 timeslot,
                 mongoose
             };
@@ -130,7 +129,7 @@ exports.deleteVisit = async(s, m) => {
         return slip.number.number;
     } catch (e) {
         console.error(e);
-        return e;
+        return '';
     } finally {
         if (mongoose) await mongoose.disconnect();
     }
@@ -176,7 +175,7 @@ exports.createVisit = async(s, m) => {
         return (await slip).number.number;
     } catch (e) {
         console.error(e);
-        return e;
+        return '';
     } finally {
         if (mongoose) await mongoose.disconnect();
     }
@@ -206,7 +205,7 @@ exports.getVisit = async(s, m) => {
         return slip.number.number;
     } catch (e) {
         console.error(e);
-        return e;
+        return '';
     } finally {
         if (mongoose) await mongoose.disconnect();
     }
