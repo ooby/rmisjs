@@ -22,9 +22,9 @@ const LocationSchema = new Schema({
     }
 });
 
-LocationSchema.statics.getById = function (rmisId, ...args) {
+LocationSchema.statics.getById = function (_id, ...args) {
     return this.findOne({
-        rmisId
+        _id
     }, ...args);
 };
 

@@ -14,9 +14,9 @@ const DepartmentSchema = new Schema({
     }
 });
 
-DepartmentSchema.statics.getById = function (rmisId, ...args) {
+DepartmentSchema.statics.getById = function (_id, ...args) {
     return this.findOne({
-        rmisId
+        _id
     }, ...args);
 };
 

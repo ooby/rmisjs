@@ -18,9 +18,9 @@ const {
     timeFormat
 } = require('./collect');
 const appointmentService = require('./appointmentHelper');
-const model = () => require('../mongo/model');
 const connect = require('../mongo/connect');
 const moment = require('moment');
+const TimeSlot = require('../mongo/model/timeslot');
 
 /**
  * Валидация пациента о наличии и прикреплении в больнице
@@ -61,11 +61,10 @@ exports.validatePatient = async(s, m) => {
  * @return {Promise|object}
  */
 exports.searchVisit = async(s, m) => {
-    let mongoose;
     try {
-        mongoose = await connect(s);
-        const TimeSlot = model().TimeSlot;
-        let timeslot = await TimeSlot.getByUUID(m.GUID).exec();
+        let timeslot = await connect(s, () =>
+            TimeSlot.getByUUID(m.GUID).exec()
+        );
         if (!timeslot) return '';
         const from = timeslot.from.valueOf();
         const location = timeslot.location.toString();
@@ -88,13 +87,11 @@ exports.searchVisit = async(s, m) => {
             slot.id = id;
             return {
                 slot,
-                timeslot,
-                mongoose
+                timeslot
             };
         }
         return null;
     } catch (e) {
-        if (mongoose) await mongoose.disconnect();
         console.error(e);
         return e;
     }
@@ -112,11 +109,9 @@ exports.searchVisit = async(s, m) => {
  * @return {Promise|object}
  */
 exports.deleteVisit = async(s, m) => {
-    let mongoose;
     try {
         let visit = await exports.searchVisit(s, m);
         if (!visit) return '';
-        mongoose = visit.mongoose;
         let slip = await appointmentService(s, {
             id: visit.slot.id
         });
@@ -125,13 +120,13 @@ exports.deleteVisit = async(s, m) => {
         let slot = await getSlot(s, {
             slot: visit.slot.id
         });
-        await visit.timeslot.updateStatus(slot.status).exec();
+        await connect(s, () =>
+            visit.timeslot.updateStatus(slot.status).exec()
+        );
         return slip.number.number;
     } catch (e) {
         console.error(e);
         return '';
-    } finally {
-        if (mongoose) await mongoose.disconnect();
     }
 };
 
@@ -147,12 +142,9 @@ exports.deleteVisit = async(s, m) => {
  * @return {Promise|object}
  */
 exports.createVisit = async(s, m) => {
-    let mongoose;
     try {
-        mongoose = await connect(s);
-        const TimeSlot = model().TimeSlot;
         let [timeslot, patient] = await Promise.all([
-            TimeSlot.getByUUID(m.GUID).exec(),
+            connect(s, () => TimeSlot.getByUUID(m.GUID).exec()),
             searchIndividual(s, {
                 birthDate: m.birthDate,
                 searchDocument: m.searchDocument
@@ -171,13 +163,13 @@ exports.createVisit = async(s, m) => {
         let slot = await getSlot(s, {
             slot: slotId
         });
-        await timeslot.updateStatus(slot.status).exec();
+        await connect(s, () =>
+            timeslot.updateStatus(slot.status).exec()
+        );
         return (await slip).number.number;
     } catch (e) {
         console.error(e);
         return '';
-    } finally {
-        if (mongoose) await mongoose.disconnect();
     }
 };
 
@@ -193,11 +185,9 @@ exports.createVisit = async(s, m) => {
  * @return {Promise|object}
  */
 exports.getVisit = async(s, m) => {
-    let mongoose;
     try {
         let visit = await exports.searchVisit(s, m);
         if (!visit) return '';
-        mongoose = visit.mongoose;
         let slip = await appointmentService(s, {
             id: visit.slot.id
         });
@@ -206,7 +196,5 @@ exports.getVisit = async(s, m) => {
     } catch (e) {
         console.error(e);
         return '';
-    } finally {
-        if (mongoose) await mongoose.disconnect();
     }
 };

@@ -18,9 +18,9 @@ const RoomSchema = new Schema({
     }
 });
 
-RoomSchema.statics.getbyId = function (rmisId, ...args) {
+RoomSchema.statics.getbyId = function (_id, ...args) {
     return this.findOne({
-        rmisId
+        _id
     }, ...args);
 };
 
