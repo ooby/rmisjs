@@ -9,22 +9,21 @@ const updateTimeSlots = require('./timeslots');
 const rmisjs = require('../../../index');
 
 module.exports = async(config, m) => {
-    let mongoose;
     try {
         const clinicId = config.rmis.clinicId;
         const {
             rmis,
             composer
         } = rmisjs(config);
-        mongoose = await connect(config);
-        await updateDepartments(composer);
-        await updateLocations(rmis, clinicId);
-        await Promise.all([
-            updateRooms(rmis),
-            updateEmployees(rmis),
-            updateTimeSlots(rmis, clinicId)
-        ]);
-    } finally {
-        if (mongoose) await mongoose.disconnect();
+        await connect(config, async () => {
+            await updateDepartments(composer);
+            await updateLocations(rmis, clinicId);
+            await updateRooms(rmis);
+            await updateEmployees(rmis);
+            await updateTimeSlots(rmis, clinicId);
+        });
+    } catch (e) {
+        console.error(e);
+        return e;
     }
 };

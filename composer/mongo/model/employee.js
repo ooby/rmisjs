@@ -22,4 +22,10 @@ const EmployeeSchema = new Schema({
     }
 });
 
+EmployeeSchema.static.getById = function (_id, ...args) {
+    return this.findOne({
+        _id
+    }, ...args);
+};
+
 module.exports = mongoose.model('Employee', EmployeeSchema);

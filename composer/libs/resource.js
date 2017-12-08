@@ -24,7 +24,6 @@ const {
 const getDetailedEmployees = require('./employee').getDetailedEmployees;
 const moment = require('moment');
 const connect = require('../mongo/connect');
-const uuid = require('uuid/v4');
 const TimeSlot = require('../mongo/model/timeslot');
 
 /**
@@ -87,10 +86,10 @@ const timeFormat = date => moment(date).format('HH:mm:ss.SSSZ');
  * @return {string|object}
  */
 exports.getDetailedLocations = async(s, m) => {
-    let mongoose;
     try {
-        mongoose = await connect(s);
-        let data = await TimeSlot.getDetailedLocationsBySource('MIS').exec();
+        let data = await connect(s, () =>
+            TimeSlot.getDetailedLocationsBySource('MIS').exec()
+        );
         for (let location of data) {
             for (let interval of location.interval) {
                 interval.date = dateFormat(interval.date);
@@ -109,7 +108,5 @@ exports.getDetailedLocations = async(s, m) => {
     } catch (e) {
         console.error(e);
         return e;
-    } finally {
-        if (mongoose) await mongoose.disconnect();
     }
 };

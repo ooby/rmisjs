@@ -64,24 +64,21 @@ TimeSlotSchema.statics.getByUUID = function (_id, ...args) {
     }, ...args);
 };
 
-TimeSlotSchema.set('toObject', {
-    getters: true
-});
-TimeSlotSchema.set('toJSON', {
-    getters: true
-});
+const getAvailableSlots = (model, ...sources) =>
+    model
+    .aggregate()
+    .match({
+        'unavailable': {
+            $nin: sources
+        },
+        'services.0': {
+            $exists: true
+        }
+    });
 
 TimeSlotSchema.statics.getDetailedLocationsBySource = function (...sources) {
     return (
-        this.aggregate()
-        .match({
-            'unavailable': {
-                $nin: sources
-            },
-            'services.0': {
-                $exists: true
-            }
-        })
+        getAvailableSlots(this, ...sources)
         .group({
             _id: {
                 date: '$date',
@@ -187,17 +184,9 @@ TimeSlotSchema.statics.getDetailedLocationsBySource = function (...sources) {
     );
 };
 
-TimeSlotSchema.statics.timeTable = function (...sources) {
+TimeSlotSchema.statics.timeTableWithSlots = function (department, ...sources) {
     return (
-        this.aggregate()
-        .match({
-            'unavailable': {
-                $nin: sources
-            },
-            'services.0': {
-                $exists: true
-            }
-        })
+        getAvailableSlots(this, ...sources)
         .group({
             _id: '$location',
             times: {
@@ -211,7 +200,10 @@ TimeSlotSchema.statics.timeTable = function (...sources) {
             as: 'location'
         })
         .match({
-            'location.source': { $in: sources }
+            'location.department': department,
+            'location.source': {
+                $in: sources
+            }
         })
         .unwind('location')
         .project({
@@ -263,14 +255,9 @@ TimeSlotSchema.statics.timeTable = function (...sources) {
     );
 };
 
-TimeSlotSchema.statics.timeTableWithDuration = function (...sources) {
+TimeSlotSchema.statics.timeTableWithDuration = function (department, ...sources) {
     return (
-        this.aggregate()
-        .match({
-            unavailable: {
-                $nin: sources
-            }
-        })
+        getAvailableSlots(this, ...sources)
         .group({
             _id: {
                 date: '$date',
@@ -291,6 +278,7 @@ TimeSlotSchema.statics.timeTableWithDuration = function (...sources) {
         })
         .unwind('location')
         .match({
+            'location.department': department,
             'location.source': {
                 $in: sources
             }
