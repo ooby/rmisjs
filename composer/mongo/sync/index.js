@@ -8,7 +8,7 @@ const updateTimeSlots = require('./timeslots');
 
 const rmisjs = require('../../../index');
 
-module.exports = async(config, m) => {
+module.exports = async(config) => {
     try {
         const clinicId = config.rmis.clinicId;
         const {
@@ -18,9 +18,11 @@ module.exports = async(config, m) => {
         await connect(config, async () => {
             await updateDepartments(composer);
             await updateLocations(rmis, clinicId);
-            await updateRooms(rmis);
-            await updateEmployees(rmis);
-            await updateTimeSlots(rmis, clinicId);
+            await Promise.all([
+                updateRooms(rmis),
+                updateEmployees(rmis),
+                updateTimeSlots(rmis, clinicId)
+            ]);
         });
     } catch (e) {
         console.error(e);

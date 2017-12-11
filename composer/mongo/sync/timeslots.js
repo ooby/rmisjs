@@ -90,7 +90,7 @@ const update = async(date, location, organization, appointmentService) => {
 
 module.exports = async(rmis, clinicId) => {
     let appointmentService = await rmis.appointment();
-    let dates = createDates();
+    let dates = createDates(0, 29);
     let locs = await Location.distinct('_id').exec();
     await TimeSlot.remove({
         $or: [

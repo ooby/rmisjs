@@ -10,6 +10,7 @@ const EmployeeSchema = new Schema({
     },
     positionName: String,
     speciality: Number,
+    specialityName: String,
     snils: String,
     surname: String,
     patrName: String,

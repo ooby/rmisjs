@@ -83,9 +83,10 @@ const timeFormat = date => moment(date).format('HH:mm:ss.SSSZ');
  * для отправки в инетграционные сервисы, возвращает Promise
  * @param {object} s - конфигурация
  * @param {object} m - справочник MDP365
+ * @param {object} c - справочник C33001
  * @return {string|object}
  */
-exports.getDetailedLocations = async(s, m) => {
+exports.getDetailedLocations = async(s, m, c) => {
     try {
         let data = await connect(s, () =>
             TimeSlot.getDetailedLocationsBySource('MIS').exec()
@@ -98,11 +99,15 @@ exports.getDetailedLocations = async(s, m) => {
                     period.to = timeFormat(period.to);
                 }
             }
-            let position = m.map(i => i.name.toUpperCase());
-            position = ss.findBestMatch(location.positionName.toUpperCase(), position);
-            position = m.map(i => i.name.toUpperCase()).indexOf(position.bestMatch.target);
-            position = m[position].code;
-            location.position = parseInt(position);
+            let positionNames = m.map(i => i.name.toUpperCase());
+            let position = ss.findBestMatch(location.positionName.toUpperCase(), positionNames);
+            position = positionNames.indexOf(position.bestMatch.target);
+            location.position = parseInt(m[position].code);
+            let specialityNames = c.map(i => i.name.toUpperCase());
+            let speciality = ss.findBestMatch(location.specialityName.toUpperCase(), specialityNames);
+            speciality = specialityNames.indexOf(speciality.bestMatch.target);
+            location.speciality = parseInt(c[speciality].code);
+            console.log(location);
         }
         return data;
     } catch (e) {
