@@ -69,8 +69,8 @@ TimeSlotSchema.methods.updateStatus = function (status) {
     });
 };
 
-TimeSlotSchema.static.getUUID = getUUID;
-TimeSlotSchema.static.setUUID = setUUID;
+TimeSlotSchema.statics.getUUID = getUUID;
+TimeSlotSchema.statics.setUUID = setUUID;
 
 TimeSlotSchema.statics.getByLocation = function (location, ...args) {
     return this.find({
@@ -85,8 +85,7 @@ TimeSlotSchema.statics.getByUUID = function (_id, ...args) {
 };
 
 const getAvailableSlots = (model, ...sources) =>
-    model
-    .aggregate()
+    model.aggregate()
     .match({
         'unavailable': {
             $nin: sources
@@ -106,7 +105,7 @@ TimeSlotSchema.statics.getDetailedLocationsBySource = function (...sources) {
             },
             interval: {
                 $push: {
-                    uuid: '$_id',
+                    _id: '$_id',
                     from: '$from',
                     to: '$to',
                     status: '$status'

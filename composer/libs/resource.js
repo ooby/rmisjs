@@ -23,6 +23,7 @@ const {
 
 const getDetailedEmployees = require('./employee').getDetailedEmployees;
 const moment = require('moment');
+const uuid = require('uuid/v4');
 const connect = require('../mongo/connect');
 const TimeSlot = require('../mongo/model/timeslot');
 
@@ -95,6 +96,9 @@ exports.getDetailedLocations = async(s, m, c) => {
             for (let interval of location.interval) {
                 interval.date = dateFormat(interval.date);
                 for (let period of interval.timePeriod) {
+                    period._id = uuid({
+                        random: period._id.buffer
+                    });
                     period.from = timeFormat(period.from);
                     period.to = timeFormat(period.to);
                 }
@@ -107,7 +111,6 @@ exports.getDetailedLocations = async(s, m, c) => {
             let speciality = ss.findBestMatch(location.specialityName.toUpperCase(), specialityNames);
             speciality = specialityNames.indexOf(speciality.bestMatch.target);
             location.speciality = parseInt(c[speciality].code);
-            console.log(location);
         }
         return data;
     } catch (e) {
