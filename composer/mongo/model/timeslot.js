@@ -2,10 +2,27 @@ const mongoose = require('mongoose');
 const uuid = require('uuid/v4');
 const Schema = mongoose.Schema;
 
+function setUUID(v) {
+    if (typeof v === 'string') {
+        v = Buffer.from(v.replace(/-/g, ''), 'hex');
+    }
+    if (v instanceof Buffer) {
+        v = new mongoose.Types.Buffer(v).toObject(0x04);
+    }
+    return v;
+}
+
+function getUUID(v) {
+    if (typeof v === 'string') return v;
+    if (v instanceof Buffer) return uuid({ random: v });
+}
+
 const TimeSlotSchema = new Schema({
     _id: {
-        type: String,
-        default: uuid
+        type: Buffer,
+        get: getUUID,
+        set: setUUID,
+        default: () => setUUID(uuid(null, new Buffer(16), 0))
     },
     from: {
         type: Date,
@@ -52,6 +69,9 @@ TimeSlotSchema.methods.updateStatus = function (status) {
     });
 };
 
+TimeSlotSchema.static.getUUID = getUUID;
+TimeSlotSchema.static.setUUID = setUUID;
+
 TimeSlotSchema.statics.getByLocation = function (location, ...args) {
     return this.find({
         location
@@ -60,7 +80,7 @@ TimeSlotSchema.statics.getByLocation = function (location, ...args) {
 
 TimeSlotSchema.statics.getByUUID = function (_id, ...args) {
     return this.findOne({
-        _id
+        _id: setUUID(_id)
     }, ...args);
 };
 
@@ -158,6 +178,7 @@ TimeSlotSchema.statics.getDetailedLocationsBySource = function (...sources) {
             birthDate: '$employee.birthDate',
             individual: '$employee.individual',
             speciality: '$employee.speciality',
+            specialityName: '$employee.specialityName',
             positionName: '$employee.positionName',
             department: '$department',
             fio: {

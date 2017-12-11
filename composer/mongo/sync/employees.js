@@ -2,6 +2,24 @@ const Location = require('../model/location');
 const Employee = require('../model/employee');
 
 module.exports = async(rmis) => {
+    let refbook = await rmis.refbook();
+    let specs = await refbook.getRefbook({
+        refbookCode: '1.2.643.5.1.13.3.2861820518965.1.1.118',
+        version: 'CURRENT'
+    });
+    specs = new Map(
+        specs.row.map(i => {
+            let r = [];
+            for (let col of i.column) {
+                if (col.name === 'ID') {
+                    r[0] = col.data;
+                } else if (col.name === 'NAME') {
+                    r[1] = col.data;
+                }
+            }
+            return r;
+        })
+    );
     let [emp, ind, positions] = await Promise.all([
         rmis.employee(),
         rmis.individual(),
@@ -30,6 +48,7 @@ module.exports = async(rmis) => {
         if (!position.speciality) continue;
         data.positionName = position.name;
         data.speciality = position.speciality;
+        data.specialityName = specs.get(data.speciality);
         let employee = await emp.getEmployee({
             id: employeePosition.employee
         });

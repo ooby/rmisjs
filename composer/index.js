@@ -13,7 +13,7 @@ module.exports = s => {
         getDetailedDepartments: () => getDetailedDepartments(s),
         getDetailedEmployees: () => getDetailedEmployees(s),
         getDetailedRooms: () => getDetailedRooms(s),
-        getDetailedLocations: (d) => getDetailedLocations(s, d),
+        getDetailedLocations: (d, m) => getDetailedLocations(s, d, m),
         getPortalDepartments: () => getPortalDepartments(s),
         getLocations: () => getLocations(s),
         getSchedules: (d) => getSchedules(s, d),
