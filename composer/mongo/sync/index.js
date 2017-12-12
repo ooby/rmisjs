@@ -5,6 +5,7 @@ const updateLocations = require('./locations');
 const updateRooms = require('./rooms');
 const updateEmployees = require('./employees');
 const updateTimeSlots = require('./timeslots');
+const updateServices = require('./services');
 
 const rmisjs = require('../../../index');
 
@@ -20,6 +21,7 @@ module.exports = async(config) => {
             await updateLocations(rmis, clinicId);
             await Promise.all([
                 updateRooms(rmis),
+                updateServices(config),
                 updateEmployees(rmis),
                 updateTimeSlots(rmis, clinicId)
             ]);

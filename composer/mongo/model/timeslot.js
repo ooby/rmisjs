@@ -14,7 +14,9 @@ function setUUID(v) {
 
 function getUUID(v) {
     if (typeof v === 'string') return v;
-    if (v instanceof Buffer) return uuid({ random: v });
+    if (v instanceof Buffer) return uuid({
+        random: v
+    });
 }
 
 const TimeSlotSchema = new Schema({
@@ -95,9 +97,24 @@ const getAvailableSlots = (model, ...sources) =>
         }
     });
 
-TimeSlotSchema.statics.getDetailedLocationsBySource = function (...sources) {
-    return (
+const binaryToUUID = binary =>
+    uuid({
+        random: binary.buffer
+    });
+
+TimeSlotSchema.statics.getDetailedLocationsBySource = async function (...sources) {
+    let data = await (
         getAvailableSlots(this, ...sources)
+        .lookup({
+            from: 'services',
+            localField: 'services',
+            foreignField: '_id',
+            as: 'services'
+        })
+        .unwind('services')
+        .match({
+            'services.repeated': false
+        })
         .group({
             _id: {
                 date: '$date',
@@ -108,7 +125,8 @@ TimeSlotSchema.statics.getDetailedLocationsBySource = function (...sources) {
                     _id: '$_id',
                     from: '$from',
                     to: '$to',
-                    status: '$status'
+                    status: '$status',
+                    services: '$services'
                 }
             }
         })
@@ -201,11 +219,20 @@ TimeSlotSchema.statics.getDetailedLocationsBySource = function (...sources) {
             'department.__v': false,
             'department._id': false
         })
+        .exec()
     );
+    for (let location of data) {
+        for (let interval of location.interval) {
+            for (let period of interval.timePeriod) {
+                period._id = binaryToUUID(period._id);
+            }
+        }
+    }
+    return data;
 };
 
-TimeSlotSchema.statics.timeTableWithSlots = function (department, ...sources) {
-    return (
+TimeSlotSchema.statics.timeTableWithSlots = async function (department, ...sources) {
+    let data = await (
         getAvailableSlots(this, ...sources)
         .group({
             _id: '$location',
@@ -272,7 +299,14 @@ TimeSlotSchema.statics.timeTableWithSlots = function (department, ...sources) {
             'employee.snils': false,
             'individual': false
         })
+        .exec()
     );
+    for (let location of data) {
+        for (let slot of location.times) {
+            slot._id = binaryToUUID(slot._id);
+        }
+    }
+    return data;
 };
 
 TimeSlotSchema.statics.timeTableWithDuration = function (department, ...sources) {
@@ -352,6 +386,7 @@ TimeSlotSchema.statics.timeTableWithDuration = function (department, ...sources)
             'location.date': false,
             'location.position': false
         })
+        .exec()
     );
 };
 

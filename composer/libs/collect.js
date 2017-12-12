@@ -11,19 +11,49 @@ const rmisjs = s => {
 };
 
 /**
+ * Получение сведений об услуге
+ * @param {Object} s - конфигурация
+ * @param {Number} serviceId - ID услуги в РМИС
+ * @return {Promise<Object>} - сведения об услуге
+ */
+exports.getService = async(s, serviceId) => {
+    const services = await rmisjs(s).services();
+    let data = await services.getService({
+        serviceId
+    });
+    return data.service;
+};
+
+/**
+ * Получение списка услуг
+ * @param {Object} s - конфигурация
+ * @return {Promise<Object>} - список услуг
+ */
+exports.getServices = async(s) => {
+    const services = await rmisjs(s).services();
+    let data = await services.getServices({
+        clinic: s.rmis.clinicId
+    });
+    return data.services;
+};
+
+/**
  * Создание талона по данным пациента
  * @param {object} s - конфигурация
  * @param {object} d - данные пациента
  * @return {object}
  */
-exports.postReserve = async (s, d) => {
+exports.postReserve = async(s, d) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.appointment();
         r = await r.postReserve(d);
         r = (r) ? r.slot : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -32,14 +62,17 @@ exports.postReserve = async (s, d) => {
  * @param {object} d - данные пациента
  * @return {object}
  */
-exports.getReserve = async (s, d) => {
+exports.getReserve = async(s, d) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.appointment();
         r = await r.getReserve(d);
         r = (r) ? r.slot : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -48,14 +81,17 @@ exports.getReserve = async (s, d) => {
  * @param {object} d - объект слота
  * @return {object}
  */
-exports.getSlot = async (s, d) => {
+exports.getSlot = async(s, d) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.appointment();
         r = await r.getSlot(d);
         // r = (r) ? r.slot : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -64,16 +100,14 @@ exports.getSlot = async (s, d) => {
  * @param {object} d - id слота
  * @return {object}
  */
-exports.deleteSlotByRefusal = async (s, d) => {
+exports.deleteSlotByRefusal = async(s, d) => {
     const rmis = rmisjs(s);
-    try {
-        let r = await rmis.appointment();
-        r = await r.deleteSlot({
-            slot: d,
-            cause: 0
-        });
-        return r;
-    } catch (e) { return e; };
+    let r = await rmis.appointment();
+    r = await r.deleteSlot({
+        slot: d,
+        cause: 0
+    });
+    return r;
 };
 
 /**
@@ -82,14 +116,17 @@ exports.deleteSlotByRefusal = async (s, d) => {
  * @param {object} d - данные пациента
  * @return {object}
  */
-exports.createPatient = async (s, d) => {
+exports.createPatient = async(s, d) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.patient();
         r = await r.createPatient(d);
         // r = (r) ? r.note : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -98,14 +135,17 @@ exports.createPatient = async (s, d) => {
  * @param {object} id - идентификатор физического лица
  * @return {object}
  */
-exports.getPatient = async (s, id) => {
+exports.getPatient = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.patient();
         r = await r.getPatient(id);
         // r = (r) ? r.note : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -114,14 +154,17 @@ exports.getPatient = async (s, id) => {
  * @param {object} id - идентификатор физического лица
  * @return {object}
  */
-exports.getPatientRegs = async (s, id) => {
+exports.getPatientRegs = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.patient();
         r = await r.getPatientRegs(id);
         r = (r) ? r.registration : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -130,13 +173,16 @@ exports.getPatientRegs = async (s, id) => {
  * @param {object} id - идентификатор прикрепления
  * @return {object}
  */
-exports.getPatientReg = async (s, id) => {
+exports.getPatientReg = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.patient();
         r = await r.getPatientReg(id);
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -145,14 +191,17 @@ exports.getPatientReg = async (s, id) => {
  * @param {object} params - параметры поиска
  * @return {object}
  */
-exports.searchIndividual = async (s, params) => {
+exports.searchIndividual = async(s, params) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.individual();
         r = await r.searchIndividual(params);
         r = (r) ? r.individual : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -161,14 +210,19 @@ exports.searchIndividual = async (s, params) => {
  * @param {number} id - идентификатор подразделения
  * @return {object}
  */
-exports.getDepartment = async (s, id) => {
+exports.getDepartment = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.department();
-        r = await r.getDepartment({ departmentId: id });
+        r = await r.getDepartment({
+            departmentId: id
+        });
         r = (r) ? r.department : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -176,13 +230,18 @@ exports.getDepartment = async (s, id) => {
  * @param {object} s - конфигурация
  * @return {object}
  */
-exports.getDepartments = async (s) => {
+exports.getDepartments = async(s) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.department();
-        r = await r.getDepartments({ clinic: s.rmis.clinicId });
+        r = await r.getDepartments({
+            clinic: s.rmis.clinicId
+        });
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -191,13 +250,19 @@ exports.getDepartments = async (s) => {
  * @param {object} id - объект с кодом и версией справочника
  * @return {object}
  */
-exports.getRefbook = async (s, id) => {
+exports.getRefbook = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.refbook();
-        r = await r.getRefbook({ refbookCode: id.code, version: id.version });
+        r = await r.getRefbook({
+            refbookCode: id.code,
+            version: id.version
+        });
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -205,13 +270,16 @@ exports.getRefbook = async (s, id) => {
  * @param {object} s - конфигурация
  * @return {object}
  */
-exports.getRefbookList = async (s) => {
+exports.getRefbookList = async(s) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.refbook();
         r = await r.getRefbookList();
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -220,14 +288,19 @@ exports.getRefbookList = async (s) => {
  * @param {string} id - код справочника
  * @return {object}
  */
-exports.getVersionList = async (s, id) => {
+exports.getVersionList = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.refbook();
-        r = await r.getVersionList({ refbookCode: id });
+        r = await r.getVersionList({
+            refbookCode: id
+        });
         r = (r) ? r.version : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -236,14 +309,19 @@ exports.getVersionList = async (s, id) => {
  * @param {string} id - идентификатор ресурса
  * @return {object}
  */
-exports.getLocation = async (s, id) => {
+exports.getLocation = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.resource();
-        r = await r.getLocation({ location: id });
+        r = await r.getLocation({
+            location: id
+        });
         r = (r) ? r.location : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -255,9 +333,13 @@ exports.getLocations = async s => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.resource();
-        r = await r.getLocations({ clinic: s.rmis.clinicId });
+        r = await r.getLocations({
+            clinic: s.rmis.clinicId
+        });
         return r;
-    } catch (e) { return e; }
+    } catch (e) {
+        return e;
+    }
 };
 
 /**
@@ -266,13 +348,15 @@ exports.getLocations = async s => {
  * @param {object} d - параметры запроса
  * @return {object}
  */
-exports.getLocationsWithOptions = async (s, d) => {
+exports.getLocationsWithOptions = async(s, d) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.resource();
         r = await r.getLocations(d);
         return r;
-    } catch (e) { return e; }
+    } catch (e) {
+        return e;
+    }
 };
 
 /**
@@ -283,14 +367,19 @@ exports.getLocationsWithOptions = async (s, d) => {
  * @param {date} date - дата расписания
  * @return {object}
  */
-exports.getTimes = async (s, id, date) => {
+exports.getTimes = async(s, id, date) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.appointment();
-        r = await r.getTimes({ location: id, date: date });
+        r = await r.getTimes({
+            location: id,
+            date: date
+        });
         r = (r) ? r.interval : null;
         return r;
-    } catch (e) { return e; }
+    } catch (e) {
+        return e;
+    }
 };
 
 /**
@@ -299,14 +388,19 @@ exports.getTimes = async (s, id, date) => {
  * @param {number} id - идентификатор кабинета приема
  * @return {object}
  */
-exports.getRoom = async (s, id) => {
+exports.getRoom = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.room();
-        r = await r.getRoom({ roomId: id });
+        r = await r.getRoom({
+            roomId: id
+        });
         r = (r) ? r.room : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -318,9 +412,13 @@ exports.getRooms = async s => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.room();
-        r = await r.getRooms({ clinic: s.rmis.clinicId });
+        r = await r.getRooms({
+            clinic: s.rmis.clinicId
+        });
         return r;
-    } catch (e) { return e; }
+    } catch (e) {
+        return e;
+    }
 };
 
 /**
@@ -329,14 +427,19 @@ exports.getRooms = async s => {
  * @param {number} id - идентификатор сотрудника
  * @return {object}
  */
-exports.getEmployee = async (s, id) => {
+exports.getEmployee = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.employee();
-        r = await r.getEmployee({ id: id });
+        r = await r.getEmployee({
+            id: id
+        });
         r = (r) ? r.employee : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -348,9 +451,13 @@ exports.getEmployees = async s => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.employee();
-        r = await r.getEmployees({ organization: s.rmis.clinicId });
+        r = await r.getEmployees({
+            organization: s.rmis.clinicId
+        });
         return r;
-    } catch (e) { return e; }
+    } catch (e) {
+        return e;
+    }
 };
 
 /**
@@ -359,14 +466,19 @@ exports.getEmployees = async s => {
  * @param {number} id - идентификатор должности сотрудника
  * @return {object}
  */
-exports.getEmployeePosition = async (s, id) => {
+exports.getEmployeePosition = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.employee();
-        r = await r.getEmployeePosition({ id: id });
+        r = await r.getEmployeePosition({
+            id: id
+        });
         r = (r) ? r.employeePosition : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -376,13 +488,18 @@ exports.getEmployeePosition = async (s, id) => {
  * @param {number} id - идентификатор сотрудника
  * @return {object}
  */
-exports.getEmployeePositions = async (s, id) => {
+exports.getEmployeePositions = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.employee();
-        r = await r.getEmployeePositions({ employee: id });
+        r = await r.getEmployeePositions({
+            employee: id
+        });
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -392,13 +509,18 @@ exports.getEmployeePositions = async (s, id) => {
  * @param {number} id - идентификатор сотрудника
  * @return {object}
  */
-exports.getEmployeeSpecialities = async (s, id) => {
+exports.getEmployeeSpecialities = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.employee();
-        r = await r.getEmployeeSpecialities({ employee: id });
+        r = await r.getEmployeeSpecialities({
+            employee: id
+        });
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -408,14 +530,17 @@ exports.getEmployeeSpecialities = async (s, id) => {
  * @param {string} id - идентификатор физического лица
  * @return {object}
  */
-exports.getIndividual = async (s, id) => {
+exports.getIndividual = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.individual();
         r = await r.getIndividual(id);
         r = (r) ? r : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 
@@ -425,14 +550,17 @@ exports.getIndividual = async (s, id) => {
  * @param {number} id - идентификатор документа
  * @return {object}
  */
-exports.getDocument = async (s, id) => {
+exports.getDocument = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.individual();
         r = await r.getDocument(id);
         r = (r) ? r : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**
@@ -442,14 +570,17 @@ exports.getDocument = async (s, id) => {
  * @param {string} id - идентификатор физического лица
  * @return {object}
  */
-exports.getIndividualDocuments = async (s, id) => {
+exports.getIndividualDocuments = async(s, id) => {
     const rmis = rmisjs(s);
     try {
         let r = await rmis.individual();
         r = await r.getIndividualDocuments(id);
         r = (r) ? r.document : null;
         return r;
-    } catch (e) { return e; };
+    } catch (e) {
+        console.error(e);
+        return e;
+    };
 };
 
 /**

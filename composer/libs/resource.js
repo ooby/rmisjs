@@ -4,6 +4,7 @@ const {
     createDates,
     isSnils,
     snils,
+    getService,
     getDepartment,
     getDocument,
     getEmployee,
@@ -90,15 +91,12 @@ const timeFormat = date => moment(date).format('HH:mm:ss.SSSZ');
 exports.getDetailedLocations = async(s, m, c) => {
     try {
         let data = await connect(s, () =>
-            TimeSlot.getDetailedLocationsBySource('MIS').exec()
+            TimeSlot.getDetailedLocationsBySource('MIS')
         );
         for (let location of data) {
             for (let interval of location.interval) {
                 interval.date = dateFormat(interval.date);
                 for (let period of interval.timePeriod) {
-                    period._id = uuid({
-                        random: period._id.buffer
-                    });
                     period.from = timeFormat(period.from);
                     period.to = timeFormat(period.to);
                 }
