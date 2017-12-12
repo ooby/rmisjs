@@ -17,7 +17,7 @@ const {
     searchIndividual,
     timeFormat
 } = require('./collect');
-const appointmentService = require('./appointmentHelper');
+const appointmentHelper = require('./appointmentHelper');
 const connect = require('../mongo/connect');
 const moment = require('moment');
 const TimeSlot = require('../mongo/model/timeslot');
@@ -45,6 +45,7 @@ exports.validatePatient = async(s, m) => {
         }
         return (r) ? r : null;
     } catch (e) {
+        console.error(e);
         return e;
     }
 };
@@ -110,12 +111,11 @@ exports.searchVisit = async(s, m) => {
  */
 exports.deleteVisit = async(s, m) => {
     try {
-        let visit = await exports.searchVisit(s, m);
-        if (!visit) return '';
-        let slip = await appointmentService(s, {
-            id: visit.slot.id
-        });
-        if (!slip) return '';
+        let [appointmentService, visit] = await Promise.all([
+            appointmentHelper(s),
+            exports.searchVisit(s, m)
+        ]);
+        let slip = await appointmentService.getAppointmentNumber(visit.slot.id);
         await deleteSlotByRefusal(s, visit.slot.id);
         let slot = await getSlot(s, {
             slot: visit.slot.id
@@ -123,7 +123,7 @@ exports.deleteVisit = async(s, m) => {
         await connect(s, () =>
             visit.timeslot.updateStatus(slot.status).exec()
         );
-        return slip.number.number;
+        return slip;
     } catch (e) {
         console.error(e);
         return '';
@@ -143,7 +143,8 @@ exports.deleteVisit = async(s, m) => {
  */
 exports.createVisit = async(s, m) => {
     try {
-        let [timeslot, patient] = await Promise.all([
+        let [appointmentService, timeslot, patient] = await Promise.all([
+            appointmentHelper(s),
             connect(s, () => TimeSlot.getByUUID(m.GUID).exec()),
             searchIndividual(s, {
                 birthDate: m.birthDate,
@@ -155,18 +156,16 @@ exports.createVisit = async(s, m) => {
             dateTime: moment(timeslot.from).format('GGGG-MM-DDTHH:mm:ss.SSSZ'),
             service: timeslot.services[0],
             urgency: false,
-            patient: patient
+            patient
         });
-        let slip = appointmentService(s, {
-            id: slotId
-        });
+        let slip = await appointmentService.getAppointmentNumber(slotId);
         let slot = await getSlot(s, {
             slot: slotId
         });
         await connect(s, () =>
             timeslot.updateStatus(slot.status).exec()
         );
-        return (await slip).number.number;
+        return slip;
     } catch (e) {
         console.error(e);
         return '';
@@ -186,13 +185,11 @@ exports.createVisit = async(s, m) => {
  */
 exports.getVisit = async(s, m) => {
     try {
-        let visit = await exports.searchVisit(s, m);
-        if (!visit) return '';
-        let slip = await appointmentService(s, {
-            id: visit.slot.id
-        });
-        if (!slip) return '';
-        return slip.number.number;
+        let [appointmentService, visit] = await Promise.all([
+            appointmentHelper(s),
+            exports.searchVisit(s, m)
+        ]);
+        return await appointmentService.getAppointmentNumber(visit.slot.id);
     } catch (e) {
         console.error(e);
         return '';

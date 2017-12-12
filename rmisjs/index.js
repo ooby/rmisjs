@@ -17,6 +17,7 @@ module.exports = config => {
         patient: () => composeLib(svc, 'patient', require('./libs/patient')),
         refbook: () => composeLib(svc, 'refbook', require('./libs/refbook')),
         resource: () => composeLib(svc, 'resource', require('./libs/resource')),
+        services: () => composeLib(svc, 'services', require('./libs/services')),
         room: () => composeLib(svc, 'room', require('./libs/room'))
     };
 };

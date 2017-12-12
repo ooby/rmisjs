@@ -41,12 +41,15 @@ const getCaseByIndividual = (c, d) =>
         patientUid: d
     });
 
+const parseAdmissionDate = (date, time) =>
+    moment(unwind(date).split('+').shift() + 'T' + unwind(time)).toDate();
+
 const parseVisits = d => {
     d = unwind(
         wind(d.Visit).sort((a, b) => {
-            a.dateTime = moment(unwind(a.admissionDate).split('+').shift() + 'T' + unwind(a.admissionTime)).toDate();
-            b.dateTime = moment(unwind(b.admissionDate).split('+').shift() + 'T' + unwind(b.admissionTime)).toDate();
-            return b.dateTime - a.dateTime;
+            a = a.dateTime = parseAdmissionDate(a.admissionDate, a.admissionTime);
+            b = b.dateTime = parseAdmissionDate(b.admissionDate, b.admissionTime);
+            return b - a;
         })
     );
     d.dateTime = moment(d.dateTime).utc().format('GGGG-MM-DDTHH:mm:ss[Z]');
