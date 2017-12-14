@@ -9,21 +9,21 @@ const updateServices = require('./services');
 
 const rmisjs = require('../../../index');
 
-module.exports = async(config) => {
+/**
+ * Выгрузка данных из РМИС в MongoDB
+ * @param {Object} s - Конфигурация
+ * @return {Promise<Error>}
+ */
+module.exports = async s => {
     try {
-        const clinicId = config.rmis.clinicId;
-        const {
-            rmis,
-            composer
-        } = rmisjs(config);
-        await connect(config, async () => {
-            await updateDepartments(composer);
-            await updateLocations(rmis, clinicId);
+        await connect(s, async () => {
+            await updateDepartments(s);
+            await updateLocations(s);
             await Promise.all([
-                updateRooms(rmis),
-                updateServices(config),
-                updateEmployees(rmis),
-                updateTimeSlots(rmis, clinicId)
+                updateRooms(s),
+                updateServices(s),
+                updateEmployees(s),
+                updateTimeSlots(s)
             ]);
         });
     } catch (e) {

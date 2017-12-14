@@ -57,18 +57,33 @@ describe('[RMIS composer > getLocationsWithPortal]: ', () => {
 
 describe('[RMIS composer > getDetailedLocations]: ', () => {
     it('getDetailedLocations method', async() => {
-        let data = await rb.getRefbook({
-            code: 'MDP365',
-            version: '1.0',
-            part: '1'
-        });
-        data = data.data.map(i => {
-            return {
-                code: i[1].value,
-                name: i[3].value
-            };
-        });
-        data = await composer.getDetailedLocations(data);
+        let [mdp365, c33001] = await Promise.all([
+            rb.getRefbook({
+                code: 'MDP365',
+                version: '1.0',
+                part: '1'
+            }).then(r =>
+                r.data.map(i => {
+                    return {
+                        code: i[1].value,
+                        name: i[3].value
+                    };
+                })
+            ),
+            rb.getRefbook({
+                code: 'C33001',
+                version: '1.0',
+                part: '1'
+            }).then(r =>
+                r.data.map(i => {
+                    return {
+                        code: i[2].value,
+                        name: i[3].value
+                    };
+                })
+            )
+        ]);
+        let data = await composer.getDetailedLocations(mdp365, c33001);
         let validator = new Ajv();
         let valid = validator.validate({
             type: 'array',

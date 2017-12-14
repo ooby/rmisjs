@@ -1,24 +1,28 @@
 const Department = require('../model/department');
+const $ = require('../uncatch');
+const getPortalDepartments = require('../../libs/department').getPortalDepartments;
 
-module.exports = async(composer) => {
-    let depts = await composer.getPortalDepartments();
-    let promises = [
-        Department.remove({
-            _id: {
-                $nin: depts.map(i => i.id)
-            }
-        }).exec()
-    ];
-    for (let dept of depts) {
-        dept._id = dept.id;
-        dept.type = dept.departmentType;
-        promises.push(
-            Department.update({
+/**
+ * Выгрузка данных из РМИС об отделениях
+ * @param {Object} s - конфигурация
+ */
+module.exports = async s => {
+    console.log('Syncing departments...');
+    let depts = await $(() => getPortalDepartments(s));
+    await Department.remove({
+        _id: {
+            $nin: depts.map(i => i.id)
+        }
+    }).exec();
+    await Promise.all(
+        depts.map(async (dept) => {
+            dept._id = dept.id;
+            dept.type = dept.departmentType;
+            await Department.update({
                 _id: dept.id
             }, dept, {
                 upsert: true
-            }).exec()
-        );
-    }
-    await Promise.all(promises);
+            }).exec();
+        })
+    );
 };

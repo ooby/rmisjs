@@ -382,6 +382,22 @@ exports.getTimes = async(s, id, date) => {
     }
 };
 
+exports.getReserveFiltered = async(s, date, location) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.appointment();
+        r = await r.getReserveFiltered({
+            date,
+            organization: s.rmis.clinicId,
+            location
+        });
+        r = (r) ? r.slot : null;
+        return r;
+    } catch (e) {
+        return e;
+    }
+};
+
 /**
  * Запрашивает и возвращает кабинет приема по идентификатору
  * @param {object} s - конфигурация
@@ -454,6 +470,26 @@ exports.getEmployees = async s => {
         r = await r.getEmployees({
             organization: s.rmis.clinicId
         });
+        return r;
+    } catch (e) {
+        return e;
+    }
+};
+
+/**
+ * Запрышивает и возвращает сведения о должности
+ * @param {Object} s - конфигурация
+ * @param {Number} id - идентификатор должности
+ * @return {Object} - сведения о должности
+ */
+exports.getPosition = async(s, id) => {
+    const rmis = rmisjs(s);
+    try {
+        let r = await rmis.employee();
+        r = await r.getPosition({
+            id
+        });
+        r = (r) ? r.position : null;
         return r;
     } catch (e) {
         return e;

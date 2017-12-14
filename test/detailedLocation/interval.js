@@ -12,7 +12,7 @@ module.exports = {
             type: 'array',
             items: {
                 type: 'object',
-                required: ['from', 'to', 'uuid', 'status'],
+                required: ['from', 'to', '_id', 'status'],
                 properties: {
                     from: {
                         type: 'string',
@@ -22,7 +22,7 @@ module.exports = {
                         type: 'string',
                         format: 'time'
                     },
-                    uuid: {
+                    _id: {
                         type: 'string',
                         format: 'uuid'
                     },
