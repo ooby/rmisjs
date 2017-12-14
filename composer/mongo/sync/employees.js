@@ -1,16 +1,38 @@
 const Location = require('../model/location');
 const Employee = require('../model/employee');
+const Queue = require('../queue');
+const $ = require('../uncatch');
 
-module.exports = async(rmis) => {
-    let refbook = await rmis.refbook();
-    let specs = await refbook.getRefbook({
-        refbookCode: '1.2.643.5.1.13.3.2861820518965.1.1.118',
-        version: 'CURRENT'
-    });
+const {
+    getRefbook,
+    getEmployeePosition,
+    getEmployee,
+    getPosition,
+    getIndividualDocuments,
+    getIndividual,
+    getDocument
+} = require('../../libs/collect');
+
+const empq = new Queue(2);
+const indq = new Queue(2);
+
+/**
+ * Выгрузка данных из РМИС о сотрудниках
+ * @param {Object} s - конфигурация
+ */
+module.exports = async s => {
+    console.log('Syncing employees...');
+    let specs = await $(() =>
+        getRefbook(s, {
+            code: '1.2.643.5.1.13.3.2861820518965.1.1.118',
+            version: 'CURRENT'
+        })
+    );
     specs = new Map(
         specs.row.map(i => {
             let r = [];
             for (let col of i.column) {
+                if (r.length == 2) break;
                 if (col.name === 'ID') {
                     r[0] = col.data;
                 } else if (col.name === 'NAME') {
@@ -20,61 +42,58 @@ module.exports = async(rmis) => {
             return r;
         })
     );
-    let [emp, ind, positions] = await Promise.all([
-        rmis.employee(),
-        rmis.individual(),
-        Location.distinct('positions').exec()
-    ]);
-    let promises = [
-        Employee.remove({
-            position: {
-                $nin: positions
-            }
-        }).exec()
-    ];
-    for (let positionId of positions) {
-        let data = {
-            position: positionId
-        };
-        let employeePosition = await emp.getEmployeePosition({
-            id: positionId
-        });
-        employeePosition = employeePosition.employeePosition;
-        data._id = employeePosition.employee;
-        let position = await emp.getPosition({
-            id: employeePosition.position
-        });
-        position = position.position;
-        if (!position.speciality) continue;
-        data.positionName = position.name;
-        data.speciality = position.speciality;
-        data.specialityName = specs.get(data.speciality);
-        let employee = await emp.getEmployee({
-            id: employeePosition.employee
-        });
-        employee = employee.employee;
-        data.individual = employee.individual;
-        let documents = await ind.getIndividualDocuments(employee.individual);
-        if (!documents) continue;
-        for (let documentId of [].concat(documents.document)) {
-            let documentData = await ind.getDocument(documentId);
-            if (documentData.type !== '19') continue;
-            data.snils = documentData.number.replace(/[-\s]/g, '');
-            break;
-        }
-        let individual = await ind.getIndividual(employee.individual);
-        data.surname = individual.surname;
-        data.patrName = individual.patrName;
-        data.firstName = individual.name;
-        if (!data.snils) continue;
-        if (!!employee.birthDate) data.birthDate = new Date(employee.birthDate);
-        promises.push(
-            Employee.update({
-                _id: employeePosition.employee
-            }, data, {
-                upsert: true
+    let positions = await Location.distinct('positions').exec();
+    await Promise.all(
+        [].concat(
+            Employee.remove({
+                position: {
+                    $nin: positions
+                }
             }).exec()
-        );
-    }
-    await Promise.all(promises);
+        ).concat(
+            positions.map(async (positionId) => {
+                let data = {
+                    position: positionId
+                };
+                let employeePosition = await empq.push(() =>
+                    $(() => getEmployeePosition(s, positionId))
+                );
+                data._id = employeePosition.employee;
+                let position = await empq.push(() =>
+                    $(() => getPosition(s, employeePosition.position))
+                );
+                if (!position.speciality) return;
+                data.positionName = position.name;
+                data.speciality = position.speciality;
+                data.specialityName = specs.get(data.speciality);
+                let employee = await empq.push(() =>
+                    $(() => getEmployee(s, employeePosition.employee))
+                );
+                data.individual = employee.individual;
+                let documents = await indq.push(() =>
+                    $(() => getIndividualDocuments(s, employee.individual))
+                );
+                if (!documents) return;
+                for (let documentId of [].concat(documents)) {
+                    let documentData = await getDocument(s, documentId);
+                    if (documentData.type !== '19') return; // 19 = SNILS
+                    data.snils = documentData.number.replace(/[-\s]/g, '');
+                    break;
+                }
+                if (!data.snils) return;
+                let individual = await indq.push(() =>
+                    $(() => getIndividual(s, employee.individual))
+                );
+                data.surname = individual.surname;
+                data.patrName = individual.patrName;
+                data.firstName = individual.name;
+                if (!!employee.birthDate) data.birthDate = new Date(employee.birthDate);
+                await Employee.update({
+                    _id: employeePosition.employee
+                }, data, {
+                    upsert: true
+                }).exec();
+            })
+        )
+    );
 };

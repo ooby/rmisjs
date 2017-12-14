@@ -2,51 +2,62 @@ const createDates = require('../../libs/collect').createDates;
 const TimeSlot = require('../model/timeslot');
 const Location = require('../model/location');
 const moment = require('moment');
+const Queue = require('../queue');
+const get = require('../getter');
+const rmis = require('../../../index');
 
 const toMidnight = dateString => moment(dateString).toDate();
 
-const update = async(date, location, organization, appointmentService) => {
-    let midnight = toMidnight(date);
-    let times = await appointmentService.getTimes({
-        location,
-        date
-    });
-    times = (
-        (!!times.interval.timePeriod ? times.interval.timePeriod : [])
-        .map(i => {
-            return {
-                from: new Date(`${date}T${i.from}`),
-                to: new Date(`${date}T${i.to}`),
-                date: midnight,
-                status: 1,
-                location,
-                unavailable: i.notAvailableSources ? i.notAvailableSources.notAvailableSource.map(i => i.source) : [],
-                services: i.availableServices ? i.availableServices.service : []
-            };
+const tim = new Queue(2);
+const res = new Queue(2);
+let promises = [];
+
+const requestTime = (s, location, date, appointmentService) =>
+    tim.push(() =>
+        appointmentService.getTimes({
+            location,
+            date
         })
     );
-    let tmp = await appointmentService.getReserveFiltered({
-        date,
-        organization,
-        location
+
+const requestReserve = (s, location, date, appointmentService) =>
+    res.push(() =>
+        appointmentService.getReserveFiltered({
+            date,
+            organization: s.rmis.clinicId,
+            location
+        })
+    );
+
+const update = async(s, date, location, appointmentService) => {
+    let midnight = toMidnight(date);
+    let reserved = requestReserve(s, location, date, appointmentService);
+    let times = await requestTime(s, location, date, appointmentService);
+    times = get(times, [], 'interval', 'timePeriod').map(i => {
+        return {
+            from: new Date(`${date}T${i.from}`),
+            to: new Date(`${date}T${i.to}`),
+            date: midnight,
+            status: 1,
+            location,
+            unavailable: get(i, [], 'notAvailableSources', 'notAvailableSource').map(i => i.source),
+            services: get(i, [], 'availableServices', 'service')
+        };
     });
     let froms = times.map(i => i.from);
-    times = (
-        (times || [])
-        .concat(
-            ((tmp || []).slot || [])
-            .filter(i => !!i.timePeriod.to)
-            .map(i => {
-                return {
-                    from: new Date(`${date}T${i.timePeriod.from}`),
-                    to: new Date(`${date}T${i.timePeriod.to}`),
-                    date: midnight,
-                    location,
-                    status: i.status
-                };
-            })
-            .filter(i => froms.indexOf(i.from.valueOf()) < 0)
-        )
+    times = times.concat(
+        get(await reserved, [], 'slot')
+        .filter(i => !!i.timePeriod.to)
+        .map(i => {
+            return {
+                from: new Date(`${date}T${i.timePeriod.from}`),
+                to: new Date(`${date}T${i.timePeriod.to}`),
+                date: midnight,
+                location,
+                status: i.status
+            };
+        })
+        .filter(i => froms.indexOf(i.from.valueOf()) < 0)
     );
     froms = times.map(i => i.from);
     await TimeSlot.remove({
@@ -61,54 +72,67 @@ const update = async(date, location, organization, appointmentService) => {
         location
     }).exec();
     existing = existing.map(i => i.valueOf());
-    let promises = [];
     for (let time of times) {
-        try {
-            let from = time.from.valueOf();
-            if (existing.indexOf(from) < 0) {
-                promises.push(new TimeSlot(time).save());
-                existing.push(from);
-            } else {
-                promises.push(
-                    TimeSlot.update({
-                        from: time.from,
-                        location
-                    }, {
-                        $set: {
-                            to: time.to,
-                            status: time.status
-                        }
-                    }).exec()
-                );
-            }
-        } catch (e) {
-            console.error(e);
+        let from = time.from.valueOf();
+        if (existing.indexOf(from) < 0) {
+            promises.push(
+                new TimeSlot(time)
+                .save()
+                .catch(e => cosnole.error(e))
+            );
+            existing.push(from);
+        } else {
+            promises.push(
+                TimeSlot
+                .update({
+                    from: time.from,
+                    location
+                }, {
+                    $set: {
+                        to: time.to,
+                        status: time.status
+                    }
+                })
+                .exec()
+                .catch(e => console.error(e))
+            );
         }
     }
-    await Promise.all(promises);
 };
 
-module.exports = async(rmis, clinicId) => {
-    let appointmentService = await rmis.appointment();
-    let dates = createDates(0, 29);
-    let locs = await Location.distinct('_id').exec();
-    await TimeSlot.remove({
-        $or: [
-            {
-                date: {
-                    $nin: dates.map(i => toMidnight(i))
-                }
-            },
-            {
-                location: {
-                    $nin: locs
-                }
-            }
-        ]
-    }).exec();
-    for (let loc of locs) {
-        for (let date of dates) {
-            await update(date, loc, clinicId, appointmentService);
-        }
-    }
+/**
+ * Выгрузка данных из РМИС о расписании
+ * @param {Object} s - конфигурация
+ */
+module.exports = async s => {
+    console.log('Syncing timeslots...');
+    let appointmentService = await rmis(s).rmis.appointment();
+    let dates = createDates();
+    let locations = await Location.distinct('_id').exec();
+    await Promise.all(
+        [].concat(
+            TimeSlot.remove({
+                $or: [{
+                    date: {
+                        $nin: dates.map(i => toMidnight(i))
+                    }
+                }, {
+                    location: {
+                        $nin: locations
+                    }
+                }]
+            }).exec()
+        ).concat(
+            locations.map(location =>
+                Promise.all(
+                    dates.map(date =>
+                        update(s, date, location, appointmentService)
+                        .catch(e => console.error(e))
+                    )
+                )
+            )
+        )
+    );
+    await Promise.all(promises);
+    promises = [];
 };
