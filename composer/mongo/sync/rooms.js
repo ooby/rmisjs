@@ -10,7 +10,6 @@ const q = new Queue(2);
  * @param {Object} s - конфигурация
  */
 module.exports = async s => {
-    console.log('Syncing rooms...');
     let [roomService, rooms] = await Promise.all([
         rmisjs(s).rmis.room(),
         Location.distinct('rooms').exec()

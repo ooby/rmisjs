@@ -4,7 +4,7 @@ const Location = require('../model/location');
 const moment = require('moment');
 const Queue = require('../queue');
 const get = require('../getter');
-const rmis = require('../../../index');
+const rmisjs = require('../../../index');
 
 const toMidnight = dateString => moment(dateString).toDate();
 
@@ -105,8 +105,7 @@ const update = async(s, date, location, appointmentService) => {
  * @param {Object} s - конфигурация
  */
 module.exports = async s => {
-    console.log('Syncing timeslots...');
-    let appointmentService = await rmis(s).rmis.appointment();
+    let appointmentService = await rmisjs(s).rmis.appointment();
     let dates = createDates();
     let locations = await Location.distinct('_id').exec();
     await Promise.all(

@@ -1,5 +1,5 @@
-const Location = require('../model/location');
 const Department = require('../model/department');
+const Location = require('../model/location');
 const rmisjs = require('../../../index');
 const Queue = require('../queue');
 const get = require('../getter');
@@ -11,17 +11,11 @@ const q = new Queue(2);
  * @param {Object} s - конфигурация
  */
 module.exports = async s => {
-    console.log('Syncng locations...');
     let resource = await rmisjs(s).rmis.resource();
     let ids = resource.getLocations({
         clinic: s.rmis.clinicId
     });
     let depts = await Department.distinct('_id').exec();
-    let removal = Location.remove({
-        department: {
-            $nin: depts
-        }
-    }).exec();
     await Promise.all(
         [].concat(
             Location.remove({

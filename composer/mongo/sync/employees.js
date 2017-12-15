@@ -21,12 +21,8 @@ const indq = new Queue(2);
  * @param {Object} s - конфигурация
  */
 module.exports = async s => {
-    console.log('Syncing employees...');
     let specs = await $(() =>
-        getRefbook(s, {
-            code: '1.2.643.5.1.13.3.2861820518965.1.1.118',
-            version: 'CURRENT'
-        })
+        getRefbook(s, s.mongo.specbook)
     );
     specs = new Map(
         specs.row.map(i => {
@@ -51,7 +47,7 @@ module.exports = async s => {
                 }
             }).exec()
         ).concat(
-            positions.map(async (positionId) => {
+            positions.map(async positionId => {
                 let data = {
                     position: positionId
                 };

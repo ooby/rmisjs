@@ -7,7 +7,13 @@ const { syncDepartments } = require('./sync/department');
 const { syncRooms } = require('./sync/room');
 const { syncEmployees } = require('./sync/employee');
 const { getSchedules, deleteSchedules, syncSchedules } = require('./sync/schedule');
-const syncMongo = require('./mongo/sync');
+const mongoDepartments = require('./mongo/sync/departments');
+const mongoLocations = require('./mongo/sync/locations');
+const mongoRooms = require('./mongo/sync/rooms');
+const mongoEmployees = require('./mongo/sync/employees');
+const mongoTimeSlots = require('./mongo/sync/timeslots');
+const mongoServices = require('./mongo/sync/services');
+
 module.exports = s => {
     return {
         getDetailedDepartments: () => getDetailedDepartments(s),
@@ -27,6 +33,11 @@ module.exports = s => {
         syncEmployees: (d) => syncEmployees(s, d),
         syncSchedules: (d) => syncSchedules(s, d),
         deleteSchedules: () => deleteSchedules(s),
-        syncMongo: () => syncMongo(s)
+        mongoDepartments: () => mongoDepartments(s),
+        mongoLocations: () => mongoLocations(s),
+        mongoRooms: () => mongoRooms(s),
+        mongoEmployees: () => mongoEmployees(s),
+        mongoTimeSlots: () => mongoTimeSlots(s),
+        mongoServices: () => mongoServices(s)
     };
 };
