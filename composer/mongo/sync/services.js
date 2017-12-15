@@ -9,7 +9,6 @@ const q = new Queue(2);
  * @param {Object} s - конфигурация
  */
 module.exports = async s => {
-    console.log('Syncing services...');
     let servicesService = await rmisjs(s).rmis.services();
     let services = await servicesService.getServices({
         clinic: s.rmis.clinicId
