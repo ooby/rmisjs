@@ -111,9 +111,12 @@ TimeSlotSchema.statics.getDetailedLocationsBySource = async function (...sources
             foreignField: '_id',
             as: 'services'
         })
-        .unwind('services')
         .match({
-            'services.repeated': false
+            services: {
+                $elemMatch: {
+                    repeated: false
+                }
+            }
         })
         .group({
             _id: {
