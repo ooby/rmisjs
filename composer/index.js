@@ -1,18 +1,34 @@
-const { getDetailedLocations, getLocations } = require('./libs/resource');
-const { getDetailedDepartments, getPortalDepartments } = require('./libs/department');
-const { getDetailedEmployees } = require('./libs/employee');
-const { createVisit, getVisit, validatePatient, deleteVisit, searchVisit } = require('./libs/patient');
-const { getDetailedRooms } = require('./libs/room');
-const { syncDepartments } = require('./sync/department');
-const { syncRooms } = require('./sync/room');
-const { syncEmployees } = require('./sync/employee');
-const { getSchedules, deleteSchedules, syncSchedules } = require('./sync/schedule');
-const mongoDepartments = require('./mongo/sync/departments');
-const mongoLocations = require('./mongo/sync/locations');
+const getDetailedRooms = require('./libs/room').getDetailedRooms;
+const getDetailedEmployees = require('./libs/employee').getDetailedEmployees;
+const syncRooms = require('./sync/room').syncRooms;
+const syncEmployees = require('./sync/employee').syncEmployees;
+const syncDepartments = require('./sync/department').syncDepartments;
 const mongoRooms = require('./mongo/sync/rooms');
+const mongoServices = require('./mongo/sync/services');
+const mongoLocations = require('./mongo/sync/locations');
 const mongoEmployees = require('./mongo/sync/employees');
 const mongoTimeSlots = require('./mongo/sync/timeslots');
-const mongoServices = require('./mongo/sync/services');
+const mongoDepartments = require('./mongo/sync/departments');
+const {
+    getSchedules,
+    syncSchedules,
+    deleteSchedules
+} = require('./sync/schedule');
+const {
+    getVisit,
+    createVisit,
+    deleteVisit,
+    searchVisit,
+    validatePatient
+} = require('./libs/patient');
+const {
+    getLocations,
+    getDetailedLocations
+} = require('./libs/resource');
+const {
+    getPortalDepartments,
+    getDetailedDepartments
+} = require('./libs/department');
 
 module.exports = s => {
     return {
@@ -22,16 +38,16 @@ module.exports = s => {
         getDetailedLocations: (d, m) => getDetailedLocations(s, d, m),
         getPortalDepartments: () => getPortalDepartments(s),
         getLocations: () => getLocations(s),
-        getSchedules: (d) => getSchedules(s, d),
-        validatePatient: (d) => validatePatient(s, d),
-        createVisit: (d) => createVisit(s, d),
-        deleteVisit: (d) => deleteVisit(s, d),
-        searchVisit: (d) => searchVisit(s, d),
-        getVisit: (d) => getVisit(s, d),
-        syncDepartments: (d) => syncDepartments(s, d),
-        syncRooms: (d) => syncRooms(s, d),
-        syncEmployees: (d) => syncEmployees(s, d),
-        syncSchedules: (d) => syncSchedules(s, d),
+        getSchedules: d => getSchedules(s, d),
+        validatePatient: d => validatePatient(s, d),
+        createVisit: d => createVisit(s, d),
+        deleteVisit: d => deleteVisit(s, d),
+        searchVisit: d => searchVisit(s, d),
+        getVisit: d => getVisit(s, d),
+        syncDepartments: d => syncDepartments(s, d),
+        syncRooms: d => syncRooms(s, d),
+        syncEmployees: d => syncEmployees(s, d),
+        syncSchedules: d => syncSchedules(s, d),
         deleteSchedules: () => deleteSchedules(s),
         mongoDepartments: () => mongoDepartments(s),
         mongoLocations: () => mongoLocations(s),

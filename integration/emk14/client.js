@@ -17,9 +17,9 @@ const handleRequest = (client, options) =>
         client(options, handleError(resolve, reject))
     );
 
-exports.createClient = (host, service) => {
+module.exports = (s, service) => {
     let client = request.defaults({
-        baseUrl: `${host}/${service}`
+        baseUrl: `${s.emk14.host}/${service}`
     });
     return {
         get(action, data) {

@@ -24,6 +24,7 @@ module.exports = async (config, cb) => {
         return await cb();
     } catch (e) {
         console.error(e);
+        return e;
     } finally {
         await mongoose.disconnect();
     }

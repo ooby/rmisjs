@@ -1,4 +1,8 @@
-module.exports = c => {
+const createClient = require('../client');
+
+module.exports = s => {
+    let c = createClient(s, 'patient');
+    
     return {
         /**
          * Поиск пациента

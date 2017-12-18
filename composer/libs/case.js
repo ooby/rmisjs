@@ -2,9 +2,7 @@ const soap = require('soap');
 const refbooks = require('refbooks');
 const moment = require('moment');
 const url = require('url');
-const {
-    getRefbook
-} = require('./collect');
+const getRefbook = require('./collect').getRefbook;
 
 const wsdl = '/carbondss/services/MedbaseCases/MedbaseCases.SecureSOAP11Endpoint.xml';
 const endpoint = '/carbondss/services/MedbaseCases.SOAP11Endpoint/';
@@ -27,8 +25,8 @@ const composeMethod = (c, method) =>
         }
     };
 
-const wind = d => [].concat(d);
-const unwind = d => wind(d).pop();
+const wind = d => [].concat(d || []);
+const unwind = d => wind(d || []).pop();
 
 /**
  * Сведения о случае по UID пациента
