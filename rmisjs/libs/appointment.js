@@ -1,41 +1,14 @@
-module.exports = c => {
+const createClient = require('../client');
+
+module.exports = async s => {
+    let c = await createClient(s, 'appointment');
     return {
         describe: () => c.describe(),
-        getTimes: d => new Promise((resolve, reject) => {
-            c.getTimes(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        postReserve: d => new Promise((resolve, reject) => {
-            c.postReserve(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        deleteSlot: d => new Promise((resolve, reject) => {
-            c.deleteSlot(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getSlot: d => new Promise((resolve, reject) => {
-            c.getSlot(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getReserve: d => new Promise((resolve, reject) => {
-            c.getReserve(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getReserveFiltered: d => new Promise((resolve, reject) => {
-            c.getReserveFiltered(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        })
+        getTimes: d => c.getTimesAsync(d),
+        postReserve: d => c.postReserveAsync(d),
+        deleteSlot: d => c.deleteSlotAsync(d),
+        getSlot: d => c.getSlotAsync(d),
+        getReserve: d => c.getReserveAsync(d),
+        getReserveFiltered: d => c.getReserveFilteredAsync(d)
     };
 };

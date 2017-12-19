@@ -42,9 +42,18 @@ module.exports = async s => {
     await Promise.all(
         [].concat(
             Employee.remove({
-                position: {
-                    $nin: positions
-                }
+                $or: [
+                    {
+                        position: {
+                            $nin: positions
+                        }
+                    },
+                    {
+                        snils: {
+                            $exists: false
+                        }
+                    }
+                ]
             }).exec()
         ).concat(
             positions.map(async positionId => {
@@ -72,7 +81,7 @@ module.exports = async s => {
                 if (!documents) return;
                 for (let documentId of [].concat(documents)) {
                     let documentData = await getDocument(s, documentId);
-                    if (documentData.type !== '19') return; // 19 = SNILS
+                    if (parseInt(documentData.type) !== 19) continue; // 19 = SNILS
                     data.snils = documentData.number.replace(/[-\s]/g, '');
                     break;
                 }

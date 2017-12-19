@@ -27,7 +27,7 @@ module.exports = async s => {
                     _id: service.id,
                     name: service.name
                 };
-                service.repeated = /повтор/i.test(service.name);
+                service.repeated = (/повтор/i).test(service.name);
                 let details = await q.push(() =>
                     servicesService.getService({
                         serviceId: service._id

@@ -1,17 +1,10 @@
-module.exports = c => {
+const createClient = require('../client');
+
+module.exports = async s => {
+    let c = await createClient(s, 'resource');
     return {
         describe: () => c.describe(),
-        getLocation: d => new Promise((resolve, reject) => {
-            c.getLocation(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getLocations: d => new Promise((resolve, reject) => {
-            c.getLocations(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        })
+        getLocation: d => c.getLocationAsync(d),
+        getLocations: d => c.getLocationsAsync(d)
     };
 };

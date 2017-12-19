@@ -1,41 +1,14 @@
-module.exports = c => {
+const createClient = require('../client');
+
+module.exports = async s => {
+    let c = await createClient(s, 'employee');
     return {
         describe: () => c.describe(),
-        getEmployee: d => new Promise((resolve, reject) => {
-            c.getEmployee(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getEmployees: d => new Promise((resolve, reject) => {
-            c.getEmployees(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getEmployeePosition: d => new Promise((resolve, reject) => {
-            c.getEmployeePosition(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getEmployeePositions: d => new Promise((resolve, reject) => {
-            c.getEmployeePositions(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getEmployeeSpecialities: d => new Promise((resolve, reject) => {
-            c.getEmployeeSpecialities(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getPosition: d => new Promise((resolve, reject) => {
-            c.getPosition(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        })
+        getEmployee: d => c.getEmployeeAsync(d),
+        getEmployees: d => c.getEmployeesAsync(d),
+        getEmployeePosition: d => c.getEmployeePositionAsync(d),
+        getEmployeePositions: d => c.getEmployeePositionsAsync(d),
+        getEmployeeSpecialities: d => c.getEmployeeSpecialitiesAsync(d),
+        getPosition: d => c.getPositionAsync(d)
     };
 };
