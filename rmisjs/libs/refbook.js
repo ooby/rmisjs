@@ -1,23 +1,11 @@
-module.exports = c => {
+const createClient = require('../client');
+
+module.exports = async s => {
+    let c = await createClient(s, 'refbook');
     return {
         describe: () => c.describe(),
-        getRefbook: d => new Promise((resolve, reject) => {
-            c.getRefbook(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getRefbookList: d => new Promise((resolve, reject) => {
-            c.getRefbookList(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getVersionList: d => new Promise((resolve, reject) => {
-            c.getVersionList(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        })
+        getRefbook: d => c.getRefbookAsync(d),
+        getRefbookList: d => c.getRefbookListAsync(d),
+        getVersionList: d => c.getVersionListAsync(d)
     };
 };

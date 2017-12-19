@@ -1,9 +1,3 @@
 const soap = require('soap');
-exports.createClient = path => {
-    return new Promise((resolve, reject) => {
-        soap.createClient(path, (e, c) => {
-            if (e) { reject(e); }
-            else { resolve(c); }
-        });
-    });
-};
+
+module.exports = s => soap.createClientAsync(s.er14.path);

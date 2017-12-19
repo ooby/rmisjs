@@ -1,29 +1,12 @@
-module.exports = c => {
+const createClient = require('../client');
+
+module.exports = async s => {
+    let c = await createClient(s, 'individual');
     return {
         describe: () => c.describe(),
-        getDocument: d => new Promise((resolve, reject) => {
-            c.getDocument(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getIndividual: d => new Promise((resolve, reject) => {
-            c.getIndividual(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        searchIndividual: d => new Promise((resolve, reject) => {
-            c.searchIndividual(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getIndividualDocuments: d => new Promise((resolve, reject) => {
-            c.getIndividualDocuments(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        })
+        getDocument: d => c.getDocumentAsync(d),
+        getIndividual: d => c.getIndividualAsync(d),
+        searchIndividual: d => c.searchIndividualAsync(d),
+        getIndividualDocuments: d => c.getIndividualDocumentsAsync(d)
     };
 };

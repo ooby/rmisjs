@@ -1,23 +1,11 @@
-module.exports = c => {
+const createClient = require('../client');
+
+module.exports = async s => {
+    let c = await createClient(s, 'district');
     return {
         describe: () => c.describe(),
-        getDistrict: d => new Promise((resolve, reject) => {
-            c.getDistrict(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        getSeparation: d => new Promise((resolve, reject) => {
-            c.getSeparation(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        }),
-        searchDistricts: d => new Promise((resolve, reject) => {
-            c.searchDistricts(d, (e, r) => {
-                if (e) { reject(e); }
-                else { resolve(r); }
-            });
-        })
+        getDistrict: d => c.getDistrictAsync(d),
+        getSeparation: d => c.getSeparationAsync(d),
+        searchDistricts: d => c.searchDistrictsAsync(d)
     };
 };

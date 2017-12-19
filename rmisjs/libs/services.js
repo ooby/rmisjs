@@ -1,4 +1,7 @@
-module.exports = c => {
+const createClient = require('../client');
+
+module.exports = async s => {
+    let c = await createClient(s, 'services');
     return {
         describe: () => c.describe(),
         getService: d => c.getServiceAsync(d),
