@@ -1,7 +1,11 @@
+const patient = require('./libs/patient');
+const professional = require('./libs/professional');
+const document = require('./libs/document');
+
 module.exports = s => {
     return {
-        patient: () => require('./libs/patient')(s),
-        professional: () => require('./libs/professional')(s),
-        document: () => require('./libs/document')(s)
+        patient: () => patient(s),
+        professional: () => professional(s),
+        document: () => document(s)
     };
 };

@@ -59,7 +59,7 @@ exports.syncSchedules = async(s, d) => {
                 })
                 if (!log) continue;
                 if (parseInt(log.ErrorCode) === 0) continue;
-                log.location = i;
+                log.location = i.location;
                 bb.push(log);
             }
         }
@@ -86,13 +86,11 @@ exports.getSchedules = async(s, d) => {
     }
 };
 
-exports.deleteSchedules = async(s, from, to) => {
+exports.deleteSchedulesForDates = async(s, ...dates) => {
     try {
         const er14 = await rmisjs(s).integration.er14.process();
-        const dates = createDates(from, to);
         let result = [];
         for (let d of dates) {
-            if (!schedule.scheduleInfo) continue;
             let i = await er14.getScheduleInfo(
                 getSchedFormat({
                     scheduleDate: d,
@@ -100,6 +98,7 @@ exports.deleteSchedules = async(s, from, to) => {
                     needFIO: false
                 })
             )
+            if (!i.scheduleInfo) continue;
             for (let j of i.scheduleInfo.schedule) {
                 let log = await er14.deleteSchedule(
                     schedFormatStruct({
@@ -123,3 +122,6 @@ exports.deleteSchedules = async(s, from, to) => {
         return e;
     }
 };
+
+exports.deleteSchedules = (s, from, to) =>
+    exports.deleteSchedulesForDates(s, ...createDates(from, to));
