@@ -12,7 +12,8 @@ const mongoDepartments = require('./mongo/sync/departments');
 const {
     getSchedules,
     syncSchedules,
-    deleteSchedules
+    deleteSchedules,
+    deleteSchedulesForDates
 } = require('./sync/schedule');
 const {
     getVisit,
@@ -48,7 +49,8 @@ module.exports = s => {
         syncRooms: d => syncRooms(s, d),
         syncEmployees: d => syncEmployees(s, d),
         syncSchedules: d => syncSchedules(s, d),
-        deleteSchedules: () => deleteSchedules(s),
+        deleteSchedules: (d, m) => deleteSchedules(s, d, m),
+        deleteSchedulesForDates: (...d) => deleteSchedulesForDates(s, ...d),
         mongoDepartments: () => mongoDepartments(s),
         mongoLocations: () => mongoLocations(s),
         mongoRooms: () => mongoRooms(s),
