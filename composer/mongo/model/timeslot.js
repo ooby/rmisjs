@@ -217,11 +217,6 @@ TimeSlotSchema.statics.getDetailedLocationsBySource = async function (...sources
                 ]
             }
         })
-        .project({
-            '_id': false,
-            'department.__v': false,
-            'department._id': false
-        })
         .exec()
     );
     for (let location of data) {

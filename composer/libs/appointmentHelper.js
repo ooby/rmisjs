@@ -2,9 +2,15 @@ const soap = require('soap');
 
 const url = 'https://14.is-mis.ru/ei/services/appointment?wsdl';
 
-module.exports = async(cfg) => {
+const createClient = async s => {
     const c = await soap.createClientAsync(url);
     c.setSecurity(new soap.BasicAuthSecurity(cfg.rmis.auth.username, cfg.rmis.auth.password));
+    return c;    
+}
+
+module.exports = async s => {
+    const c = await createClient(s);
+    
     return {
         /**
          * Получение номера талона по номеру слота
@@ -12,10 +18,15 @@ module.exports = async(cfg) => {
          * @return {Promise<String>} - номер талона
          */
         async getAppointmentNumber(id) {
-            let slip = await c.getAppointmentNumberAsync({
-                id
-            });
-            return slip.number.number;
+            try {
+                let slip = await c.getAppointmentNumberAsync({
+                    id
+                });
+                return slip ? slip.number.number : null;
+            } catch (e) {
+                console.error(e);
+                return e;
+            }
         }
     };
 };

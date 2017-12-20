@@ -1,56 +1,44 @@
-const { roomFormat } = require('./format');
-exports.syncRooms = async (s, d) => {
+const roomFormat = require('./format').roomFormat;
+const rmisjs = require('../../index');
+
+exports.syncRooms = async(s, d) => {
     try {
-        const rmisjs = require('../../index')(s);
-        const er14 = await rmisjs.integration.er14.process();
-        let r = await er14.getMuInfo({ 'pt:muCode': s.er14.muCode });
-        let rs = [];
+        const er14 = await rmisjs(s).integration.er14.process();
+        let r = await er14.getMuInfo({
+            'pt:muCode': s.er14.muCode
+        });
+        let result = [];
         for (let i of r.muInfo.department) {
-            if (!i.deleted && i.room) {
-                if (Array.isArray(i.room)) {
-                    i.room.forEach(j => {
-                        if (!j.deleted) {
-                            let d = {
-                                muCode: s.er14.muCode,
-                                deptCode: i.deptCode,
-                                roomNumber: j.roomNumber,
-                                deleted: true
-                            };
-                            let u = roomFormat(d);
-                            rs.push(u);
-                        }
-                    });
-                } else {
-                    if (!i.room.deleted) {
-                        let d = {
-                            muCode: s.er14.muCode,
-                            deptCode: i.deptCode,
-                            roomNumber: i.room.roomNumber,
-                            deleted: true
-                        };
-                        let u = roomFormat(d);
-                        rs.push(u);
-                    }
-                }
+            if (!!i.deleted || !i.room) continue;
+            for (let j of [].concat(i.room)) {
+                if (!!j.deleted) continue;
+                let log = await er14.updateCabinetInfo(
+                    roomFormat({
+                        muCode: s.er14.muCode,
+                        deptCode: i.deptCode,
+                        roomNumber: j.roomNumber,
+                        deleted: true
+                    })
+                );
+                if (parseInt(log.ErrorCode) === 0) continue;
+                result.push(log);
             }
         }
-        let result = [];
-        for (let i of rs) {
-            let res = await er14.updateCabinetInfo(i);
-            result.push(res);
-        }
-        r = d;
-        for (let i of r) {
-            let d = {
-                muCode: s.er14.muCode,
-                deptCode: i.department.code,
-                roomNumber: i.room,
-                deleted: false
-            };
-            let u = roomFormat(d);
-            let res = await er14.updateCabinetInfo(u);
-            result.push(res);
+        for (let i of d) {
+            let log = await er14.updateCabinetInfo(
+                roomFormat({
+                    muCode: s.er14.muCode,
+                    deptCode: i.department.code,
+                    roomNumber: i.room,
+                    deleted: false
+                })
+            );
+            if (parseInt(log.ErrorCode) === 0) continue;
+            result.push(log);
         }
         return result;
-    } catch (e) { return e; }
+    } catch (e) {
+        console.error(e);
+        return e;
+    }
 };

@@ -1,7 +1,9 @@
 const createClient = require('./client');
 
+const mu = require('./libs/mu');
+
 module.exports = s => {
     return {
-        process: () => require('./libs/mu')(s)
+        process: () => mu(s)
     };
 };
