@@ -35,14 +35,9 @@ const TimeSlot = require('../mongo/model/timeslot');
 exports.validatePatient = async(s, m) => {
     try {
         let r = await searchIndividual(s, m);
-        if (r) {
-            r = await getPatientRegs(s, r);
-            if (Array.isArray(r)) {
-                r = await getPatientReg(s, r[0]);
-            } else {
-                r = await getPatientReg(s, r);
-            }
-        }
+        if (!r) return null;
+        r = await getPatientRegs(s, r);
+        r = await getPatientReg(s, Array.isArray(r) ? r[0] : r);
         return (r) ? r : null;
     } catch (e) {
         console.error(e);

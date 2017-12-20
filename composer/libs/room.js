@@ -1,4 +1,8 @@
-const { getRoom, getRooms } = require('./collect');
+const {
+    getRoom,
+    getRooms
+} = require('./collect');
+
 exports.getDetailedRooms = async s => {
     try {
         let r = await getRooms(s);
@@ -8,5 +12,8 @@ exports.getDetailedRooms = async s => {
             result.push(k);
         }
         return result;
-    } catch (e) { return e; }
+    } catch (e) {
+        console.error(e);
+        return e;
+    }
 };

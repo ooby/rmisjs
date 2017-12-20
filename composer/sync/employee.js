@@ -1,25 +1,29 @@
-const { empFormat } = require('./format');
-exports.syncEmployees = async (s, d) => {
+const empFormat = require('./format').empFormat;
+const rmisjs = require('../../index');
+
+exports.syncEmployees = async(s, d) => {
     try {
-        const rmisjs = require('../../index')(s);
-        const er14 = await rmisjs.integration.er14.process();
-        let r = d;
+        const er14 = await rmisjs(s).integration.er14.process();
         let result = [];
-        for (let i of r) {
-            let d = {
-                docCode: i.snils,
-                snils: i.snils,
-                firstName: i.firstName,
-                middleName: i.patrName,
-                lastName: i.surname,
-                specCode: (Array.isArray(i.speciality)) ? i.speciality[0] : i.speciality,
-                positionCode: (Array.isArray(i.position)) ? i.position[0] : i.position,
-                muCode: s.er14.muCode
-            };
-            let u = empFormat(d);
-            let rr = await er14.updateStaffInfo(u);
-            result.push(rr);
+        for (let i of d) {
+            let log = await er14.updateStaffInfo(
+                empFormat({
+                    docCode: i.snils,
+                    snils: i.snils,
+                    firstName: i.firstName,
+                    middleName: i.patrName,
+                    lastName: i.surname,
+                    specCode: (Array.isArray(i.speciality)) ? i.speciality[0] : i.speciality,
+                    positionCode: (Array.isArray(i.position)) ? i.position[0] : i.position,
+                    muCode: s.er14.muCode
+                })
+            );
+            if (parseInt(log.ErrorCode) === 0) continue;
+            result.push(log);
         }
         return result;
-    } catch (e) { return e; }
+    } catch (e) {
+        console.error(e);
+        return e;
+    }
 };

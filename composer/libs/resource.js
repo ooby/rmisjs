@@ -38,17 +38,13 @@ const getRefCode = async(s, ref) => {
     try {
         let k = await getRefbookList(s);
         let specRefCode;
-        k.refbook.forEach(i => {
+        for (let i of k.refbook) {
             let code;
-            i.column.forEach(j => {
-                if (j.name === 'CODE') {
-                    code = j.data;
-                }
-                if (j.name === 'NAME' && j.data === ref) {
-                    specRefCode = code;
-                }
-            });
-        });
+            for (let j of i.column) {
+                if (j.name === 'CODE') code = j.data;
+                if (j.name === 'NAME' && j.data === ref) specRefCode = code;
+            }
+        }
         return specRefCode;
     } catch (e) {
         console.error(e);
@@ -66,11 +62,9 @@ const getRefVersion = async(s, code) => {
     try {
         let specRefVersion;
         let k = await getVersionList(s, code);
-        k[0].column.forEach(i => {
-            if (i.name === 'VERSION') {
-                specRefVersion = i.data;
-            }
-        });
+        for (let i of k[0].column) {
+            if (i.name === 'VERSION') specRefVersion = i.data;
+        }
         return specRefVersion;
     } catch (e) {
         console.error(e);
@@ -79,6 +73,19 @@ const getRefVersion = async(s, code) => {
 };
 
 const timeFormat = date => moment(date).format('HH:mm:ss.SSSZ');
+
+/**
+ * Возвращает код по имени записи в справочнике
+ * @param {Object} dict - справочник
+ * @param {String} name - имя записи
+ * @return {Number} - код записи
+ */
+const getCodeByName = (dict, name) => {
+    let names = dict.map(i => i.name.toUpperCase());
+    let value = ss.findBestMatch(name.toUpperCase(), names);
+    value = names.indexOf(value.bestMatch.target);
+    return parseInt(dict[value].code);
+}
 
 /**
  * Формирует из ресурсов коллекцию детализированных данных
@@ -101,14 +108,8 @@ exports.getDetailedLocations = async(s, m, c) => {
                     period.to = timeFormat(period.to);
                 }
             }
-            let positionNames = m.map(i => i.name.toUpperCase());
-            let position = ss.findBestMatch(location.positionName.toUpperCase(), positionNames);
-            position = positionNames.indexOf(position.bestMatch.target);
-            location.position = parseInt(m[position].code);
-            let specialityNames = c.map(i => i.name.toUpperCase());
-            let speciality = ss.findBestMatch(location.specialityName.toUpperCase(), specialityNames);
-            speciality = specialityNames.indexOf(speciality.bestMatch.target);
-            location.speciality = parseInt(c[speciality].code);
+            location.position = getCodeByName(m, location.positionName);
+            location.speciality = getCodeByName(c, location.specialityName);
         }
         return data;
     } catch (e) {

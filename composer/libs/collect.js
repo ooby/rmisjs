@@ -1,14 +1,5 @@
 const moment = require('moment');
-
-/**
- * Подключает библиотеки rmisjs
- * @param {object} s - конфигурация
- * @return {object}
- */
-const rmisjs = s => {
-    const rmjs = require('../../index')(s);
-    return rmjs.rmis;
-};
+const rmisjs = require('../../index');
 
 /**
  * Получение сведений об услуге
@@ -17,11 +8,16 @@ const rmisjs = s => {
  * @return {Promise<Object>} - сведения об услуге
  */
 exports.getService = async(s, serviceId) => {
-    const services = await rmisjs(s).services();
-    let data = await services.getService({
-        serviceId
-    });
-    return data.service;
+    try {
+        const services = await rmisjs(s).rmis.services();
+        let data = await services.getService({
+            serviceId
+        });
+        return data.service;
+    } catch (e) {
+        console.error(e);
+        return e;
+    }
 };
 
 /**
@@ -30,7 +26,7 @@ exports.getService = async(s, serviceId) => {
  * @return {Promise<Object>} - список услуг
  */
 exports.getServices = async(s) => {
-    const services = await rmisjs(s).services();
+    const services = await rmisjs(s).rmis.services();
     let data = await services.getServices({
         clinic: s.rmis.clinicId
     });
@@ -44,9 +40,8 @@ exports.getServices = async(s) => {
  * @return {object}
  */
 exports.postReserve = async(s, d) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.appointment();
+        let r = await rmisjs(s).rmis.appointment();
         r = await r.postReserve(d);
         r = (r) ? r.slot : null;
         return r;
@@ -63,9 +58,8 @@ exports.postReserve = async(s, d) => {
  * @return {object}
  */
 exports.getReserve = async(s, d) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.appointment();
+        let r = await rmisjs(s).rmis.appointment();
         r = await r.getReserve(d);
         r = (r) ? r.slot : null;
         return r;
@@ -82,9 +76,8 @@ exports.getReserve = async(s, d) => {
  * @return {object}
  */
 exports.getSlot = async(s, d) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.appointment();
+        let r = await rmisjs(s).causermis.appointment();
         r = await r.getSlot(d);
         // r = (r) ? r.slot : null;
         return r;
@@ -101,13 +94,17 @@ exports.getSlot = async(s, d) => {
  * @return {object}
  */
 exports.deleteSlotByRefusal = async(s, d) => {
-    const rmis = rmisjs(s);
-    let r = await rmis.appointment();
-    r = await r.deleteSlot({
-        slot: d,
-        cause: 0
-    });
-    return r;
+    try {
+        let r = await rmis.appointment();
+        r = await r.deleteSlot({
+            slot: d,
+            cause: 0
+        });
+        return r;
+    } catch (e) {
+        console.error(e);
+        return r;
+    }
 };
 
 /**
@@ -117,9 +114,8 @@ exports.deleteSlotByRefusal = async(s, d) => {
  * @return {object}
  */
 exports.createPatient = async(s, d) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.patient();
+        let r = await rmisjs(s).rmis.patient();
         r = await r.createPatient(d);
         // r = (r) ? r.note : null;
         return r;
@@ -136,9 +132,8 @@ exports.createPatient = async(s, d) => {
  * @return {object}
  */
 exports.getPatient = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.patient();
+        let r = await rmisjs(s).rmis.patient();
         r = await r.getPatient(id);
         // r = (r) ? r.note : null;
         return r;
@@ -155,9 +150,8 @@ exports.getPatient = async(s, id) => {
  * @return {object}
  */
 exports.getPatientRegs = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.patient();
+        let r = await rmisjs(s).rmis.patient();
         r = await r.getPatientRegs(id);
         r = (r) ? r.registration : null;
         return r;
@@ -174,9 +168,8 @@ exports.getPatientRegs = async(s, id) => {
  * @return {object}
  */
 exports.getPatientReg = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.patient();
+        let r = await rmisjs(s).rmis.patient();
         r = await r.getPatientReg(id);
         return r;
     } catch (e) {
@@ -192,9 +185,8 @@ exports.getPatientReg = async(s, id) => {
  * @return {object}
  */
 exports.searchIndividual = async(s, params) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.individual();
+        let r = await rmisjs(s).rmis.individual();
         r = await r.searchIndividual(params);
         r = (r) ? r.individual : null;
         return r;
@@ -211,9 +203,8 @@ exports.searchIndividual = async(s, params) => {
  * @return {object}
  */
 exports.getDepartment = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.department();
+        let r = await rmisjs(s).rmis.department();
         r = await r.getDepartment({
             departmentId: id
         });
@@ -230,10 +221,9 @@ exports.getDepartment = async(s, id) => {
  * @param {object} s - конфигурация
  * @return {object}
  */
-exports.getDepartments = async(s) => {
-    const rmis = rmisjs(s);
+exports.getDepartments = async s => {
     try {
-        let r = await rmis.department();
+        let r = await rmisjs(s).rmis.department();
         r = await r.getDepartments({
             clinic: s.rmis.clinicId
         });
@@ -251,9 +241,8 @@ exports.getDepartments = async(s) => {
  * @return {object}
  */
 exports.getRefbook = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.refbook();
+        let r = await rmisjs(s).rmis.refbook();
         r = await r.getRefbook({
             refbookCode: id.code,
             version: id.version
@@ -270,10 +259,9 @@ exports.getRefbook = async(s, id) => {
  * @param {object} s - конфигурация
  * @return {object}
  */
-exports.getRefbookList = async(s) => {
-    const rmis = rmisjs(s);
+exports.getRefbookList = async s => {
     try {
-        let r = await rmis.refbook();
+        let r = await rmisjs(s).rmis.refbook();
         r = await r.getRefbookList();
         return r;
     } catch (e) {
@@ -289,9 +277,8 @@ exports.getRefbookList = async(s) => {
  * @return {object}
  */
 exports.getVersionList = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.refbook();
+        let r = await rmisjs(s).rmis.refbook();
         r = await r.getVersionList({
             refbookCode: id
         });
@@ -310,9 +297,8 @@ exports.getVersionList = async(s, id) => {
  * @return {object}
  */
 exports.getLocation = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.resource();
+        let r = await rmisjs(s).rmis.resource();
         r = await r.getLocation({
             location: id
         });
@@ -330,9 +316,8 @@ exports.getLocation = async(s, id) => {
  * @return {object}
  */
 exports.getLocations = async s => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.resource();
+        let r = await rmisjs(s).rmis.resource();
         r = await r.getLocations({
             clinic: s.rmis.clinicId
         });
@@ -349,9 +334,8 @@ exports.getLocations = async s => {
  * @return {object}
  */
 exports.getLocationsWithOptions = async(s, d) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.resource();
+        let r = await rmisjs(s).rmis.resource();
         r = await r.getLocations(d);
         return r;
     } catch (e) {
@@ -368,9 +352,8 @@ exports.getLocationsWithOptions = async(s, d) => {
  * @return {object}
  */
 exports.getTimes = async(s, id, date) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.appointment();
+        let r = await rmisjs(s).rmis.appointment();
         r = await r.getTimes({
             location: id,
             date: date
@@ -383,9 +366,8 @@ exports.getTimes = async(s, id, date) => {
 };
 
 exports.getReserveFiltered = async(s, date, location) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.appointment();
+        let r = await rmisjs(s).rmis.appointment();
         r = await r.getReserveFiltered({
             date,
             organization: s.rmis.clinicId,
@@ -405,9 +387,8 @@ exports.getReserveFiltered = async(s, date, location) => {
  * @return {object}
  */
 exports.getRoom = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.room();
+        let r = await rmisjs(s).rmis.room();
         r = await r.getRoom({
             roomId: id
         });
@@ -425,9 +406,8 @@ exports.getRoom = async(s, id) => {
  * @return {object}
  */
 exports.getRooms = async s => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.room();
+        let r = await rmisjs(s).rmis.room();
         r = await r.getRooms({
             clinic: s.rmis.clinicId
         });
@@ -444,9 +424,8 @@ exports.getRooms = async s => {
  * @return {object}
  */
 exports.getEmployee = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.employee();
+        let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployee({
             id: id
         });
@@ -464,9 +443,8 @@ exports.getEmployee = async(s, id) => {
  * @return {object}
  */
 exports.getEmployees = async s => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.employee();
+        let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployees({
             organization: s.rmis.clinicId
         });
@@ -483,9 +461,8 @@ exports.getEmployees = async s => {
  * @return {Object} - сведения о должности
  */
 exports.getPosition = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.employee();
+        let r = await rmisjs(s).rmis.employee();
         r = await r.getPosition({
             id
         });
@@ -503,9 +480,8 @@ exports.getPosition = async(s, id) => {
  * @return {object}
  */
 exports.getEmployeePosition = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.employee();
+        let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployeePosition({
             id: id
         });
@@ -525,9 +501,8 @@ exports.getEmployeePosition = async(s, id) => {
  * @return {object}
  */
 exports.getEmployeePositions = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.employee();
+        let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployeePositions({
             employee: id
         });
@@ -546,9 +521,8 @@ exports.getEmployeePositions = async(s, id) => {
  * @return {object}
  */
 exports.getEmployeeSpecialities = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.employee();
+        let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployeeSpecialities({
             employee: id
         });
@@ -567,9 +541,8 @@ exports.getEmployeeSpecialities = async(s, id) => {
  * @return {object}
  */
 exports.getIndividual = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.individual();
+        let r = await rmisjs(s).rmis.individual();
         r = await r.getIndividual(id);
         r = (r) ? r : null;
         return r;
@@ -587,9 +560,8 @@ exports.getIndividual = async(s, id) => {
  * @return {object}
  */
 exports.getDocument = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.individual();
+        let r = await rmisjs(s).rmis.individual();
         r = await r.getDocument(id);
         r = (r) ? r : null;
         return r;
@@ -607,9 +579,8 @@ exports.getDocument = async(s, id) => {
  * @return {object}
  */
 exports.getIndividualDocuments = async(s, id) => {
-    const rmis = rmisjs(s);
     try {
-        let r = await rmis.individual();
+        let r = await rmisjs(s).rmis.individual();
         r = await r.getIndividualDocuments(id);
         r = (r) ? r.document : null;
         return r;

@@ -1,128 +1,125 @@
+const rmisjs = require('../../index');
+const createDates = require('../libs/collect').createDates;
+
 const {
     getSchedFormat,
     schedFormat,
     schedFormatStruct,
     slotFormat
 } = require('./format');
-const createDates = require('../libs/collect').createDates;
+
 exports.syncSchedules = async(s, d) => {
     try {
-        const rmisjs = require('../../index')(s);
-        const er14 = await rmisjs.integration.er14.process();
-        let r = d;
+        const er14 = await rmisjs(s).integration.er14.process();
         let bb = [];
-        for (let i of r) {
+        for (let i of d) {
             for (let j of i.interval) {
-                let data = getSchedFormat({
-                    scheduleDate: j.date,
-                    muCode: s.er14.muCode,
-                    needFIO: false
-                });
-                let schedules = await er14.getScheduleInfo(data);
+                let schedules = await er14.getScheduleInfo(
+                    getSchedFormat({
+                        scheduleDate: j.date,
+                        muCode: s.er14.muCode,
+                        needFIO: false
+                    })
+                );
                 let rmIds = [];
                 let count = 0;
                 if (schedules.scheduleInfo) {
-                    schedules = schedules.scheduleInfo.schedule;
-                    schedules = (Array.isArray(schedules)) ? schedules : new Array(schedules);
-                    for (let k of schedules) {
-                        if (k.docCode === i.snils) {
-                            let slots = (Array.isArray(k.slot)) ? k.slot : new Array(k.slot);
-                            for (let l of slots) {
-                                for (let tp of j.timePeriod) {
-                                    if (l.timeInterval.GUID === tp._id) {
-                                        rmIds.push(j.timePeriod.indexOf(tp));
-                                    }
-                                }
+                    for (let k of [].concat(schedules.scheduleInfo.schedule)) {
+                        if (k.docCode !== i.snils) continue;
+                        for (let l of [].concat(k.slot)) {
+                            for (let tp of j.timePeriod) {
+                                if (l.timeInterval.GUID !== tp._id) continue;
+                                rmIds.push(j.timePeriod.indexOf(tp));
                             }
                         }
                     }
-                    for (let k of rmIds) {
-                        j.timePeriod.splice(k, 1);
-                    }
+                    for (let k of rmIds) j.timePeriod.splice(k, 1);
                 }
-                if (j.timePeriod.length > 0) {
-                    let d = {
-                        scheduleDate: j.date,
-                        muCode: s.er14.muCode,
-                        deptCode: i.department.code,
-                        roomNumber: i.room,
-                        docCode: i.snils,
-                        specCode: (Array.isArray(i.speciality)) ? i.speciality[0] : i.speciality,
-                        positionCode: (Array.isArray(i.position)) ? i.position[0] : i.position
-                    };
-                    let u = schedFormat(d);
-                    j.timePeriod.forEach(k => {
-                        let ts = {
-                            timeStart: k.from.replace(/\+09:00/g, 'Z'),
-                            timeFinish: k.to.replace(/\+09:00/g, 'Z'),
-                            slotType: 2,
-                            GUID: k._id,
-                            SlotState: k.status
-                        };
-                        u = u + slotFormat(ts);
+                if (j.timePeriod.length <= 0) continue;
+                let u = schedFormat({
+                    scheduleDate: j.date,
+                    muCode: s.er14.muCode,
+                    deptCode: i.department.code,
+                    roomNumber: i.room,
+                    docCode: i.snils,
+                    specCode: Array.isArray(i.speciality) ? i.speciality[0] : i.speciality,
+                    positionCode: Array.isArray(i.position) ? i.position[0] : i.position
+                });
+                for (let k of j.timePeriod) {
+                    u += slotFormat({
+                        timeStart: k.from.replace(/\+09:00/g, 'Z'),
+                        timeFinish: k.to.replace(/\+09:00/g, 'Z'),
+                        slotType: 2,
+                        GUID: k._id,
+                        SlotState: k.status
                     });
-                    let rr = await er14.updateSchedule({
-                        $xml: u
-                    });
-                    bb.push(rr);
                 }
+                let log = await er14.updateSchedule({
+                    $xml: u
+                })
+                if (!log) continue;
+                if (parseInt(log.ErrorCode) === 0) continue;
+                log.location = i;
+                bb.push(log);
             }
         }
         return bb;
     } catch (e) {
+        console.error(e);
         return e;
     }
 };
+
 exports.getSchedules = async(s, d) => {
     try {
-        const rmisjs = require('../../index')(s);
-        const er14 = await rmisjs.integration.er14.process();
-        let data = getSchedFormat({
-            scheduleDate: d,
-            muCode: s.er14.muCode,
-            needFIO: false
-        });
-        let schedule = await er14.getScheduleInfo(data);
-        return schedule;
-    } catch (e) {
-        return e;
-    }
-};
-exports.deleteSchedules = async (s, from, to) => {
-    try {
-        const rmisjs = require('../../index')(s);
-        const er14 = await rmisjs.integration.er14.process();
-        const dates = createDates(from, to);
-        let result = [];
-        for (let d of dates) {
-            let data = getSchedFormat({
+        const er14 = await rmisjs(s).integration.er14.process();
+        return await er14.getScheduleInfo(
+            getSchedFormat({
                 scheduleDate: d,
                 muCode: s.er14.muCode,
                 needFIO: false
-            });
-            let schedule = await er14.getScheduleInfo(data);
-            if (schedule.scheduleInfo) {
-                result.push(schedule);
-            }
-        }
-        let res = [];
-        for (let i of result) {
-            for (let j of i.scheduleInfo.schedule) {
-                let data = schedFormatStruct({
-                    scheduleDate: j.scheduleDate,
-                    muCode: j.muCode,
-                    deptCode: j.deptCode,
-                    roomNumber: j.roomNumber,
-                    docCode: j.docCode,
-                    specCode: j.specCode,
-                    positionCode: j.positionCode
-                });
-                let d = await er14.deleteSchedule(data);
-                res.push(d);
-            }
-        }
-        return res;
+            })
+        );
     } catch (e) {
+        console.error(e);
+        return e;
+    }
+};
+
+exports.deleteSchedules = async(s, from, to) => {
+    try {
+        const er14 = await rmisjs(s).integration.er14.process();
+        const dates = createDates(from, to);
+        let result = [];
+        for (let d of dates) {
+            if (!schedule.scheduleInfo) continue;
+            let i = await er14.getScheduleInfo(
+                getSchedFormat({
+                    scheduleDate: d,
+                    muCode: s.er14.muCode,
+                    needFIO: false
+                })
+            )
+            for (let j of i.scheduleInfo.schedule) {
+                let log = await er14.deleteSchedule(
+                    schedFormatStruct({
+                        scheduleDate: j.scheduleDate,
+                        muCode: j.muCode,
+                        deptCode: j.deptCode,
+                        roomNumber: j.roomNumber,
+                        docCode: j.docCode,
+                        specCode: j.specCode,
+                        positionCode: j.positionCode
+                    })
+                )
+                if (!log) continue;
+                if (parseInt(log.ErrorCode) === 0) continue;
+                result.push(log);
+            }
+        }
+        return result;
+    } catch (e) {
+        console.error(e);
         return e;
     }
 };

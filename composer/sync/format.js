@@ -5,6 +5,7 @@ exports.getSchedFormat = d => {
         'ct:needFIO': d.needFIO
     };
 };
+
 exports.schedFormat = d => {
     return '<ct:scheduleDate>' + d.scheduleDate + '</ct:scheduleDate>' +
         '<ct:muCode>' + d.muCode + '</ct:muCode>' +

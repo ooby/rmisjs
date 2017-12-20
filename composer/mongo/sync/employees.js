@@ -1,7 +1,6 @@
 const Location = require('../model/location');
 const Employee = require('../model/employee');
 const Queue = require('../queue');
-const $ = require('../uncatch');
 
 const {
     getRefbook,
@@ -21,9 +20,7 @@ const indq = new Queue(2);
  * @param {Object} s - конфигурация
  */
 module.exports = async s => {
-    let specs = await $(() =>
-        getRefbook(s, s.mongo.specbook)
-    );
+    let specs = await getRefbook(s, s.mongo.specbook);
     specs = new Map(
         specs.row.map(i => {
             let r = [];
@@ -42,18 +39,9 @@ module.exports = async s => {
     await Promise.all(
         [].concat(
             Employee.remove({
-                $or: [
-                    {
-                        position: {
-                            $nin: positions
-                        }
-                    },
-                    {
-                        snils: {
-                            $exists: false
-                        }
-                    }
-                ]
+                position: {
+                    $nin: positions
+                }
             }).exec()
         ).concat(
             positions.map(async positionId => {
@@ -61,22 +49,22 @@ module.exports = async s => {
                     position: positionId
                 };
                 let employeePosition = await empq.push(() =>
-                    $(() => getEmployeePosition(s, positionId))
+                    getEmployeePosition(s, positionId)
                 );
                 data._id = employeePosition.employee;
                 let position = await empq.push(() =>
-                    $(() => getPosition(s, employeePosition.position))
+                    getPosition(s, employeePosition.position)
                 );
                 if (!position.speciality) return;
                 data.positionName = position.name;
                 data.speciality = position.speciality;
                 data.specialityName = specs.get(data.speciality);
                 let employee = await empq.push(() =>
-                    $(() => getEmployee(s, employeePosition.employee))
+                    getEmployee(s, employeePosition.employee)
                 );
                 data.individual = employee.individual;
                 let documents = await indq.push(() =>
-                    $(() => getIndividualDocuments(s, employee.individual))
+                    getIndividualDocuments(s, employee.individual)
                 );
                 if (!documents) return;
                 for (let documentId of [].concat(documents)) {
@@ -87,7 +75,7 @@ module.exports = async s => {
                 }
                 if (!data.snils) return;
                 let individual = await indq.push(() =>
-                    $(() => getIndividual(s, employee.individual))
+                    getIndividual(s, employee.individual)
                 );
                 data.surname = individual.surname;
                 data.patrName = individual.patrName;

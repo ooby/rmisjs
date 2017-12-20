@@ -8,13 +8,34 @@ const EmployeeSchema = new Schema({
         required: true,
         unique: true
     },
-    positionName: String,
-    speciality: Number,
-    specialityName: String,
-    snils: String,
-    surname: String,
-    patrName: String,
-    firstName: String,
+    positionName: {
+        type: String,
+        required: true
+    },
+    speciality: {
+        type: Number,
+        required: true
+    },
+    specialityName: {
+        type: String,
+        required: true
+    },
+    snils: {
+        type: String,
+        required: true
+    },
+    surname: {
+        type: String,
+        required: true
+    },
+    patrName: {
+        type: String,
+        required: true
+    },
+    firstName: {
+        type: String,
+        required: true
+    },
     birthDate: Date,
     individual: {
         type: String,

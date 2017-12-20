@@ -2,56 +2,42 @@ const {
     getEmployee,
     getEmployees,
     getEmployeeSpecialities,
-    getEmployeePosition,
-    getEmployeePositions,
-    getIndividual,
-    getRefbook,
-    getRefbookList,
-    getVersionList
+    getIndividual
 } = require('./collect');
+
 exports.getDetailedEmployees = async s => {
     try {
         let r = await getEmployees(s);
         let result = [];
         for (let i of r.employee) {
             let k = await getEmployee(s, i);
-            result.push(Object.assign(k, { id: i }));
+            if (!k) continue;
+            if (!k.individual) continue;
+            let data = Object.assign(k, {
+                id: i
+            });
+            k = await getIndividual(s, data.individual);
+            if (!k) continue;
+            if (!k.surname || !k.name || !k.patrName) continue;
+            k.fio = [k.surname, k.name, k.patrName].map(j => j.toUpperCase()).join(' ');
+            k.firstname = k.name;
+            delete k.name;
+            data = Object.assign(data, k);
+            k = await getEmployeeSpecialities(s, data.id);
+            if (!k) continue;
+            if (!k.speciality) continue;
+            data = Object.assign(data, {
+                speciality: Array.isArray(k.speciality) ? k.speciality[0] : k.speciality
+            })
+            delete data.number;
+            delete data.dismissed;
+            delete data.gender;
+            delete data.note;
+            result.push(data);
         }
-        r = result.filter(i => !!i).filter(i => !!i.individual);
-        result = [];
-        for (let i of r) {
-            let k = await getIndividual(s, i.individual);
-            result.push(Object.assign(i, k));
-        }
-        r = result.filter(i => !!i.surname)
-            .filter(i => !!i.name)
-            .filter(i => !!i.patrName);
-        for (let i of r) {
-            Object.assign(i, { firstName: i.name });
-            delete i.name;
-        }
-        result = [];
-        for (let i of r) {
-            let k = await getEmployeeSpecialities(s, i.id);
-            let obj = { speciality: '' };
-            if (k) {
-                if (Array.isArray(k.speciality)) {
-                    Object.assign(obj, { speciality: k.speciality[0] });
-                } else {
-                    Object.assign(obj, { speciality: k.speciality });
-                }
-            }
-            result.push(Object.assign(i, obj));
-        }
-        r = result.filter(i => !!i.speciality);
-        for (let i of r) {
-            let fio = i.surname.toUpperCase() + ' ' + i.firstName.toUpperCase() + ' ' + i.patrName.toUpperCase();
-            Object.assign(i, { fio: fio });
-            delete i.number;
-            delete i.dismissed;
-            delete i.gender;
-            delete i.note;
-        }
-        return r;
-    } catch (e) { return e; }
+        return result;
+    } catch (e) {
+        console.error(e);
+        return e;
+    }
 };
