@@ -77,7 +77,7 @@ exports.getReserve = async(s, d) => {
  */
 exports.getSlot = async(s, d) => {
     try {
-        let r = await rmisjs(s).causermis.appointment();
+        let r = await rmisjs(s).rmis.appointment();
         r = await r.getSlot(d);
         // r = (r) ? r.slot : null;
         return r;
@@ -95,7 +95,7 @@ exports.getSlot = async(s, d) => {
  */
 exports.deleteSlotByRefusal = async(s, d) => {
     try {
-        let r = await rmis.appointment();
+        let r = await rmisjs(s).rmis.appointment();
         r = await r.deleteSlot({
             slot: d,
             cause: 0
