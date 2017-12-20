@@ -64,7 +64,6 @@ exports.searchVisit = async(s, m) => {
         if (!timeslot) return '';
         const from = timeslot.from.valueOf();
         const location = timeslot.location.toString();
-        const status = timeslot.status.toString();
         let patient = await searchIndividual(s, {
             birthDate: m.birthDate,
             searchDocument: m.searchDocument
@@ -77,8 +76,7 @@ exports.searchVisit = async(s, m) => {
                 slot: id
             });
             if (slot.locationId !== location ||
-                new Date(slot.date).valueOf() !== from ||
-                slot.status !== status
+                new Date(slot.date).valueOf() !== from
             ) continue;
             slot.id = id;
             return {
