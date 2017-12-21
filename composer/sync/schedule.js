@@ -26,9 +26,10 @@ exports.syncSchedules = async(s, d) => {
                 if (schedules.scheduleInfo) {
                     for (let k of [].concat(schedules.scheduleInfo.schedule)) {
                         if (k.docCode !== i.snils) continue;
+                        if (!k.slot) continue;
                         for (let l of [].concat(k.slot)) {
                             for (let tp of j.timePeriod) {
-                                if (l.timeInterval.GUID !== tp._id) continue;
+                                if (l.slotInfo.GUID !== tp._id) continue;
                                 rmIds.push(j.timePeriod.indexOf(tp));
                             }
                         }
@@ -63,7 +64,6 @@ exports.syncSchedules = async(s, d) => {
                 bb.push(log);
             }
         }
-        return bb;
     } catch (e) {
         console.error(e);
         return e;

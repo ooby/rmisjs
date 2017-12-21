@@ -295,7 +295,7 @@ TimeSlotSchema.statics.timeTableWithSlots = async function (department, ...sourc
         })
         .project({
             'employee.snils': false,
-            'individual': false
+            'employee.individual': false
         })
         .exec()
     );
@@ -382,7 +382,9 @@ TimeSlotSchema.statics.timeTableWithDuration = function (department, ...sources)
         })
         .project({
             'location.date': false,
-            'location.position': false
+            'location.position': false,
+            'employee.snils': false,
+            'employee.individual': false
         })
         .exec()
     );

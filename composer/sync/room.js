@@ -20,8 +20,7 @@ exports.syncRooms = async(s, d) => {
                         deleted: true
                     })
                 );
-                if (parseInt(log.ErrorCode) === 0) continue;
-                result.push(log);
+                if (parseInt(log.ErrorCode) !== 0) result.push(log);
             }
         }
         for (let i of d) {
@@ -33,8 +32,7 @@ exports.syncRooms = async(s, d) => {
                     deleted: false
                 })
             );
-            if (parseInt(log.ErrorCode) === 0) continue;
-            result.push(log);
+            if (parseInt(log.ErrorCode) !== 0) result.push(log);
         }
         return result;
     } catch (e) {
