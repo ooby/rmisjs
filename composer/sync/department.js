@@ -15,8 +15,7 @@ exports.syncDepartments = async(s, d) => {
                 'pt:muCode': s.er14.muCode,
                 'pt:department': deptFormat(i)
             });
-            if (parseInt(log.ErrorCode) === 0) continue;
-            result.push(log);
+            if (parseInt(log.ErrorCode) !== 0) result.push(log);
         }
         for (let i of d) {
             let log = await er14.updateMuInfo({
@@ -28,8 +27,7 @@ exports.syncDepartments = async(s, d) => {
                     deleted: false
                 })
             });
-            if (parseInt(log.ErrorCode) === 0) continue;
-            result.push(log);
+            if (parseInt(log.ErrorCode) !== 0) result.push(log);
         }
         return result;
     } catch (e) {
