@@ -383,8 +383,8 @@ TimeSlotSchema.statics.timeTableWithDuration = function (department, ...sources)
         .project({
             'location.date': false,
             'location.position': false,
-            'employee.snils': false,
-            'employee.individual': false
+            'location.employee.snils': false,
+            'location.employee.individual': false
         })
         .exec()
     );
