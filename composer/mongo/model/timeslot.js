@@ -14,9 +14,11 @@ function setUUID(v) {
 
 function getUUID(v) {
     if (typeof v === 'string') return v;
-    if (v instanceof Buffer) return uuid({
-        random: v
-    });
+    if (v instanceof Buffer) {
+        return uuid({
+            random: v
+        });
+    }
 }
 
 const TimeSlotSchema = new Schema({

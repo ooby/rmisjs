@@ -5,12 +5,12 @@ const url = 'https://14.is-mis.ru/ei/services/appointment?wsdl';
 const createClient = async s => {
     const c = await soap.createClientAsync(url);
     c.setSecurity(new soap.BasicAuthSecurity(s.rmis.auth.username, s.rmis.auth.password));
-    return c;    
-}
+    return c;
+};
 
 module.exports = async s => {
     const c = await createClient(s);
-    
+
     return {
         /**
          * Получение номера талона по номеру слота
