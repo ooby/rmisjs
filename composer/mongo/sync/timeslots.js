@@ -2,7 +2,7 @@ const createDates = require('../../libs/collect').createDates;
 const TimeSlot = require('../model/timeslot');
 const Location = require('../model/location');
 const moment = require('moment');
-const Queue = require('../queue');
+const Queue = require('../../libs/queue');
 const get = require('../getter');
 const rmisjs = require('../../../index');
 

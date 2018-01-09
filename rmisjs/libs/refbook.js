@@ -6,6 +6,7 @@ module.exports = async s => {
         describe: () => c.describe(),
         getRefbook: d => c.getRefbookAsync(d),
         getRefbookList: d => c.getRefbookListAsync(d),
-        getVersionList: d => c.getVersionListAsync(d)
+        getVersionList: d => c.getVersionListAsync(d),
+        getRefbookRowData: d => c.getRefbookRowDataAsync(d)
     };
 };

@@ -41,8 +41,9 @@ exports.syncSchedules = async(s, d) => {
                     scheduleDate: j.date,
                     muCode: s.er14.muCode,
                     deptCode: i.department.code,
-                    roomNumber: i.room,
                     docCode: i.snils,
+                    roomNumber: i.room,
+                    docSNILS: i.snils,
                     specCode: Array.isArray(i.speciality) ? i.speciality[0] : i.speciality,
                     positionCode: Array.isArray(i.position) ? i.position[0] : i.position
                 });
@@ -57,11 +58,11 @@ exports.syncSchedules = async(s, d) => {
                 }
                 let log = await er14.updateSchedule({
                     $xml: u
-                })
+                });
                 if (!log) continue;
                 if (parseInt(log.ErrorCode) === 0) continue;
                 log.location = i.location;
-                bb.push(log);
+                console.error(log);
             }
         }
     } catch (e) {
@@ -97,7 +98,7 @@ exports.deleteSchedulesForDates = async(s, ...dates) => {
                     muCode: s.er14.muCode,
                     needFIO: false
                 })
-            )
+            );
             if (!i.scheduleInfo) continue;
             for (let j of i.scheduleInfo.schedule) {
                 let log = await er14.deleteSchedule(
@@ -110,7 +111,7 @@ exports.deleteSchedulesForDates = async(s, ...dates) => {
                         specCode: j.specCode,
                         positionCode: j.positionCode
                     })
-                )
+                );
                 if (!log) continue;
                 if (parseInt(log.ErrorCode) === 0) continue;
                 result.push(log);

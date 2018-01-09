@@ -28,7 +28,7 @@ exports.getDetailedEmployees = async s => {
             if (!k.speciality) continue;
             data = Object.assign(data, {
                 speciality: Array.isArray(k.speciality) ? k.speciality[0] : k.speciality
-            })
+            });
             delete data.number;
             delete data.dismissed;
             delete data.gender;

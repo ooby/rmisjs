@@ -1,5 +1,5 @@
 const Service = require('../model/service');
-const Queue = require('../queue');
+const Queue = require('../../libs/queue');;
 const rmisjs = require('../../../index');
 
 const q = new Queue(2);

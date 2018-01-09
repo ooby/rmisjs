@@ -24,7 +24,8 @@ exports.getPortalDepartments = async s => {
         let result = [];
         for (let i of r.department) {
             let k = await getDepartment(s, i);
-            if (!k.portalDepartment || !k.portalDepartment.isVisible) continue;
+            if (!k.portalDepartment) continue;
+            if (!k.portalDepartment.isVisible) continue;
             result.push(
                 Object.assign(k, {
                     id: i

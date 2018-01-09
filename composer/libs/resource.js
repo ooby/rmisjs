@@ -85,7 +85,7 @@ const getCodeByName = (dict, name) => {
     let value = ss.findBestMatch(name.toUpperCase(), names);
     value = names.indexOf(value.bestMatch.target);
     return parseInt(dict[value].code);
-}
+};
 
 /**
  * Формирует из ресурсов коллекцию детализированных данных

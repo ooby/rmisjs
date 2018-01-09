@@ -1,6 +1,6 @@
 const Location = require('../model/location');
 const Employee = require('../model/employee');
-const Queue = require('../queue');
+const Queue = require('../../libs/queue');;
 
 const {
     getRefbook,
@@ -26,11 +26,8 @@ module.exports = async s => {
             let r = [];
             for (let col of i.column) {
                 if (r.length == 2) break;
-                if (col.name === 'ID') {
-                    r[0] = col.data;
-                } else if (col.name === 'NAME') {
-                    r[1] = col.data;
-                }
+                if (col.name === 'ID') r[0] = col.data;
+                else if (col.name === 'NAME') r[1] = col.data;
             }
             return r;
         })
