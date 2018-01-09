@@ -100,7 +100,7 @@ exports.deleteSchedulesForDates = async(s, ...dates) => {
                 })
             );
             if (!i.scheduleInfo) continue;
-            for (let j of i.scheduleInfo.schedule) {
+            for (let j of [].concat(i.scheduleInfo.schedule)) {
                 let log = await er14.deleteSchedule(
                     schedFormatStruct({
                         scheduleDate: j.scheduleDate,
