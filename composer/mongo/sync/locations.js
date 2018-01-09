@@ -1,7 +1,7 @@
 const Department = require('../model/department');
 const Location = require('../model/location');
 const rmisjs = require('../../../index');
-const Queue = require('../queue');
+const Queue = require('../../libs/queue');;
 const get = require('../getter');
 
 const q = new Queue(2);

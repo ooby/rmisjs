@@ -1,6 +1,6 @@
 const Room = require('../model/room');
 const Location = require('../model/location');
-const Queue = require('../queue');
+const Queue = require('../../libs/queue');;
 const rmisjs = require('../../../index');
 
 const q = new Queue(2);

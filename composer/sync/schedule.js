@@ -41,6 +41,7 @@ exports.syncSchedules = async(s, d) => {
                     scheduleDate: j.date,
                     muCode: s.er14.muCode,
                     deptCode: i.department.code,
+                    docCode: i.snils,
                     roomNumber: i.room,
                     docSNILS: i.snils,
                     specCode: Array.isArray(i.speciality) ? i.speciality[0] : i.speciality,

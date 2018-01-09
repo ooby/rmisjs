@@ -30,6 +30,11 @@ const {
     getPortalDepartments,
     getDetailedDepartments
 } = require('./libs/department');
+const {
+    get025ByIndividual,
+    getCaseByIndividual,
+    get066ByIndividual
+} = require('./libs/cases');
 
 module.exports = s => {
     return {
@@ -56,6 +61,9 @@ module.exports = s => {
         mongoRooms: () => mongoRooms(s),
         mongoEmployees: () => mongoEmployees(s),
         mongoTimeSlots: () => mongoTimeSlots(s),
-        mongoServices: () => mongoServices(s)
+        mongoServices: () => mongoServices(s),
+        get025ByIndividual: d => get025ByIndividual(s, d),
+        get066ByIndividual: d => get025ByIndividual(s, d),
+        getCaseByIndividual: d => getCaseByIndividual(s, d)
     };
 };

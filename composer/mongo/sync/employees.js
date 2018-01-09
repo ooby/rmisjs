@@ -1,6 +1,6 @@
 const Location = require('../model/location');
 const Employee = require('../model/employee');
-const Queue = require('../queue');
+const Queue = require('../../libs/queue');;
 
 const {
     getRefbook,

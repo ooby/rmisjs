@@ -11,6 +11,7 @@ exports.schedFormat = d => {
         '<ct:muCode>' + d.muCode + '</ct:muCode>' +
         '<ct:deptCode>' + d.deptCode + '</ct:deptCode>' +
         '<ct:roomNumber>' + d.roomNumber + '</ct:roomNumber>' +
+        '<ct:docCode>' + d.docCode + '</ct:docCode>' +
         '<ct:specCode>' + d.specCode + '</ct:specCode>' +
         '<ct:positionCode>' + d.positionCode + '</ct:positionCode>' +
         '<ct:docSNILS>' + d.docSNILS + '</ct:docSNILS>';
