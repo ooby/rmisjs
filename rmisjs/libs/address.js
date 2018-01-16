@@ -1,18 +1,21 @@
 const createClient = require('../client');
+const Queue = require('../../libs/queue');
+
+const q = new Queue(1);
 
 module.exports = async s => {
     let c = await createClient(s, 'address');
     return {
         describe: () => c.describe(),
-        createAddress: d => c.createAddressAsync(d),
-        getAddresses: d => c.getAddressesAsync(d),
-        getAddressInfo: d => c.getAddressInfoAsync(d),
-        getAddressAllInfo: d => c.getAddressAllInfoAsync(d),
-        getAddressLevelInfo: d => c.getAddressLevelInfoAsync(d),
-        getAddressDisplayName: d => c.getAddressDisplayNameAsync(d),
-        getAddressType: d => c.getAddressTypeAsync(d),
-        getBatchAddressInfo: d => c.getBatchAddressInfoAsync(d),
-        searchAddress: d => c.searchAddressAsync(d),
-        getVersion: d => c.getVersionAsync(d)
+        createAddress: d => q.push(() => c.createAddressAsync(d)),
+        getAddresses: d => q.push(() => c.getAddressesAsync(d)),
+        getAddressInfo: d => q.push(() => c.getAddressInfoAsync(d)),
+        getAddressAllInfo: d => q.push(() => c.getAddressAllInfoAsync(d)),
+        getAddressLevelInfo: d => q.push(() => c.getAddressLevelInfoAsync(d)),
+        getAddressDisplayName: d => q.push(() => c.getAddressDisplayNameAsync(d)),
+        getAddressType: d => q.push(() => c.getAddressTypeAsync(d)),
+        getBatchAddressInfo: d => q.push(() => c.getBatchAddressInfoAsync(d)),
+        searchAddress: d => q.push(() => c.searchAddressAsync(d)),
+        getVersion: d => q.push(() => c.getVersionAsync(d))
     };
 };

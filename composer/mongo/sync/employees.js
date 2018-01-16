@@ -1,6 +1,5 @@
 const Location = require('../model/location');
 const Employee = require('../model/employee');
-const Queue = require('../../libs/queue');;
 
 const {
     getRefbook,
@@ -11,9 +10,6 @@ const {
     getIndividual,
     getDocument
 } = require('../../libs/collect');
-
-const empq = new Queue(2);
-const indq = new Queue(2);
 
 /**
  * Выгрузка данных из РМИС о сотрудниках
@@ -45,24 +41,16 @@ module.exports = async s => {
                 let data = {
                     position: positionId
                 };
-                let employeePosition = await empq.push(() =>
-                    getEmployeePosition(s, positionId)
-                );
+                let employeePosition = await getEmployeePosition(s, positionId);
                 data._id = employeePosition.employee;
-                let position = await empq.push(() =>
-                    getPosition(s, employeePosition.position)
-                );
+                let position = await getPosition(s, employeePosition.position);
                 if (!position.speciality) return;
                 data.positionName = position.name;
                 data.speciality = position.speciality;
                 data.specialityName = specs.get(data.speciality);
-                let employee = await empq.push(() =>
-                    getEmployee(s, employeePosition.employee)
-                );
+                let employee = await getEmployee(s, employeePosition.employee);
                 data.individual = employee.individual;
-                let documents = await indq.push(() =>
-                    getIndividualDocuments(s, employee.individual)
-                );
+                let documents = await getIndividualDocuments(s, employee.individual);
                 if (!documents) return;
                 for (let documentId of [].concat(documents)) {
                     let documentData = await getDocument(s, documentId);
@@ -71,9 +59,7 @@ module.exports = async s => {
                     break;
                 }
                 if (!data.snils) return;
-                let individual = await indq.push(() =>
-                    getIndividual(s, employee.individual)
-                );
+                let individual = await getIndividual(s, employee.individual);
                 data.surname = individual.surname;
                 data.patrName = individual.patrName;
                 data.firstName = individual.name;

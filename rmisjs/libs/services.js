@@ -1,10 +1,13 @@
 const createClient = require('../client');
+const Queue = require('../../libs/queue');
+
+const q = new Queue(1);
 
 module.exports = async s => {
     let c = await createClient(s, 'services');
     return {
         describe: () => c.describe(),
-        getService: d => c.getServiceAsync(d),
-        getServices: d => c.getServicesAsync(d)
+        getService: d => q.push(() => c.getServiceAsync(d)),
+        getServices: d => q.push(() => c.getServicesAsync(d))
     };
 };

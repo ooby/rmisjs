@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.4.42",
+  "version": "0.4.43",
   "engines": {
     "node": ">8.0.0"
   },
@@ -33,6 +33,8 @@
   },
   "homepage": "https://github.com/ooby/rmisjs#readme",
   "dependencies": {
+    "js2xmlparser": "^3.0.0",
+    "jsdom": "^11.5.1",
     "moment": "^2.18.1",
     "mongoose": "^4.13.1",
     "nconf": "^0.8.4",

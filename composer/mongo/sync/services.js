@@ -1,8 +1,5 @@
 const Service = require('../model/service');
-const Queue = require('../../libs/queue');;
 const rmisjs = require('../../../index');
-
-const q = new Queue(2);
 
 /**
  * Выгрузка данных из РМИС об услугах
@@ -28,11 +25,9 @@ module.exports = async s => {
                     name: service.name
                 };
                 service.repeated = (/повтор/i).test(service.name);
-                let details = await q.push(() =>
-                    servicesService.getService({
-                        serviceId: service._id
-                    })
-                );
+                let details = await servicesService.getService({
+                    serviceId: service._id
+                });
                 details = details.service;
                 if (details.repeated) service.repeated = details.repeated;
                 await Service.update({

@@ -18,23 +18,22 @@ const handleRequest = (client, options) =>
     );
 
 module.exports = (s, service) => {
-    let client = request.defaults({
+    const client = request.defaults({
         baseUrl: `${s.emk14.host}/${service}`
     });
     return {
-        get(action, data) {
-            return handleRequest(client, {
+        get: (action, data) =>
+            handleRequest(client, {
                 method: 'GET',
                 url: action,
                 qs: data
-            });
-        },
-        post(action, data) {
-            return handleRequest(client, {
+            }),
+
+        post: (action, data) =>
+            handleRequest(client, {
                 method: 'POST',
                 url: action,
                 json: data
-            });
-        }
+            })
     };
 };

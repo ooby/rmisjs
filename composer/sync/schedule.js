@@ -109,7 +109,8 @@ exports.deleteSchedulesForDates = async(s, ...dates) => {
                         roomNumber: j.roomNumber,
                         docCode: j.docCode,
                         specCode: j.specCode,
-                        positionCode: j.positionCode
+                        positionCode: j.positionCode,
+                        docSNILS: j.docCode
                     })
                 );
                 if (!log) continue;
