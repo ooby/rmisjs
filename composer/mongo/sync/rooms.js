@@ -1,9 +1,6 @@
 const Room = require('../model/room');
 const Location = require('../model/location');
-const Queue = require('../../libs/queue');;
 const rmisjs = require('../../../index');
-
-const q = new Queue(2);
 
 /**
  * Выгрузка данных из РМИС о кабинетах
@@ -23,11 +20,9 @@ module.exports = async s => {
             }).exec()
         ).concat(
             rooms.map(async roomId => {
-                let room = await q.push(() =>
-                    roomService.getRoom({
-                        roomId
-                    })
-                );
+                let room = await roomService.getRoom({
+                    roomId
+                });
                 room = room.room;
                 room._id = roomId;
                 await Room.update({

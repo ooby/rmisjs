@@ -1,5 +1,5 @@
 const soap = require('soap');
-const url = require('../libs/url').url;
+const { url } = require('../libs/url');
 
 module.exports = async(cfg, opt) => {
     cfg = cfg.rmis;

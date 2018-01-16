@@ -1,10 +1,13 @@
 const createClient = require('../client');
+const Queue = require('../../libs/queue');
+
+const q = new Queue(1);
 
 module.exports = async s => {
     let c = await createClient(s, 'room');
     return {
         describe: () => c.describe(),
-        getRoom: d => c.getRoomAsync(d),
-        getRooms: d => c.getRoomsAsync(d)
+        getRoom: d => q.push(() => c.getRoomAsync(d)),
+        getRooms: d => q.push(() => c.getRoomsAsync(d))
     };
 };

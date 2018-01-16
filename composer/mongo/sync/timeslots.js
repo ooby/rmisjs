@@ -2,32 +2,25 @@ const createDates = require('../../libs/collect').createDates;
 const TimeSlot = require('../model/timeslot');
 const Location = require('../model/location');
 const moment = require('moment');
-const Queue = require('../../libs/queue');
 const get = require('../getter');
 const rmisjs = require('../../../index');
 
 const toMidnight = dateString => moment(dateString).toDate();
 
-const tim = new Queue(2);
-const res = new Queue(2);
 let promises = [];
 
 const requestTime = (s, location, date, appointmentService) =>
-    tim.push(() =>
-        appointmentService.getTimes({
-            location,
-            date
-        })
-    );
+    appointmentService.getTimes({
+        location,
+        date
+    });
 
 const requestReserve = (s, location, date, appointmentService) =>
-    res.push(() =>
-        appointmentService.getReserveFiltered({
-            date,
-            organization: s.rmis.clinicId,
-            location
-        })
-    );
+    appointmentService.getReserveFiltered({
+        date,
+        organization: s.rmis.clinicId,
+        location
+    });
 
 const update = async(s, date, location, appointmentService) => {
     let midnight = toMidnight(date);

@@ -1,10 +1,7 @@
 const Department = require('../model/department');
 const Location = require('../model/location');
 const rmisjs = require('../../../index');
-const Queue = require('../../libs/queue');;
 const get = require('../getter');
-
-const q = new Queue(2);
 
 /**
  * Выгрузка данных из РМИС о ресурсах
@@ -25,11 +22,9 @@ module.exports = async s => {
             }).exec()
         ).concat(
             get(await ids, [], 'location').map(async id => {
-                let location = await q.push(() =>
-                    resource.getLocation({
-                        location: id
-                    })
-                );
+                let location = await resource.getLocation({
+                    location: id
+                });
                 if (!location) return;
                 else location = location.location;
                 if (
