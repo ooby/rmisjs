@@ -1,29 +1,14 @@
-const getProtocol = require('./protocol');
-const document = require('./document');
-const refbooks = require('refbooks');
+const getProtocol = require('../libs/protocol');
+const document = require('../libs/document');
+const refbook = require('../libs/refbook');
 const rmisjs = require('../../index');
 const moment = require('moment');
-const Queue = require('../../libs/queue');
 const soap = require('soap');
 const url = require('url');
 const j2x = require('js2xmlparser');
-const ss = require('string-similarity');
 
 const wsdl = '/carbondss/services/MedbaseCases/MedbaseCases.SecureSOAP11Endpoint.xml';
 const endpoint = '/carbondss/services/MedbaseCases.SOAP11Endpoint/';
-
-/**
- * Возвращает значение поля из справочника по значению поля имени.
- * @param {Object} dict - справочник
- * @param {String} name - значение поля имени
- * @return {Promise<String>} - значение заданного поля
- */
-const getCodeByName = (dict, name) => {
-    let names = dict.map(i => i.name.toUpperCase());
-    let index = ss.findBestMatch(name.toUpperCase(), names);
-    index = names.indexOf(index.bestMatch.target);
-    return dict[index].code;
-};
 
 const match = (pattern, arr) => {
     for (let item of [].concat(arr)) {
@@ -72,25 +57,59 @@ const waitForNull = async obj => {
     return valid ? obj : null;
 };
 
-const rbq = new Queue(1);
+const keys = {
+    MDP365: {
+        code: 'MDP365',
+        version: '1.0',
+        indexes: [1, 3]
+    },
+    PRK470: {
+        code: 'PRK470',
+        version: '1.0',
+        indexes: [0, 1]
+    },
+    HST0020: {
+        code: 'HST0020',
+        version: '1.0',
+        indexes: [0, 1]
+    },
+    C33001: {
+        code: 'C33001',
+        version: '1.0',
+        indexes: [0, 3]
+    }
+};
 
-const composeLib = async s => {
+const $ = (data, path, def) => {
+    if (!data) return def;
+    if (!path) return data || def;
+    for (let i of path.split('.')) {
+        if (i in data === false) return def;
+        data = data[i];
+    }
+    return [].concat(data).shift() || def;
+};
+
+const $$ = (data, path, def) => {
+    if (!data) return def;
+    if (!path) return data || def;
+    for (let i of path.split('.')) {
+        if (i in data == false) return def;
+        data = data[i];
+    }
+    data = [].concat(data);
+    return !data.length ? null : data;
+};
+
+module.exports = async s => {
     const docParser = await document(s);
-    const dict = new Map();
     const doctors = new Map();
-    const documents = new Map();
-
-    const populateCache = () => {
-        cacheMappedRefbook('MDP365', '1.0', [1, 3]);
-        cacheMappedRefbook('PRK470', '1.0', [0, 1]);
-        cacheMappedRefbook('HST0020', '1.0', [0, 1]);
-        cacheMappedRefbook('C33001', '1.0', [0, 3]);
-    };
+    const rb = await refbook(s);
 
     const clearCache = () => {
-        dict.clear();
         doctors.clear();
-        documents.clear();
+        docParser.clearCache();
+        rb.clearCache();
     };
 
     const c = await soap.createClientAsync(url.resolve(s.rmis.path, wsdl), {
@@ -98,81 +117,8 @@ const composeLib = async s => {
     });
     c.setSecurity(new soap.BasicAuthSecurity(s.rmis.auth.username, s.rmis.auth.password));
 
-    const rb = refbooks(s);
     const rmis = await rmisjs(s).rmis;
-    const [refbook, employee] = await Promise.all([
-        rmis.refbook(),
-        rmis.employee()
-    ]);
-
-    /**
-     * Возвращает поля из справочника НСИ по индексам полей
-     * @param {String} code
-     * @param {String} version
-     * @param {Array<Number>} indexes
-     * @return {Promise<object>}
-     */
-    const mapRefbook = async(code, version, indexes) => {
-        let parts = await rbq.push(() =>
-            rb.getRefbookParts({
-                code,
-                version
-            })
-        );
-        let result = [];
-        await Promise.all(
-            new Array(parts).fill(0).map(async(_, i) => {
-                let r = await rbq.push(() =>
-                    rb.getRefbook({
-                        code,
-                        version,
-                        part: i + 1
-                    })
-                );
-                result = result.concat(
-                    r.data.map(j => {
-                        return {
-                            code: j[indexes[0]].value,
-                            name: j[indexes[1]].value
-                        };
-                    })
-                );
-            })
-        );
-        return result;
-    };
-
-    const cacheMappedRefbook = async(code, version, index) =>
-        dict.set(code, mapRefbook(code, version, index));
-
-    /**
-     * Возвращает значение соответствующего поля из справочника.
-     * Если поле или его значение не существует, то возвращает значение по-умолчанию.
-     * @param {Object} d - параметры
-     * @param {String} d.code - OID справочника
-     * @param {String} d.version - версия справочника
-     * @param {String} d.col - поле запроса
-     * @param {String} d.val - значение поля запроса
-     * @param {String} d.res - возвращаемое поле
-     * @param {Object} [def] - возвращаемое значение по-умолчанию
-     * @return {Promise<String>}
-     */
-    const getRefbookValue = async(d, def = null) => {
-        let data = await refbook.getRefbookRowData({
-            refbookCode: d.code,
-            version: d.version,
-            column: {
-                name: d.col,
-                data: d.val
-            }
-        });
-        if (!data) return def;
-        data = data.row[0].column.reduce((p, i) => {
-            p[i.name] = i.data;
-            return p;
-        }, {});
-        return data[d.res] || def;
-    };
+    const employee = await rmis.employee();
 
     /**
      * Возвращает все случаи по UID физического лица
@@ -183,9 +129,7 @@ const composeLib = async s => {
         let data = await c.searchCaseAsync({
             patientUid
         });
-        if (!data) return null;
-        if (!data.cases) return null;
-        return data.cases.caseComplex;
+        return $$(data, 'cases.caseComplex', null);
     };
 
     /**
@@ -194,8 +138,8 @@ const composeLib = async s => {
      * @return {Promise<String>}
      */
     const parseDoctorPost = async positionName => {
-        let mdp365 = await dict.get('MDP365');
-        let code = getCodeByName(mdp365, positionName);
+        if (!positionName) return null;
+        let code = await rb.getCodeNSI(positionName, keys['MDP365']);
         return !code ? null : code;
     };
 
@@ -209,17 +153,25 @@ const composeLib = async s => {
         let speciality = await employee.getPosition({
             id: positionId
         });
-        if (!speciality.position) return null;
-        if (!speciality.position.speciality) return null;
-        speciality = speciality.position.speciality;
-        let specName = await getRefbookValue({
-            code: '1.2.643.5.1.13.3.2861820518965.1.1.118',
-            version: 'CURRENT',
-            col: 'ID',
-            val: speciality,
-            res: 'NAME'
-        });
-        return await getCodeByName(await dict.get('C33001'), specName);
+        speciality = $(speciality, 'position.speciality');
+        if (!speciality) return null;
+        let specName = await rb.getValueRMIS('pim_speciality', 'ID', speciality, 'NAME');
+        if (!specName) return null;
+        let specCode = await rb.getCodeNSI(specName, keys['C33001']);
+        return specCode || null;
+    };
+
+    const parseSnils = async uid => {
+        let doc = $(await docParser.searchSnils(uid), 'number', null);
+        if (!doc) return null;
+        if (/^\d{3}-\d{3}-\d{3}\s\d{2}$/.test(doc)) return doc;
+        if (/^\d{11}$/.test(doc)) {
+            return [
+                [doc.slice(0, 3), doc.slice(3, 6), doc.slice(6, 9)].join('-'),
+                doc.slice(9, 11)
+            ].join(' ');
+        }
+        return null;
     };
 
     /**
@@ -230,13 +182,14 @@ const composeLib = async s => {
      */
     const parseDoctor = async(thecase, visit) => {
         if (!thecase || !visit) return null;
-        let docUid = [].concat(visit.Doctor.Patient.patientUid).pop();
+        let docUid = $(visit, 'Doctor.Patient.patientUid', null);
+        if (!docUid) return null;
         if (doctors.has(docUid)) return doctors.get(docUid);
         let doctor = await waitForNull({
             uid: docUid,
-            snils: docParser.getSnils(docUid),
-            postCode: parseDoctorPost(visit.Doctor.positionName),
-            specialtyCode: parseDoctorSpec(visit.Doctor.positionId)
+            snils: parseSnils(docUid),
+            postCode: parseDoctorPost($(visit, 'Doctor.positionName')),
+            specialtyCode: parseDoctorSpec($(visit, 'Doctor.positionId'))
         });
         if (!doctor) return null;
         doctors.set(docUid, doctor);
@@ -283,16 +236,18 @@ const composeLib = async s => {
         return dateTime;
     };
 
-    const parsePaymentData = thecase => {
+    const parsePaymentData = async thecase => {
         if (!thecase) return null;
-        let paymentData = {
-            typePaymentCode: thecase.fundingSourceTypeId,
-            policyNumber: match(/^\d{16}$/, thecase.Patient.polis),
-            insuranceCompanyCode: thecase.document.issuerCode
-        };
-        if (thecase.fundingSourceTypeId === '2') return null;
-        if (thecase.fundingSourceTypeId === '5') paymentData.typePaymentCode = '2';
-        if (!paymentData.policyNumber) delete paymentData.policyNumber;
+        let paymentData = await waitForNull({
+            typePaymentCode: $(thecase, 'fundingSourceTypeId'),
+            policyNumber: match(/^\d{16}$/, $(thecase, 'Patient.polis')),
+            insuranceCompanyCode: $(thecase, 'document.issuerCode')
+        });
+        let funding = parseInt($(thecase, 'fundingSourceTypeId'));
+        if (!funding) return null;
+        if (funding === 2) return null;
+        if (funding === 5) paymentData.typePaymentCode = '2';
+        if ('policyNumber' in paymentData) delete paymentData.policyNumber;
         return paymentData;
     };
 
@@ -311,43 +266,32 @@ const composeLib = async s => {
 
     const parseService = async(thecase, visit) => {
         if (!thecase || !visit) return null;
-        let data = await waitForNull({
-            doctor: parseDoctor(thecase, visit),
-            hst0020: dict.get('HST0020')
-        });
-        if (!data) return null;
+        let doctor = await parseDoctor(thecase, visit);
+        if (!doctor) return null;
         let renderedServices = visit.renderedServices ? [].concat(visit.renderedServices.renderedService) : [];
         return {
             Service: await Promise.all(
                 renderedServices.map(async i => {
                     return {
-                        serviceCode: await getCodeByName(data.hst0020, i.serviceName),
+                        serviceCode: await rb.getCodeNSI(i.serviceName, keys['HST0020']),
                         unitCode: 1, // WRONG
                         quantityServices: renderedServices.length,
-                        doctor: data.doctor
+                        doctor
                     };
                 })
             )
         };
     };
 
-    const parseVisitResult = resultId =>
-        getRefbookValue({
-            code: '1.2.643.5.1.13.3.2861820518965.1.1.212',
-            version: 'CURRENT',
-            col: 'ID',
-            val: resultId,
-            res: 'CODE'
-        });
+    const parseVisitResult = resultId => {
+        if (!resultId) return null;
+        return rb.getValueRMIS('mc_step_result', 'ID', resultId, 'CODE');
+    };
 
-    const parseDiseaseResult = deseaseResultId =>
-        getRefbookValue({
-            code: '1.2.643.5.1.13.3.2861820518965.1.1.54',
-            version: 'CURRENT',
-            col: 'ID',
-            val: deseaseResultId,
-            res: 'CODE'
-        });
+    const parseDiseaseResult = deseaseResultId => {
+        if (!deseaseResultId) return null;
+        return rb.getValueRMIS('mc_step_care_result', 'ID', deseaseResultId, 'CODE');
+    };
 
     const parse025Visit = async(thecase, visit) => {
         if (!thecase || !visit) return null;
@@ -364,7 +308,8 @@ const composeLib = async s => {
         let diagnosis = data.diagnosis;
         delete data.diagnosis;
         return {
-            Form025: Object.assign(data, diagnosis)
+            root: 'Form025',
+            form: Object.assign(data, diagnosis)
         };
     };
 
@@ -385,48 +330,30 @@ const composeLib = async s => {
         let diagnosis = data.diagnosis;
         delete data.diagnosis;
         return {
-            AmbulatorySummary: Object.assign(data, diagnosis)
+            root: 'AmbulatorySummary',
+            form: Object.assign(data, diagnosis)
         };
     };
 
     const parsePatientDocument = async uid => {
         if (!uid) return null;
-        let doc = await docParser.searchDocument(uid, '26');
+        let doc = await docParser.searchPolis(uid);
         if (!doc) return null;
-        doc.issuerCode = await getRefbookValue({
-            code: '1.2.643.5.1.13.3.2861820518965.1.1.111',
-            version: 'CURRENT',
-            col: 'ID',
-            val: doc.issuer,
-            res: 'CODE'
-        });
+        doc.issuerCode = await rb.getValueRMIS('pim_organization', 'ID', doc.issuer, 'CODE');
         return doc;
     };
 
     const parseForm = async careProvidingFormId => {
-        let [prk470, name] = await Promise.all([
-            dict.get('PRK470'),
-            getRefbookValue({
-                code: '1.2.643.5.1.13.3.2861820518965.1.1.27',
-                version: 'CURRENT',
-                col: 'ID',
-                val: careProvidingFormId,
-                res: 'NAME'
-            }, '1')
-        ]);
-        return await getCodeByName(prk470, name);
+        if (!careProvidingFormId) return null;
+        let name = await rb.getValueRMIS('md_care_providing_form', 'ID', careProvidingFormId, 'NAME');
+        if (!name) return;
+        return await rb.getCodeNSI(name, keys['PRK470']);
     };
 
     const parseCare = careLevelId =>
-        getRefbookValue({
-            code: '1.2.643.5.1.13.3.2861820518965.1.1.242',
-            version: 'CURRENT',
-            col: 'ID',
-            val: careLevelId,
-            res: 'CODE'
-        });
+        rb.getValueRMIS('mc_care_level', 'ID', careLevelId, 'CODE');
 
-    const parseAdmission = async(thecase, record) =>
+    const parseAdmission = (thecase, record) =>
         waitForNull({
             dateTimeReceipt: parseDate(record.admissionDate, record.admissionTime),
             indicationsHospitalizationCode: thecase.careProvidingFormCode,
@@ -445,16 +372,19 @@ const composeLib = async s => {
             // DisabilityCertificate: null // 0
         });
         return !form ? null : {
-            Form066: form
+            root: 'Form066',
+            form
         };
     };
 
     const parseExaminatiion = async(thecase, record) => {
         if (!record.renderedServices) return null;
-        let services = record.renderedService;
+        let services = [].concat(record.renderedService);
+        if (services.length === 0) return null;
         let result = {};
         await Promise.all(
             services.map(async i => {
+                if (!i) return null;
                 let proto = await getProtocol(i.id);
                 if (!proto) return;
                 for (let key in proto) {
@@ -463,7 +393,7 @@ const composeLib = async s => {
                 }
             })
         );
-        for (let key of result) {
+        for (let key of Object.keys(result)) {
             result[key] = result[key].join('; ');
         }
         Object.assign(result, {
@@ -507,7 +437,7 @@ const composeLib = async s => {
         });
     };
 
-    const parseAllServices = async (thecase, records) => {
+    const parseAllServices = async(thecase, records) => {
         let Services = await Promise.all(
             records.map(i => parseService(thecase, i))
         );
@@ -516,8 +446,9 @@ const composeLib = async s => {
 
     const parseStationarySummary = async thecase => {
         let first = thecase.hspRecords[0];
-        return await waitForNull({
-            StationarySummary: waitForNull({
+        return {
+            root: 'StationarySummary',
+            form: await waitForNull({
                 PrimaryInformationAdmission: parseAdmission(thecase, first), // WRONG
                 PaymentData: parsePaymentData(thecase),
                 CertifiedExtract: parseCertifiedExtract(thecase),
@@ -525,39 +456,38 @@ const composeLib = async s => {
                 PrimaryExamination: parseExaminatiion(thecase, first),
                 Recommendations: '' // WRONG
             })
-        });
+        };
     };
 
     const getForms = async d => {
-        populateCache();
         let cases = await getCase(d);
         if (!cases) return null;
-        let result = [d];
+        let result = [];
         await Promise.all(
-            [].concat(cases).map(async thecase => {
+            cases.map(async thecase => {
                 if (!thecase) return null;
                 let hsp = !!thecase.hspRecords;
                 let amb = !thecase.hspRecords && thecase.Visits;
                 if (hsp === amb) return null;
                 if (hsp) {
-                    if (!thecase.hspRecords.hospitalRecord) return null;
-                    thecase.hspRecords = [].concat(thecase.hspRecords.hospitalRecord);
+                    thecase.hspRecords = $$(thecase, 'hspRecords.hospitalRecord', null);
+                    if (!thecase.hspRecords) return null;
                 } else {
-                    if (!thecase.Visits.Visit) return null;
-                    thecase.Visits = [].concat(thecase.Visits.Visit);
+                    thecase.Visits = $$(thecase, 'Visits.Visit', null);
+                    if (!thecase.Visits) return null;
                 }
                 let data = {
-                    document: parsePatientDocument(thecase.Patient.patientUid),
-                    careProvidingFormCode: parseForm(thecase.careProvidingFormId)
+                    document: parsePatientDocument($(thecase, 'Patient.patientUid')),
+                    careProvidingFormCode: parseForm($(thecase, 'careProvidingFormId'))
                 };
                 if (amb) {
                     Object.assign(data, {
-                        careLevelCode: parseCare(thecase.careLevelId)
+                        careLevelCode: parseCare($(thecase, 'careLevelId'))
                     });
                 }
                 data = await waitForNull(data);
                 if (!data) return null;
-                if (amb) thecase.Patient.polis = data.document.number;
+                if (amb) thecase.Patient.polis = $(data, 'document.number');
                 Object.assign(thecase, data);
                 let closed = false;
                 switch (parseInt(thecase.stateId)) {
@@ -572,57 +502,52 @@ const composeLib = async s => {
                         break;
                 }
                 if (hsp && !!thecase.hspRecords[0].outcomeDate) closed = true;
+                let meta = {
+                    caseId: thecase.id,
+                    patientId: d,
+                    date: thecase.createdDate
+                };
                 if (closed) {
                     let data;
                     if (hsp) data = await parseStationarySummary(thecase);
                     else data = await parseSummaryVisits(thecase, thecase.Visits[0]);
-                    if (data !== null) result.push(data);
+                    if (data === null) return;
+                    result.push(Object.assign(data, meta));
                 } else {
                     let iterator = hsp ? parseHspRecord : parse025Visit;
                     let arr = hsp ? thecase.hspRecords : thecase.Visits;
                     await Promise.all(
                         arr.map(async i => {
                             let res = await iterator(thecase, i);
-                            if (res !== null) result = result.concat(data);
+                            if (res === null) return;
+                            result = result.concat(Object.assign(res, meta));
                         })
                     );
                 }
             })
         );
-        await clearCache();
         return result;
     };
 
     return {
-        getCase,
-        getForms
+        /**
+         * Возвращает все случаи пациента по его UID.
+         * @param {String} patientUid - UID пациента
+         * @return {Promise<Object>}
+         */
+        getCase: patientUid =>
+            getCase(patientUid)
+            .catch(console.error),
+
+        /**
+         * Возвращает формы для ИЭМК
+         * @param {String} patientUid - UID пациента
+         * @return {Promise<Object>}
+         */
+        getForms: patientUid =>
+            getForms(patientUid)
+            .catch(console.error),
+
+        clearCache
     };
-};
-
-const composeMethod = async(s, method, ...args) => {
-    try {
-        const c = await composeLib(s);
-        return await c[method](...args);
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
-
-module.exports = {
-    /**
-     * Возвращает все случаи пациента по его UID.
-     * @param {String} s - конфигурация
-     * @param {String} patientUid - UID пациента
-     * @return {Promise<Object>}
-     */
-    getCase: (s, patientUid) => composeMethod(s, 'getCase', patientUid),
-
-    /**
-     * Возвращает формы для ИЭМК
-     * @param {Object} s - конфигурация
-     * @param {String} patientUid - UID пациента
-     * @return {Promise<Object>}
-     */
-    getForms: (s, patientUid) => composeMethod(s, 'getForms', patientUid)
 };

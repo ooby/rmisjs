@@ -8,20 +8,26 @@ module.exports = async s => {
         document(s)
     ]);
 
-    const parseIndividual = async(uid, defaultSnils) => {
+    const parseIndividual = async(uid, snils) => {
         if (cache.has(uid)) return cache.get(uid);
-        let [indiv, snils] = await Promise.all([
-            ind.getIndividual(uid),
-            defaultSnils || doc.getSnils(uid)
-        ]);
+        let indiv = await ind.getIndividual(uid);
+        if (!snils) {
+            snils = await doc.searchSnils(uid);
+            if (!snils) return null;
+            if (!snils.number) return null;
+            snils = snils.number;
+        }
         let data = {
             mcod: s.er14.muCode,
-            snils,
+            snils: snils,
             LastName: indiv.surname,
             FirstName: indiv.name,
             MiddleName: indiv.patrName,
-            BirthDate: indiv.birthDate,
-            Sex: indiv.gender
+            BirthDate: indiv.birthDate ? indiv.birthDate.replace(/\+.*$/g, '') : null,
+            Sex: {
+                '@version': '1.0',
+                '$': indiv.gender
+            }
         };
         cache.set(uid, data);
         return data;
@@ -29,19 +35,27 @@ module.exports = async s => {
 
     return {
         clearCache: () => cache.clear(),
-        getPatient: data => parseIndividual(data[0]),
-        getDoctors: async data => {
+        getPatient: async uid => {
+            let data = await parseIndividual(uid);
+            if (!data) return null;
+            return data;
+        },
+        getDoctors: async forms => {
             let uids = [];
             let doctors = [];
             await Promise.all(
-                data.slice(1).map(async i => {
-                    let services = i[Object.keys(i).pop()].Services;
+                forms.map(async i => {
+                    if (!i) return null;
+                    if (Object.values(i).indexOf(null) > -1) return null;
+                    let services = i.form.Services;
                     if (!services) return;
                     services = [].concat(services.Service);
                     await Promise.all(
                         services.map(async j => {
-                            let { doctor } = j;
-                            let { uid, snils } = doctor;
+                            if (!j) return;
+                            let doctor = j.doctor;
+                            let uid = doctor.uid;
+                            let snils = doctor.snils;
                             if (uids.indexOf(uid) > -1) return;
                             uids.push(uid);
                             let parsed = await parseIndividual(uid, snils);

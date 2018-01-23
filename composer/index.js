@@ -10,6 +10,7 @@ const mongoEmployees = require('./mongo/sync/employees');
 const mongoTimeSlots = require('./mongo/sync/timeslots');
 const mongoDepartments = require('./mongo/sync/departments');
 const getProtocol = require('./libs/protocol');
+const emk = require('./emk');
 const {
     getSchedules,
     syncSchedules,
@@ -31,11 +32,7 @@ const {
     getPortalDepartments,
     getDetailedDepartments
 } = require('./libs/department');
-const {
-    getCase,
-    getForms
-} = require('./libs/cases');
-const emk = require('./emk');
+const cased = require('./emk/cases');
 
 module.exports = s => {
     return {
@@ -63,9 +60,8 @@ module.exports = s => {
         mongoEmployees: () => mongoEmployees(s),
         mongoTimeSlots: () => mongoTimeSlots(s),
         mongoServices: () => mongoServices(s),
-        getCase: d => getCase(s, d),
-        getForms: d => getForms(s, d),
-        syncForms: d => emk(s).then(c => c.syncForms(d)).catch(console.error),
+        syncEmk: () => emk(s).then(p => p.syncAll()),
+        getCase: d => cased(s).then(p => p.getCase(d)),
         getProtocol: d => getProtocol(s, d)
     };
 };
