@@ -34,9 +34,13 @@ module.exports = async s => {
     };
 
     return {
-        clearCache: () => {
-            cache.clear();
-            doc.clearCache();
+        clearCache: {
+            all: () => {
+                cache.clear();
+                doc.clearCache();
+            },
+            doc: () => doc.clearCache(),
+            ind: () => cache.clearCache()
         },
         getPatient: uid => parseIndividual(uid),
         getDoctors: async forms => {
@@ -49,28 +53,24 @@ module.exports = async s => {
                     await Promise.all(
                         [].concat(i.form.Services.Service)
                         .map(async service => {
-                            if (!service) return;
-                            let { doctor } = service;
+                            if (!j) return;
+                            let { doctor } = j;
                             let {
                                 uid,
-                                snils,
-                                postCode,
-                                specialityCode
+                                snils
                             } = doctor;
                             if (uids.has(uid) > -1) return;
                             uids.add(uid);
                             let parsed = await parseIndividual(uid, snils);
                             if (!parsed) return;
-                            doctors.push(
-                                Object.assign(parsed, {
-                                    postCode,
-                                    specialityCode
-                                })
-                            );
+                            parsed.postCode = doctor.postCode;
+                            parsed.specialityCode = doctor.specialityCode;
+                            doctors.push(parsed);
                         })
                     );
                 })
             );
+            uids.clear();
             return doctors;
         }
     };
