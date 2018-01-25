@@ -19,7 +19,7 @@ module.exports = async s => {
         }
         let data = {
             mcod: s.er14.muCode,
-            snils: snils,
+            snils: snils.replace(/-\s/g, ''),
             LastName: indiv.surname,
             FirstName: indiv.name,
             MiddleName: indiv.patrName,
@@ -34,31 +34,39 @@ module.exports = async s => {
     };
 
     return {
-        clearCache: () => cache.clear(),
+        clearCache: () => {
+            cache.clear();
+            doc.clearCache();
+        },
         getPatient: uid => parseIndividual(uid),
         getDoctors: async forms => {
-            let uids = [];
+            let uids = new Set([]);
             let doctors = [];
             await Promise.all(
                 forms.map(async i => {
                     if (!i) return null;
                     if (Object.values(i).indexOf(null) > -1) return null;
-                    let services = i.form.Services;
-                    if (!services) return;
-                    services = [].concat(services.Service);
                     await Promise.all(
-                        services.map(async j => {
-                            if (!j) return;
-                            let doctor = j.doctor;
-                            let uid = doctor.uid;
-                            let snils = doctor.snils;
-                            if (uids.indexOf(uid) > -1) return;
-                            uids.push(uid);
+                        [].concat(i.form.Services.Service)
+                        .map(async service => {
+                            if (!service) return;
+                            let { doctor } = service;
+                            let {
+                                uid,
+                                snils,
+                                postCode,
+                                specialityCode
+                            } = doctor;
+                            if (uids.has(uid) > -1) return;
+                            uids.add(uid);
                             let parsed = await parseIndividual(uid, snils);
-                            parsed.postCode = doctor.postCode;
-                            parsed.specialityCode = doctor.specialityCode;
                             if (!parsed) return;
-                            doctors.push(parsed);
+                            doctors.push(
+                                Object.assign(parsed, {
+                                    postCode,
+                                    specialityCode
+                                })
+                            );
                         })
                     );
                 })
