@@ -1,10 +1,13 @@
-const rmisjs = require('../../index');
 const moment = require('moment');
-const emd = require('./emd');
 
+const emd = require('./emd');
 const uuid = require('../mongo/uuid');
+const Queue = require('../../libs/queue');
+const rmisjs = require('../../index');
+
 const connect = require('../mongo/connect');
 const Document = require('../mongo/model/document');
+const LastSync = require('../mongo/model/lastSync');
 
 const _types = {
     AmbulatorySummary: uuid.setUUID('3F95F4C5-CA9C-4F4F-A744-4C21F56E4166'),
@@ -15,11 +18,16 @@ const _types = {
 
 const dateFromObjectId = id => new Date(Buffer.from(id, 'hex').readInt32BE() * 1000);
 
+const queue = new Queue(1);
+
 module.exports = async s => {
     const synced = new Set([]);
-    const rmis = rmisjs(s);
-    const patient = await rmis.rmis.patient();
-    const emk14 = rmis.integration.emk14;
+    const {
+        rmis,
+        integration
+    } = rmisjs(s);
+    const patient = await rmis.patient();
+    const { emk14 } = integration;
     const prof = emk14.professional();
     const ptnt = emk14.patient();
     const docs = emk14.document();
@@ -37,48 +45,47 @@ module.exports = async s => {
             synced.add(data.snils);
             return true;
         } catch (e) {
-            if (!e.ErrorCode) throw e;
-            if (parseInt(e.ErrorCode) !== -2) throw e;
+            if (!e.code) throw e;
+            if (parseInt(e.code) !== -2) throw e;
             await service.publish(data);
             synced.add(data.snils);
             return true;
         }
     };
 
-    const findDocument = async data => {
-        let id = await Document.findOne(data, {
-            _id: true
-        }).lean();
-        if (!id) {
-            id = new Document(data);
-            await id.save();
-        }
-        return id._id.toString();
-    };
+    const findDocument = data =>
+        connect(s, async () => {
+            let doc = await Document.findOne(data).exec();
+            if (!doc) {
+                doc = new Document(data);
+                await doc.save();
+            }
+            return doc._id.toString();
+        });
 
     const syncForm = async form => {
-        if (!form.patient || !form.form) return null;
-        form.doctors = [].concat(form.doctors);
+        if (!form) return;
+        if (Object.values(form).indexOf(null) > -1) return;
+        form.doctors = (
+            [].concat(form.doctors)
+            .filter(doctor => Object.values(doctor).indexOf(null) === -1)
+        );
         if (!form.doctors.length) return null;
-        form.doctors = form.doctors.filter(doctor => Object.values(doctor).indexOf(null) === -1);
-        if (!form.doctors.length) return null;
-        let doctor;
-        for (let service of [].concat(form.form.Services.Service)) {
-            if (!service) continue;
-            if (!service.doctor) continue;
-            if (!service.doctor.snils ||
-                !service.doctor.postCode ||
-                !service.doctor.specialtyCode) continue;
-            service.doctor.snils.replace(/[\s-]/g, '');
-            let codes = form.doctors.find(i => i.snils.replace(/[\s-]/g, '') === service.doctor.snils);
-            if (!codes) continue;
-            doctor = service.doctor;
-            Object.assign(doctor, codes);
-            break;
+        let doctor = form.doctors.find(i => !!i.specialityCode && !!i.postCode);
+        if (!doctor) {
+            console.log(new Date().toString(), form.patientId, 'no doctor');
+            return null;
         }
-        if (!doctor) return null;
+        let {
+            specialityCode,
+            postCode
+        } = doctor;
         await Promise.all(
-            form.doctors.map(doctor => syncIndividual(prof, doctor))
+            form.doctors.map(doctor => {
+                delete doctor.postCode;
+                delete doctor.specialityCode;
+                return syncIndividual(prof, doctor);
+            })
             .concat(syncIndividual(ptnt, form.patient))
         );
         let data = {
@@ -87,9 +94,9 @@ module.exports = async s => {
             PatientSnils: form.patient.snils,
             ProfessionalSnils: doctor.snils,
             CardNumber: form.patientId,
-            CaseBegin: moment(form.date, 'YYYY-MM-DDZ').toDate()
+            CaseBegin: form.date
         };
-        let id = await connect(s, () => findDocument(data));
+        let id = await findDocument(data);
         let date = dateFromObjectId(id);
         let existing;
         try {
@@ -98,12 +105,13 @@ module.exports = async s => {
                 PatientSnils: data.PatientSnils
             });
         } catch (e) {
-            if (!e.ErrorCode) throw e;
-            if (parseInt(e.ErrorCode) !== -3) throw e;
+            if (!e) throw e;
+            if (e.code !== -3) throw e;
         }
+        delete data.caseId;
         Object.assign(data, {
             mcod: s.er14.muCode.toString(),
-            date: moment(date).format('YYYY-MM-DD[T]HH:mm:ss'),
+            Date: moment(date).format('YYYY-MM-DD[T]HH:mm:ss'),
             CaseBegin: moment(data.CaseBegin).format('YYYY-MM-DD'),
             documentId: id,
             Type: {
@@ -128,65 +136,104 @@ module.exports = async s => {
             },
             ProfessionalPost: {
                 '@version': '1.0',
-                '$': doctor.postCode
+                '$': postCode
             },
             ProfessionalSpec: {
                 '@version': '1.0',
-                '$': doctor.specialtyCode
+                '$': specialityCode
             },
             StructuredBody: Buffer.from(convertToXml(form)).toString('base64')
         });
-        existing = [].concat(existing.DocumentList).find(i => i.documentId === data.documentId);
-        if (existing) {
-            data.id = existing.id;
+        existing = (
+            [].concat(existing.DocumentList)
+            .find(i => i.documentId === data.documentId)
+        );
+        if (existing) data.Id = existing.Id;
+        try {
+            await docs.publish(data);
+        } catch (e) {
+            console.error(e);
         }
-        await docs.publish(data);
     };
 
-    const syncPatient = async patient => {
+    const syncPatient = async (patient, lastDate) => {
         if (!patient) return;
-        let forms = await getForms(patient);
+        console.log(new Date().toString(), patient, 'start');
+        let forms = await getForms(patient, lastDate);
         if (!forms) return;
-        forms = [].concat(forms);
-        if (!forms.length) return;
         await Promise.all(
-            forms.map(form => syncForm(form))
+            [].concat(forms).map(form => syncForm(form))
         );
+        console.log(new Date().toString(), patient, 'finished');
     };
 
-    const syncPatients = async (...patients) => {
-        if (!patients.length) return;
-        if (!patients[0]) return;
-        await Promise.all(
-            patients.map(patient => {
-                if (!patient) return;
-                return syncPatient(patient);
-            })
+    const syncPatients = (patients, lastDate) =>
+        Promise.all(
+            [].concat(patients)
+            .map(patient =>
+                queue.push(() =>
+                    syncPatient(patient, lastDate)
+                )
+            )
         );
+
+    const getLastDate = async () => {
+        let data = await connect(s, () =>
+            LastSync.find({}).sort({
+                date: -1
+            }).limit(1).exec()
+        );
+        if (!data) return null;
+        return data.date;
+    };
+
+    const setLastDate = async date => {
+        let doc = new LastSync({ date });
+        await connect(s, async () => {
+            await LastSync.remove({});
+            await doc.save();
+        });
     };
 
     return {
         async syncAll() {
-            let page = 1;
-            while (true) {
-                let data = await patient.searchPatient({
-                    page,
-                    regClinicId: s.rmis.clinicId
-                });
-                if (!data) break;
-                if (!data.patient) break;
-                data = [].concat(data.patient);
-                if (!data.length) break;
-                if (!data[0]) break;
-                page++;
-                await syncPatients(...[].concat(data));
-                break;
-            };
-            clearCache();
-            synced.clear();
+            try {
+                let now = new Date();
+                let lastDate = await getLastDate();
+                let page = 1;
+                while (true) {
+                    let data = await patient.searchPatient({
+                        page,
+                        regClinicId: s.rmis.clinicId
+                    });
+                    if (!data) break;
+                    if (!data.patient) break;
+                    data = [].concat(data.patient);
+                    if (!data.length) break;
+                    if (!data[0]) break;
+                    page++;
+                    await syncPatients(data, lastDate);
+                };
+                clearCache();
+                synced.clear();
+                await setLastDate(now);
+            } catch (e) {
+                console.error(e);
+                return e;
+            }
         },
-        syncPatient,
-        syncPatients,
-        syncForm
+        async syncPatient(patient) {
+            try {
+                let now = new Date();
+                let lastDate = await getLastDate();
+                await syncPatient(patient, lastDate);
+                clearCache();
+                synced.clear();
+                await setLastDate(now);
+            } catch (e) {
+                console.error(e);
+                return e;
+            }
+        }
     };
 };

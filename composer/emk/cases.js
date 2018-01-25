@@ -45,16 +45,14 @@ const deseaseTypeMatch = (id, injury) => {
 };
 
 const waitForNull = async obj => {
-    let valid = true;
-    await Promise.all(
-        Object.entries(obj).map(async([key, value]) => {
-            if (!valid) return;
-            value = await value;
-            if (value === null) valid = false;
-            obj[key] = value;
-        })
-    );
-    return valid ? obj : null;
+    try {
+        let result = await Promise.all(Object.values(obj));
+        for (let key of Object.keys(obj)) obj[key] = await obj[key];
+        return obj;
+    } catch (e) {
+        if (e !== null) throw e;
+        return null;
+    }
 };
 
 const keys = {
@@ -83,22 +81,29 @@ const keys = {
 const $ = (data, path, def) => {
     if (!data) return def;
     if (!path) return data || def;
-    for (let i of path.split('.')) {
-        if (i in data === false) return def;
-        data = data[i];
+    if (path) {
+        for (let i of path.split('.')) {
+            if (i in data == false) return def;
+            data = data[i];
+            if (!data) return def;
+        }
     }
-    return [].concat(data).shift() || def;
+    data = [].concat(data).pop();
+    return data || def;
 };
 
 const $$ = (data, path, def) => {
     if (!data) return def;
     if (!path) return data || def;
-    for (let i of path.split('.')) {
-        if (i in data == false) return def;
-        data = data[i];
+    if (path) {
+        for (let i of path.split('.')) {
+            if (i in data == false) return def;
+            data = data[i];
+            if (!data) return def;
+        }
     }
     data = [].concat(data);
-    return !data.length ? null : data;
+    return data || def;
 };
 
 module.exports = async s => {
@@ -122,13 +127,11 @@ module.exports = async s => {
 
     /**
      * Возвращает все случаи по UID физического лица
-     * @param {String} patientUid
+     * @param {String} d - параметры
      * @return {Promise<Object>}
      */
-    const getCase = async patientUid => {
-        let data = await c.searchCaseAsync({
-            patientUid
-        });
+    const getCase = async d => {
+        let data = await c.searchCaseAsync(d);
         return $$(data, 'cases.caseComplex', null);
     };
 
@@ -138,9 +141,9 @@ module.exports = async s => {
      * @return {Promise<String>}
      */
     const parseDoctorPost = async positionName => {
-        if (!positionName) return null;
+        if (!positionName) return Promise.reject(null);
         let code = await rb.getCodeNSI(positionName, keys['MDP365']);
-        return !code ? null : code;
+        return !code ? Promise.reject(null) : code;
     };
 
     /**
@@ -149,21 +152,21 @@ module.exports = async s => {
      * @return {Promise<Object>}
      */
     const parseDoctorSpec = async positionId => {
-        if (!positionId) return null;
+        if (!positionId) return Promise.reject(null);
         let speciality = await employee.getPosition({
             id: positionId
         });
         speciality = $(speciality, 'position.speciality');
-        if (!speciality) return null;
+        if (!speciality) return Promise.reject(null);
         let specName = await rb.getValueRMIS('pim_speciality', 'ID', speciality, 'NAME');
-        if (!specName) return null;
+        if (!specName) return Promise.reject(null);
         let specCode = await rb.getCodeNSI(specName, keys['C33001']);
-        return specCode || null;
+        return specCode || Promise.reject(null);
     };
 
     const parseSnils = async uid => {
         let doc = $(await docParser.searchSnils(uid), 'number', null);
-        if (!doc) return null;
+        if (!doc) return Promise.reject(null);
         if (/^\d{3}-\d{3}-\d{3}\s\d{2}$/.test(doc)) return doc;
         if (/^\d{11}$/.test(doc)) {
             return [
@@ -171,7 +174,7 @@ module.exports = async s => {
                 doc.slice(9, 11)
             ].join(' ');
         }
-        return null;
+        return Promise.reject(null);
     };
 
     /**
@@ -181,17 +184,17 @@ module.exports = async s => {
      * @return {Promise<Object>}
      */
     const parseDoctor = async(thecase, visit) => {
-        if (!thecase || !visit) return null;
+        if (!thecase || !visit) return Promise.reject(null);
         let docUid = $(visit, 'Doctor.Patient.patientUid', null);
-        if (!docUid) return null;
+        if (!docUid) return Promise.reject(null);
         if (doctors.has(docUid)) return doctors.get(docUid);
         let doctor = await waitForNull({
             uid: docUid,
             snils: parseSnils(docUid),
             postCode: parseDoctorPost($(visit, 'Doctor.positionName')),
-            specialtyCode: parseDoctorSpec($(visit, 'Doctor.positionId'))
+            specialityCode: parseDoctorSpec($(visit, 'Doctor.positionId'))
         });
-        if (!doctor) return null;
+        if (!doctor) return Promise.reject(null);
         doctors.set(docUid, doctor);
         return doctor;
     };
@@ -203,8 +206,8 @@ module.exports = async s => {
      * @return {Promise<Object>} - поля диагнозов
      */
     const parseDiagnosis = async(thecase, visit) => {
-        if (!thecase || !visit) return null;
-        if (!visit.diagnoses) return null;
+        if (!thecase || !visit) return Promise.reject(null);
+        if (!visit.diagnoses) return Promise.reject(null);
         let mainDiagnosisCode = null;
         let characterDiagnosisCode = null;
         let concomitantDiagnosis = [];
@@ -216,7 +219,8 @@ module.exports = async s => {
                 characterDiagnosisCode = deseaseTypeMatch(i.deseaseTypeId, i.injuryTypeId);
             }
         }
-        return !mainDiagnosisCode || !characterDiagnosisCode ? null : {
+        if (!mainDiagnosisCode || !characterDiagnosisCode) return Promise.reject(null);
+        return {
             mainDiagnosisCode,
             characterDiagnosisCode,
             concomitantDiagnosis
@@ -230,29 +234,29 @@ module.exports = async s => {
      * @return {String}
      */
     const parseDate = (date, time) => {
-        if (!date || !time) return null;
+        if (!date || !time) return Promise.reject(null);
         let dateTime = date.replace(/\+.*$/, '') + 'T';
         dateTime += time || ('00:00:00.000' + moment().format('Z'));
         return dateTime;
     };
 
     const parsePaymentData = async thecase => {
-        if (!thecase) return null;
+        if (!thecase) return Promise.reject(null);
         let paymentData = await waitForNull({
             typePaymentCode: $(thecase, 'fundingSourceTypeId'),
-            policyNumber: match(/^\d{16}$/, $(thecase, 'Patient.polis')),
+            policyNumber: thecase.Patient.polis,
             insuranceCompanyCode: $(thecase, 'document.issuerCode')
         });
         let funding = parseInt($(thecase, 'fundingSourceTypeId'));
-        if (!funding) return null;
-        if (funding === 2) return null;
+        if (!funding) return Promise.reject(null);
+        if (funding === 2) return Promise.reject(null);
         if (funding === 5) paymentData.typePaymentCode = '2';
         if ('policyNumber' in paymentData) delete paymentData.policyNumber;
         return paymentData;
     };
 
     const parseVisit = (thecase, visit) => {
-        if (!thecase || !visit) return null;
+        if (!thecase || !visit) return Promise.reject(null);
         let dateTime = parseDate(visit.admissionDate, visit.admissionTime);
         return !dateTime ? null : {
             dateTime,
@@ -265,9 +269,9 @@ module.exports = async s => {
     };
 
     const parseService = async(thecase, visit) => {
-        if (!thecase || !visit) return null;
+        if (!thecase || !visit) return Promise.reject(null);
         let doctor = await parseDoctor(thecase, visit);
-        if (!doctor) return null;
+        if (!doctor) return Promise.reject(null);
         let renderedServices = visit.renderedServices ? [].concat(visit.renderedServices.renderedService) : [];
         return {
             Service: await Promise.all(
@@ -284,27 +288,27 @@ module.exports = async s => {
     };
 
     const parseVisitResult = resultId => {
-        if (!resultId) return null;
+        if (!resultId) return Promise.reject(null);
         return rb.getValueRMIS('mc_step_result', 'ID', resultId, 'CODE');
     };
 
     const parseDiseaseResult = deseaseResultId => {
-        if (!deseaseResultId) return null;
+        if (!deseaseResultId) return Promise.reject(null);
         return rb.getValueRMIS('mc_step_care_result', 'ID', deseaseResultId, 'CODE');
     };
 
     const parse025Visit = async(thecase, visit) => {
-        if (!thecase || !visit) return null;
-        if (!visit.diagnoses) return null;
+        if (!thecase || !visit) return Promise.reject(null);
+        if (!visit.diagnoses) return Promise.reject(null);
         let data = await waitForNull({
             diagnosis: parseDiagnosis(thecase, visit),
             resultCode: parseVisitResult(visit.visitResultId),
             outcomeCode: parseDiseaseResult(visit.deseaseResultId),
             visit: parseVisit(thecase, visit),
-            paymentData: parsePaymentData(thecase),
+            PaymentData: parsePaymentData(thecase),
             Services: parseService(thecase, visit),
         });
-        if (!data) return null;
+        if (!data) return Promise.reject(null);
         let diagnosis = data.diagnosis;
         delete data.diagnosis;
         return {
@@ -313,20 +317,21 @@ module.exports = async s => {
         };
     };
 
-    const parseSummaryVisits = async(thecase, visit) => {
-        if (!thecase || !visit) return null;
-        if (!visit.diagnoses) return null;
+    const parseAmbulatorySummary = async(thecase, visit) => {
+        if (!thecase || !visit) return Promise.reject(null);
+        if (!visit.diagnoses) return Promise.reject(null);
         let data = await waitForNull({
+            PaymentData: parsePaymentData(thecase),
             diagnosis: parseDiagnosis(thecase, visit),
             InformationDisease: waitForNull({
                 resultCode: parseVisitResult(visit.visitResultId),
                 outcomeCode: parseDiseaseResult(visit.deseaseResultId),
                 visit: parseVisit(thecase, visit),
             }),
-            paymentData: parsePaymentData(thecase),
+            PrimaryExamination: parseExaminatiion(thecase, visit),
             Services: parseService(thecase, visit),
         });
-        if (!data) return null;
+        if (!data) return Promise.reject(null);
         let diagnosis = data.diagnosis;
         delete data.diagnosis;
         return {
@@ -336,22 +341,26 @@ module.exports = async s => {
     };
 
     const parsePatientDocument = async uid => {
-        if (!uid) return null;
+        if (!uid) return Promise.reject(null);
         let doc = await docParser.searchPolis(uid);
-        if (!doc) return null;
+        if (!doc) return Promise.reject(null);
         doc.issuerCode = await rb.getValueRMIS('pim_organization', 'ID', doc.issuer, 'CODE');
         return doc;
     };
 
     const parseForm = async careProvidingFormId => {
-        if (!careProvidingFormId) return null;
+        if (!careProvidingFormId) return Promise.reject(null);
         let name = await rb.getValueRMIS('md_care_providing_form', 'ID', careProvidingFormId, 'NAME');
-        if (!name) return;
-        return await rb.getCodeNSI(name, keys['PRK470']);
+        if (!name) return Promise.reject(null);
+        let code = await rb.getCodeNSI(name, keys['PRK470']);
+        return code;
     };
 
-    const parseCare = careLevelId =>
-        rb.getValueRMIS('mc_care_level', 'ID', careLevelId, 'CODE');
+    const parseCare = async careLevelId => {
+        let code = await rb.getValueRMIS('mc_care_level', 'ID', careLevelId, 'CODE');
+        if (!code) return Promise.reject(null);
+        return code;
+    };
 
     const parseAdmission = (thecase, record) =>
         waitForNull({
@@ -378,13 +387,13 @@ module.exports = async s => {
     };
 
     const parseExaminatiion = async(thecase, record) => {
-        if (!record.renderedServices) return null;
+        if (!record.renderedServices) return Promise.reject(null);
         let services = [].concat(record.renderedService);
-        if (services.length === 0) return null;
+        if (services.length === 0) return Promise.reject(null);
         let result = {};
         await Promise.all(
             services.map(async i => {
-                if (!i) return null;
+                if (!i) return;
                 let proto = await getProtocol(i.id);
                 if (!proto) return;
                 for (let key in proto) {
@@ -405,14 +414,14 @@ module.exports = async s => {
             },
             ObjectiveData: {
                 functionalExamination: {
-                    // functionalParameter: [
-                    //     {
-                    //         nameParameter: null,
-                    //         valueParameter: null,
-                    //         controlValue: null,
-                    //         measuringUnit: null
-                    //     }
-                    // ]
+                    functionalParameter: [
+                        {
+                            nameParameter: '',
+                            valueParameter: '',
+                            controlValue: '',
+                            measuringUnit: ''
+                        }
+                    ]
                 }
             },
             provisionalDiagnosis: null,
@@ -459,70 +468,95 @@ module.exports = async s => {
         };
     };
 
-    const getForms = async d => {
-        let cases = await getCase(d);
-        if (!cases) return null;
+    const getForms = async(patientUid, lastDate) => {
+        const cases = await getCase({
+            patientUid
+        });
+        if (!cases) return;
         let result = [];
         await Promise.all(
             cases.map(async thecase => {
-                if (!thecase) return null;
                 let hsp = !!thecase.hspRecords;
                 let amb = !thecase.hspRecords && thecase.Visits;
-                if (hsp === amb) return null;
+                if (hsp === amb) return;
                 if (hsp) {
                     thecase.hspRecords = $$(thecase, 'hspRecords.hospitalRecord', null);
-                    if (!thecase.hspRecords) return null;
+                    if (!thecase.hspRecords) return;
                 } else {
                     thecase.Visits = $$(thecase, 'Visits.Visit', null);
-                    if (!thecase.Visits) return null;
+                    if (!thecase.Visits) return;
                 }
-                let data = {
-                    document: parsePatientDocument($(thecase, 'Patient.patientUid')),
-                    careProvidingFormCode: parseForm($(thecase, 'careProvidingFormId'))
-                };
-                if (amb) {
-                    Object.assign(data, {
-                        careLevelCode: parseCare($(thecase, 'careLevelId'))
-                    });
-                }
-                data = await waitForNull(data);
-                if (!data) return null;
-                if (amb) thecase.Patient.polis = $(data, 'document.number');
-                Object.assign(thecase, data);
+                let data = waitForNull(
+                    Object.assign({
+                        document: parsePatientDocument(thecase.Patient.patientUid),
+                        careProvidingFormCode: parseForm(thecase.careProvidingFormId)
+                    }, amb ? {
+                        careLevelCode: parseCare(thecase.careLevelId)
+                    } : {})
+                );
                 let closed = false;
-                switch (parseInt(thecase.stateId)) {
-                    case 1:
-                        closed = true;
-                        break;
-                    case 2:
-                        closed = true;
-                        break;
-                    case 7:
-                        closed = true;
-                        break;
-                }
                 if (hsp && !!thecase.hspRecords[0].outcomeDate) closed = true;
+                else {
+                    switch (parseInt(thecase.stateId)) {
+                        case 1:
+                            closed = true;
+                            break;
+                        case 2:
+                            closed = true;
+                            break;
+                        case 7:
+                            closed = true;
+                            break;
+                    }
+                }
                 let meta = {
+                    patientId: patientUid,
                     caseId: thecase.id,
-                    patientId: d,
-                    date: thecase.createdDate
+                    date: moment(thecase.createdDate, 'YYYY-MM-DDZ').toDate()
                 };
+                data = await data;
+                if (!data) return;
+                Object.assign(thecase, data);
+                thecase.Patient.polis = data.document.number;
+                let records = hsp ? thecase.hspRecords : thecase.Visits;
+                let parser;
                 if (closed) {
-                    let data;
-                    if (hsp) data = await parseStationarySummary(thecase);
-                    else data = await parseSummaryVisits(thecase, thecase.Visits[0]);
-                    if (data === null) return;
-                    result.push(Object.assign(data, meta));
+                    parser = hsp ? parseStationarySummary : parseAmbulatorySummary;
+                    if (lastDate) {
+                        let thedate = (
+                            records.map(i =>
+                                moment(parseDate(i.admissionDate, i.admissionTime))
+                                .toDate()
+                                .valueOf()
+                            )
+                            .sort((a, b) => a - b)
+                            .pop()
+                        );
+                        if (thedate <= lastDate.valueOf()) return;
+                    }
+                    try {
+                        let data = await parser(thecase, records[0]);
+                        if (!data) return;
+                        result.push(Object.assign(data, meta));
+                    } catch (e) {
+                        if (e !== null) throw e;
+                    }
                 } else {
-                    let iterator = hsp ? parseHspRecord : parse025Visit;
-                    let arr = hsp ? thecase.hspRecords : thecase.Visits;
-                    await Promise.all(
-                        arr.map(async i => {
-                            let res = await iterator(thecase, i);
-                            if (res === null) return;
-                            result = result.concat(Object.assign(res, meta));
+                    parser = hsp ? parseHspRecord : parse025Visit;
+                    records = await Promise.all(
+                        records.map(async i => {
+                            let thedate = moment(parseDate(i.admissionDate, i.admissionTime)).toDate();
+                            if (lastDate && lastDate.valueOf() >= thedate.valueOf()) return null;
+                            try {
+                                let res = await parser(thecase, i);
+                                return !res ? null : Object.assign(res, meta);
+                            } catch (e) {
+                                if (e !== null) throw e;
+                                return null;
+                            }
                         })
                     );
+                    result.concat(records.filter(i => !!i));
                 }
             })
         );
@@ -532,21 +566,22 @@ module.exports = async s => {
     return {
         /**
          * Возвращает все случаи пациента по его UID.
-         * @param {String} patientUid - UID пациента
+         * @param {String} d - параметры
          * @return {Promise<Object>}
          */
-        getCase: patientUid =>
+        getCase: d =>
             getCase(patientUid)
-            .catch(console.error),
+            .catch(e => console.error(e)),
 
         /**
          * Возвращает формы для ИЭМК
          * @param {String} patientUid - UID пациента
+         * @param {Date} [lastDate] - дата последней выгрузки
          * @return {Promise<Object>}
          */
-        getForms: patientUid =>
-            getForms(patientUid)
-            .catch(console.error),
+        getForms: (patientUid, lastDate) =>
+            getForms(patientUid, lastDate)
+            .catch(e => console.error(e)),
 
         clearCache
     };

@@ -35,11 +35,7 @@ module.exports = async s => {
 
     return {
         clearCache: () => cache.clear(),
-        getPatient: async uid => {
-            let data = await parseIndividual(uid);
-            if (!data) return null;
-            return data;
-        },
+        getPatient: uid => parseIndividual(uid),
         getDoctors: async forms => {
             let uids = [];
             let doctors = [];
@@ -59,6 +55,8 @@ module.exports = async s => {
                             if (uids.indexOf(uid) > -1) return;
                             uids.push(uid);
                             let parsed = await parseIndividual(uid, snils);
+                            parsed.postCode = doctor.postCode;
+                            parsed.specialityCode = doctor.specialityCode;
                             if (!parsed) return;
                             doctors.push(parsed);
                         })
