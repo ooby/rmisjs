@@ -78,8 +78,8 @@ module.exports = async s => {
         let data = {
             Type: _types[form.root],
             caseId: form.caseId,
-            PatientSnils: form.patient.snils.replace(/-\s/g, ''),
-            ProfessionalSnils: doctor.snils.replace(/-\s/g, ''),
+            PatientSnils: form.patient.snils.replace(/[-\s]/g, ''),
+            ProfessionalSnils: doctor.snils.replace(/[-\s]/g, ''),
             CardNumber: form.patientId,
             CaseBegin: form.date
         };

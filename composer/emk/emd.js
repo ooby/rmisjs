@@ -48,7 +48,6 @@ module.exports = async s => {
                 console.log(new Date().toString(), uid, 'missing doctor data');
                 return null;
             }
-            collector.clearCache();
             return forms.map(i =>
                 Object.assign(i, {
                     doctors,
@@ -57,6 +56,9 @@ module.exports = async s => {
             );
         },
         convertToXml,
-        clearCache: () => cased.clearCache()
+        clearCache: () => {
+            cased.clearCache();
+            collector.clearCache.all();
+        }
     };
 };

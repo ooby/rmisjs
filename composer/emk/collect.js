@@ -19,7 +19,7 @@ module.exports = async s => {
         }
         let data = {
             mcod: s.er14.muCode,
-            snils: snils.replace(/-\s/g, ''),
+            snils: snils.replace(/[-\s]/g, ''),
             LastName: indiv.surname,
             FirstName: indiv.name,
             MiddleName: indiv.patrName,
@@ -50,22 +50,29 @@ module.exports = async s => {
                 forms.map(async i => {
                     if (!i) return null;
                     if (Object.values(i).indexOf(null) > -1) return null;
+                    let services = i.form.Services;
+                    if (!services) return null;
+                    services = [].concat(services.Service);
                     await Promise.all(
-                        [].concat(i.form.Services.Service)
-                        .map(async service => {
-                            if (!j) return;
-                            let { doctor } = j;
+                        services.map(async service => {
+                            if (!service) return;
+                            let { doctor } = service;
                             let {
                                 uid,
-                                snils
+                                snils,
+                                postCode,
+                                specialtyCode
                             } = doctor;
-                            if (uids.has(uid) > -1) return;
+                            if (uids.has(uid)) return;
                             uids.add(uid);
                             let parsed = await parseIndividual(uid, snils);
                             if (!parsed) return;
-                            parsed.postCode = doctor.postCode;
-                            parsed.specialityCode = doctor.specialityCode;
-                            doctors.push(parsed);
+                            doctors.push(
+                                Object.assign(parsed, {
+                                    postCode,
+                                    specialityCode: specialtyCode
+                                })
+                            );
                         })
                     );
                 })

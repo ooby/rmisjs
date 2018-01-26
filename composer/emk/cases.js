@@ -189,10 +189,10 @@ module.exports = async s => {
         if (!docUid) return Promise.reject(null);
         if (doctors.has(docUid)) return doctors.get(docUid);
         let doctor = await waitForNull({
-            uid: docUid,
+            uid: Promise.resolve(docUid),
             snils: parseSnils(docUid),
             postCode: parseDoctorPost($(visit, 'Doctor.positionName')),
-            specialityCode: parseDoctorSpec($(visit, 'Doctor.positionId'))
+            specialtyCode: parseDoctorSpec($(visit, 'Doctor.positionId'))
         });
         if (!doctor) return Promise.reject(null);
         doctors.set(docUid, doctor);
@@ -243,13 +243,12 @@ module.exports = async s => {
     const parsePaymentData = async thecase => {
         if (!thecase) return Promise.reject(null);
         let paymentData = await waitForNull({
-            typePaymentCode: $(thecase, 'fundingSourceTypeId'),
-            policyNumber: thecase.Patient.polis,
-            insuranceCompanyCode: $(thecase, 'document.issuerCode')
+            typePaymentCode: Promise.resolve($(thecase, 'fundingSourceTypeId')),
+            policyNumber: Promise.resolve(thecase.Patient.polis),
+            insuranceCompanyCode: Promise.resolve($(thecase, 'document.issuerCode'))
         });
         let funding = parseInt($(thecase, 'fundingSourceTypeId'));
-        if (!funding) return Promise.reject(null);
-        if (funding === 2) return Promise.reject(null);
+        if (!funding || funding === 2) return Promise.reject(null);
         if (funding === 5) paymentData.typePaymentCode = '2';
         if ('policyNumber' in paymentData) delete paymentData.policyNumber;
         return paymentData;
@@ -362,14 +361,17 @@ module.exports = async s => {
         return code;
     };
 
-    const parseAdmission = (thecase, record) =>
-        waitForNull({
-            dateTimeReceipt: parseDate(record.admissionDate, record.admissionTime),
+    const parseAdmission = async (thecase, record) => {
+        let date = await parseDate(record.admissionDate, record.admissionTime);
+        return Object.assign({
             indicationsHospitalizationCode: thecase.careProvidingFormCode,
             channelHospitalizationCode: 8, // WRONG
             caseGivenYear: record.previousHospitalRecordId ? 2 : 1,
             hospitalized: 1 // WRONG
+        }, {
+            dateTimeReceipt: date
         });
+    };
 
     const parseHspRecord = async(thecase, record) => {
         let form = await waitForNull({
@@ -438,10 +440,10 @@ module.exports = async s => {
         return await waitForNull({
             dischargeDate,
             numberBedDays: moment(dischargeDate).diff(moment(admissionDate), 'days') + 1,
-            ConditionsMedAssistance: 1, // WRONG
-            TypeAssistence: 3, // WRONG
+            ConditionsMedAssistance: Promise.resolve(1), // WRONG
+            TypeAssistence: Promise.resolve(3), // WRONG
             OutcomeCode: parseDiseaseResult(first.diseaseResultId),
-            resultСode: parseVisitResult(),
+            resultСode: parseVisitResult(first.visitResultId || first.hspRecordResultId),
             DiagnosisCertifiedExtract: parseDiagnosis(thecase, first)
         });
     };
@@ -463,7 +465,7 @@ module.exports = async s => {
                 CertifiedExtract: parseCertifiedExtract(thecase),
                 Services: parseAllServices(thecase, thecase.hspRecords),
                 PrimaryExamination: parseExaminatiion(thecase, first),
-                Recommendations: '' // WRONG
+                Recommendations: Promise.resolve('') // WRONG
             })
         };
     };
