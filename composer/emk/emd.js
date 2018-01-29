@@ -56,9 +56,6 @@ module.exports = async s => {
             );
         },
         convertToXml,
-        clearCache: () => {
-            cased.clearCache();
-            collector.clearCache.all();
-        }
+        clearCache: Object.assign(cased.clearCache, collector.clearCache)
     };
 };

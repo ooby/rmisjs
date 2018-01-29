@@ -142,15 +142,23 @@ module.exports = async s => {
     };
 
     const syncPatient = async (patient, lastDate) => {
-        if (!patient) return;
-        console.log(new Date().toString(), patient, 'start');
-        let forms = await emds.getForms(patient, lastDate);
-        if (!forms) return;
-        await Promise.all(
-            [].concat(forms)
-            .map(form => syncForm(form))
-        );
-        console.log(new Date().toString(), patient, 'finished');
+        try {
+            if (!patient) return;
+            console.log(new Date().toString(), patient, 'start');
+            let forms = await emds.getForms(patient, lastDate);
+            if (!forms) return;
+            await Promise.all(
+                [].concat(forms)
+                .map(form => syncForm(form))
+            );
+            console.log(new Date().toString(), patient, 'finished');
+        } catch (e) {
+            console.error(e);
+        } finally {
+            emds.clearCache.collect();
+            emds.clearCache.docParser();
+            emds.clearCache.doctors();
+        }
     };
 
     const syncPatients = async (patients, lastDate) => {
@@ -174,11 +182,6 @@ module.exports = async s => {
             await LastSync.remove({});
             await doc.save();
         });
-    };
-
-    const clearCache = () => {
-        emds.clearCache();
-        synced.clear();
     };
 
     return {
@@ -208,7 +211,8 @@ module.exports = async s => {
                 console.error(e);
                 return e;
             } finally {
-                clearCache();
+                synced.clear();
+                emds.clearCache.refbooks();
             }
         },
         async syncPatient(patient) {
@@ -217,12 +221,12 @@ module.exports = async s => {
                 let lastDate = await getLastDate();
                 await syncPatient(patient, lastDate);
                 await setLastDate(now);
-                clearCache();
             } catch (e) {
                 console.error(e);
                 return e;
             } finally {
-                clearCache();
+                synced.clear();
+                emds.clearCache.refbooks();
             }
         }
     };

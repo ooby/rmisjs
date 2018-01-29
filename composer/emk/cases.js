@@ -44,15 +44,13 @@ const deseaseTypeMatch = (id, injury) => {
     }
 };
 
-const waitForNull = async obj => {
-    try {
-        let result = await Promise.all(Object.values(obj));
-        for (let key of Object.keys(obj)) obj[key] = await obj[key];
-        return obj;
-    } catch (e) {
-        if (e !== null) throw e;
-        return null;
+const waitForObject = async obj => {
+    let entries = Object.entries(obj).filter(([k, v]) => v instanceof Promise);
+    await Promise.all(entries.map(([k, v]) => v));
+    for (let [k, v] of entries) {
+        obj[k] = await v;
     }
+    return obj;
 };
 
 const keys = {
@@ -106,15 +104,22 @@ const $$ = (data, path, def) => {
     return data || def;
 };
 
+const missing = name => {
+    console.log(new Date().toString(), name);
+    return Promise.reject({
+        missingData: name
+    });
+};
+
 module.exports = async s => {
     const docParser = await document(s);
     const doctors = new Map();
     const rb = await refbook(s);
 
-    const clearCache = () => {
-        doctors.clear();
-        docParser.clearCache();
-        rb.clearCache();
+    const clearCache = {
+        doctors: () => doctors.clear(),
+        docParser: () => docParser.clearCache(),
+        refbooks: () => rb.clearCache()
     };
 
     const c = await soap.createClientAsync(url.resolve(s.rmis.path, wsdl), {
@@ -141,9 +146,9 @@ module.exports = async s => {
      * @return {Promise<String>}
      */
     const parseDoctorPost = async positionName => {
-        if (!positionName) return Promise.reject(null);
+        if (!positionName) return missing('No doctor position name');
         let code = await rb.getCodeNSI(positionName, keys['MDP365']);
-        return !code ? Promise.reject(null) : code;
+        return !code ? missing('No doctor post code') : code;
     };
 
     /**
@@ -152,21 +157,21 @@ module.exports = async s => {
      * @return {Promise<Object>}
      */
     const parseDoctorSpec = async positionId => {
-        if (!positionId) return Promise.reject(null);
+        if (!positionId) return missing('No doctor position id');
         let speciality = await employee.getPosition({
             id: positionId
         });
         speciality = $(speciality, 'position.speciality');
-        if (!speciality) return Promise.reject(null);
+        if (!speciality) return missing('No doctor speciality');
         let specName = await rb.getValueRMIS('pim_speciality', 'ID', speciality, 'NAME');
-        if (!specName) return Promise.reject(null);
+        if (!specName) return missing('No doctor speciality name');
         let specCode = await rb.getCodeNSI(specName, keys['C33001']);
-        return specCode || Promise.reject(null);
+        return specCode || missing('No doctor speciality code');
     };
 
     const parseSnils = async uid => {
         let doc = $(await docParser.searchSnils(uid), 'number', null);
-        if (!doc) return Promise.reject(null);
+        if (!doc) return missing('No snils');
         if (/^\d{3}-\d{3}-\d{3}\s\d{2}$/.test(doc)) return doc;
         if (/^\d{11}$/.test(doc)) {
             return [
@@ -174,7 +179,7 @@ module.exports = async s => {
                 doc.slice(9, 11)
             ].join(' ');
         }
-        return Promise.reject(null);
+        return missing('No snils');
     };
 
     /**
@@ -183,18 +188,18 @@ module.exports = async s => {
      * @param {Object} visit - посещение пацинта
      * @return {Promise<Object>}
      */
-    const parseDoctor = async(thecase, visit) => {
-        if (!thecase || !visit) return Promise.reject(null);
+    const parseDoctor = async (thecase, visit) => {
+        if (!thecase || !visit) return missing('No case or no visit while parsing doctor');
         let docUid = $(visit, 'Doctor.Patient.patientUid', null);
-        if (!docUid) return Promise.reject(null);
+        if (!docUid) return missing('No doctor UID');
         if (doctors.has(docUid)) return doctors.get(docUid);
-        let doctor = await waitForNull({
+        let doctor = await waitForObject({
             uid: Promise.resolve(docUid),
             snils: parseSnils(docUid),
             postCode: parseDoctorPost($(visit, 'Doctor.positionName')),
             specialtyCode: parseDoctorSpec($(visit, 'Doctor.positionId'))
         });
-        if (!doctor) return Promise.reject(null);
+        if (!doctor) return missing('No doctor');
         doctors.set(docUid, doctor);
         return doctor;
     };
@@ -205,9 +210,9 @@ module.exports = async s => {
      * @param {Object} visit - посещение
      * @return {Promise<Object>} - поля диагнозов
      */
-    const parseDiagnosis = async(thecase, visit) => {
-        if (!thecase || !visit) return Promise.reject(null);
-        if (!visit.diagnoses) return Promise.reject(null);
+    const parseDiagnosis = async (thecase, visit) => {
+        if (!thecase || !visit) return missing('No case or no record while parsing diagnosis');
+        if (!visit.diagnoses) return missing('No diagnoses');
         let mainDiagnosisCode = null;
         let characterDiagnosisCode = null;
         let concomitantDiagnosis = [];
@@ -219,7 +224,7 @@ module.exports = async s => {
                 characterDiagnosisCode = deseaseTypeMatch(i.deseaseTypeId, i.injuryTypeId);
             }
         }
-        if (!mainDiagnosisCode || !characterDiagnosisCode) return Promise.reject(null);
+        if (!mainDiagnosisCode || !characterDiagnosisCode) return missing('No diagnoses\' codes');
         return {
             mainDiagnosisCode,
             characterDiagnosisCode,
@@ -233,29 +238,30 @@ module.exports = async s => {
      * @param {Object} time - время посещения
      * @return {String}
      */
-    const parseDate = (date, time) => {
-        if (!date || !time) return Promise.reject(null);
+    const parseDate = async (date, time) => {
+        if (!date) return missing('No date');
+        if (date && !time) return date;
         let dateTime = date.replace(/\+.*$/, '') + 'T';
         dateTime += time || ('00:00:00.000' + moment().format('Z'));
         return dateTime;
     };
 
     const parsePaymentData = async thecase => {
-        if (!thecase) return Promise.reject(null);
-        let paymentData = await waitForNull({
+        if (!thecase) return missing('No case while parsing payment data');
+        let paymentData = await waitForObject({
             typePaymentCode: Promise.resolve($(thecase, 'fundingSourceTypeId')),
             policyNumber: Promise.resolve(thecase.Patient.polis),
             insuranceCompanyCode: Promise.resolve($(thecase, 'document.issuerCode'))
         });
         let funding = parseInt($(thecase, 'fundingSourceTypeId'));
-        if (!funding || funding === 2) return Promise.reject(null);
+        if (!funding || funding === 2) return missing('No funding type ID');
         if (funding === 5) paymentData.typePaymentCode = '2';
         if ('policyNumber' in paymentData) delete paymentData.policyNumber;
         return paymentData;
     };
 
-    const parseVisit = (thecase, visit) => {
-        if (!thecase || !visit) return Promise.reject(null);
+    const parseVisit = async (thecase, visit) => {
+        if (!thecase || !visit) return missing('No case or no record while parsing visits');
         let dateTime = parseDate(visit.admissionDate, visit.admissionTime);
         return !dateTime ? null : {
             dateTime,
@@ -267,10 +273,10 @@ module.exports = async s => {
         };
     };
 
-    const parseService = async(thecase, visit) => {
-        if (!thecase || !visit) return Promise.reject(null);
+    const parseService = async (thecase, visit) => {
+        if (!thecase || !visit) return missing('No case or no record while parsing services');
         let doctor = await parseDoctor(thecase, visit);
-        if (!doctor) return Promise.reject(null);
+        if (!doctor) return missing('No doctor while parsing services');
         let renderedServices = visit.renderedServices ? [].concat(visit.renderedServices.renderedService) : [];
         return {
             Service: await Promise.all(
@@ -286,20 +292,20 @@ module.exports = async s => {
         };
     };
 
-    const parseVisitResult = resultId => {
-        if (!resultId) return Promise.reject(null);
+    const parseVisitResult = async resultId => {
+        if (!resultId) return missing('No result ID');
         return rb.getValueRMIS('mc_step_result', 'ID', resultId, 'CODE');
     };
 
-    const parseDiseaseResult = deseaseResultId => {
-        if (!deseaseResultId) return Promise.reject(null);
+    const parseDiseaseResult = async deseaseResultId => {
+        if (!deseaseResultId) return missing('No result disease ID');
         return rb.getValueRMIS('mc_step_care_result', 'ID', deseaseResultId, 'CODE');
     };
 
-    const parse025Visit = async(thecase, visit) => {
-        if (!thecase || !visit) return Promise.reject(null);
-        if (!visit.diagnoses) return Promise.reject(null);
-        let data = await waitForNull({
+    const parse025Visit = async (thecase, visit) => {
+        if (!thecase || !visit) return missing('No case or no visit while parsing form 025');
+        if (!visit.diagnoses) return missing('No diagnoses');
+        let data = await waitForObject({
             diagnosis: parseDiagnosis(thecase, visit),
             resultCode: parseVisitResult(visit.visitResultId),
             outcomeCode: parseDiseaseResult(visit.deseaseResultId),
@@ -307,7 +313,7 @@ module.exports = async s => {
             PaymentData: parsePaymentData(thecase),
             Services: parseService(thecase, visit),
         });
-        if (!data) return Promise.reject(null);
+        if (!data) return missing('No form data');
         let diagnosis = data.diagnosis;
         delete data.diagnosis;
         return {
@@ -316,13 +322,13 @@ module.exports = async s => {
         };
     };
 
-    const parseAmbulatorySummary = async(thecase, visit) => {
-        if (!thecase || !visit) return Promise.reject(null);
-        if (!visit.diagnoses) return Promise.reject(null);
-        let data = await waitForNull({
+    const parseAmbulatorySummary = async (thecase, visit) => {
+        if (!thecase || !visit) return missing('No case or no visit while parsing AbulatorySummary');
+        if (!visit.diagnoses) return missing('No diagnoses');
+        let data = await waitForObject({
             PaymentData: parsePaymentData(thecase),
             diagnosis: parseDiagnosis(thecase, visit),
-            InformationDisease: waitForNull({
+            InformationDisease: waitForObject({
                 resultCode: parseVisitResult(visit.visitResultId),
                 outcomeCode: parseDiseaseResult(visit.deseaseResultId),
                 visit: parseVisit(thecase, visit),
@@ -330,7 +336,7 @@ module.exports = async s => {
             PrimaryExamination: parseExaminatiion(thecase, visit),
             Services: parseService(thecase, visit),
         });
-        if (!data) return Promise.reject(null);
+        if (!data) return missing('No form data');
         let diagnosis = data.diagnosis;
         delete data.diagnosis;
         return {
@@ -340,24 +346,26 @@ module.exports = async s => {
     };
 
     const parsePatientDocument = async uid => {
-        if (!uid) return Promise.reject(null);
+        if (!uid) return missing('No patient UID');
         let doc = await docParser.searchPolis(uid);
-        if (!doc) return Promise.reject(null);
+        if (!doc) return missing('No polis');
         doc.issuerCode = await rb.getValueRMIS('pim_organization', 'ID', doc.issuer, 'CODE');
         return doc;
     };
 
     const parseForm = async careProvidingFormId => {
-        if (!careProvidingFormId) return Promise.reject(null);
+        if (careProvidingFormId === '0') careProvidingFormId = '3';
+        if (!careProvidingFormId) return missing('No form ID');
         let name = await rb.getValueRMIS('md_care_providing_form', 'ID', careProvidingFormId, 'NAME');
-        if (!name) return Promise.reject(null);
+        if (!name) return missing('No form name');
         let code = await rb.getCodeNSI(name, keys['PRK470']);
+        if (!code) return missing('No form code');
         return code;
     };
 
     const parseCare = async careLevelId => {
         let code = await rb.getValueRMIS('mc_care_level', 'ID', careLevelId, 'CODE');
-        if (!code) return Promise.reject(null);
+        if (!code) return missing('No care code');
         return code;
     };
 
@@ -373,8 +381,8 @@ module.exports = async s => {
         });
     };
 
-    const parseHspRecord = async(thecase, record) => {
-        let form = await waitForNull({
+    const parseHspRecord = async (thecase, record) => {
+        let form = await waitForObject({
             PrimaryInformationAdmission: parseAdmission(thecase, record),
             PaymentData: parsePaymentData(thecase),
             // RegistrationNewborn: null, // 0
@@ -388,10 +396,10 @@ module.exports = async s => {
         };
     };
 
-    const parseExaminatiion = async(thecase, record) => {
-        if (!record.renderedServices) return Promise.reject(null);
+    const parseExaminatiion = async (thecase, record) => {
+        if (!record.renderedServices) return missing('No services');
         let services = [].concat(record.renderedService);
-        if (services.length === 0) return Promise.reject(null);
+        if (services.length === 0) return missing('No services');
         let result = {};
         await Promise.all(
             services.map(async i => {
@@ -416,14 +424,12 @@ module.exports = async s => {
             },
             ObjectiveData: {
                 functionalExamination: {
-                    functionalParameter: [
-                        {
-                            nameParameter: '',
-                            valueParameter: '',
-                            controlValue: '',
-                            measuringUnit: ''
-                        }
-                    ]
+                    functionalParameter: [{
+                        nameParameter: '',
+                        valueParameter: '',
+                        controlValue: '',
+                        measuringUnit: ''
+                    }]
                 }
             },
             provisionalDiagnosis: null,
@@ -433,13 +439,31 @@ module.exports = async s => {
         return result;
     };
 
+    const parseNumberBedDays = async (admissionDate, admissionTime, dischargeDate, dischargeTime) => {
+        let [admission, discharge] = await Promise.all([
+            parseDate(admissionDate, admissionTime),
+            parseDate(dischargeDate, dischargeTime)
+        ]);
+        let dischargeMoment = dischargeTime ? moment(discharge) : moment(discharge, 'YYYY-MM-DDZ');
+        let admissionMoment = admissionTime ? moment(admission) : moment(admission, 'YYYY-MM-DDZ');
+        let numberBedDays = dischargeMoment.diff(admissionMoment, 'days') + 1;
+        return {
+            numberBedDays,
+            discharge,
+            admission
+        };
+    };
+
     const parseCertifiedExtract = async thecase => {
-        let first = thecase.hspRecords[0];
-        let dischargeDate = parseDate(first.outcomeDate, first.outcomeTime);
-        let admissionDate = parseDate(first.admissionDate, first.admissionTime);
-        return await waitForNull({
-            dischargeDate,
-            numberBedDays: moment(dischargeDate).diff(moment(admissionDate), 'days') + 1,
+        let first = thecase.records[0];
+        let {
+            discharge,
+            admission,
+            numberBedDays
+        } = await parseNumberBedDays(first.admissionDate, first.admissionTime, first.outcomeDate, first.outcomeTime);
+        return await waitForObject({
+            dischargeDate: Promise.resolve(discharge),
+            numberBedDays: Promise.resolve(numberBedDays),
             ConditionsMedAssistance: Promise.resolve(1), // WRONG
             TypeAssistence: Promise.resolve(3), // WRONG
             OutcomeCode: parseDiseaseResult(first.diseaseResultId),
@@ -448,56 +472,46 @@ module.exports = async s => {
         });
     };
 
-    const parseAllServices = async(thecase, records) => {
+    const parseAllServices = async thecase => {
         let Services = await Promise.all(
-            records.map(i => parseService(thecase, i))
+            thecase.records.map(i => parseService(thecase, i))
         );
         return Services.reduce((r, i) => r.concat(i), []);
     };
 
     const parseStationarySummary = async thecase => {
-        let first = thecase.hspRecords[0];
+        let first = thecase.records[0];
         return {
             root: 'StationarySummary',
-            form: await waitForNull({
+            form: await waitForObject({
                 PrimaryInformationAdmission: parseAdmission(thecase, first), // WRONG
                 PaymentData: parsePaymentData(thecase),
                 CertifiedExtract: parseCertifiedExtract(thecase),
-                Services: parseAllServices(thecase, thecase.hspRecords),
+                Services: parseAllServices(thecase),
                 PrimaryExamination: parseExaminatiion(thecase, first),
                 Recommendations: Promise.resolve('') // WRONG
             })
         };
     };
 
-    const getForms = async(patientUid, lastDate) => {
-        const cases = await getCase({
-            patientUid
-        });
+    const getForms = async (patientUid, lastDate) => {
+        const cases = await getCase(
+            Object.assign({
+                patientUid
+            }, lastDate ? {
+                dateStepFrom: moment(lastDate).format('YYYY-MM-DD')
+            } : {})
+        );
         if (!cases) return;
         let result = [];
         await Promise.all(
             cases.map(async thecase => {
                 let hsp = !!thecase.hspRecords;
                 let amb = !thecase.hspRecords && thecase.Visits;
-                if (hsp === amb) return;
-                if (hsp) {
-                    thecase.hspRecords = $$(thecase, 'hspRecords.hospitalRecord', null);
-                    if (!thecase.hspRecords) return;
-                } else {
-                    thecase.Visits = $$(thecase, 'Visits.Visit', null);
-                    if (!thecase.Visits) return;
-                }
-                let data = waitForNull(
-                    Object.assign({
-                        document: parsePatientDocument(thecase.Patient.patientUid),
-                        careProvidingFormCode: parseForm(thecase.careProvidingFormId)
-                    }, amb ? {
-                        careLevelCode: parseCare(thecase.careLevelId)
-                    } : {})
-                );
+                thecase.records = $$(thecase, hsp ? 'hspRecords.hospitalRecord' : 'Visits.Visit', null);
+                if (!thecase.records) return;
                 let closed = false;
-                if (hsp && !!thecase.hspRecords[0].outcomeDate) closed = true;
+                if (hsp && !!thecase.records[0].outcomeDate) closed = true;
                 else {
                     switch (parseInt(thecase.stateId)) {
                         case 1:
@@ -516,49 +530,46 @@ module.exports = async s => {
                     caseId: thecase.id,
                     date: moment(thecase.createdDate, 'YYYY-MM-DDZ').toDate()
                 };
-                data = await data;
+                let data;
+                try {
+                    data = await waitForObject(
+                        Object.assign({
+                            document: parsePatientDocument(thecase.Patient.patientUid),
+                            careProvidingFormCode: parseForm(thecase.careProvidingFormId)
+                        }, amb ? {
+                            careLevelCode: parseCare(thecase.careLevelId)
+                        } : {})
+                    );
+                } catch (e) {
+                    if (!e.missingData) throw e;
+                    data = null;
+                }
                 if (!data) return;
                 Object.assign(thecase, data);
                 thecase.Patient.polis = data.document.number;
-                let records = hsp ? thecase.hspRecords : thecase.Visits;
                 let parser;
                 if (closed) {
                     parser = hsp ? parseStationarySummary : parseAmbulatorySummary;
-                    if (lastDate) {
-                        let thedate = (
-                            records.map(i =>
-                                moment(parseDate(i.admissionDate, i.admissionTime))
-                                .toDate()
-                                .valueOf()
-                            )
-                            .sort((a, b) => a - b)
-                            .pop()
-                        );
-                        if (thedate <= lastDate.valueOf()) return;
-                    }
                     try {
-                        let data = await parser(thecase, records[0]);
+                        let data = await parser(thecase, thecase.records[0]);
                         if (!data) return;
                         result.push(Object.assign(data, meta));
                     } catch (e) {
-                        if (e !== null) throw e;
+                        if (!e.missingData) throw e;
                     }
                 } else {
                     parser = hsp ? parseHspRecord : parse025Visit;
-                    records = await Promise.all(
-                        records.map(async i => {
-                            let thedate = moment(parseDate(i.admissionDate, i.admissionTime)).toDate();
-                            if (lastDate && lastDate.valueOf() >= thedate.valueOf()) return null;
+                    thecase.records = await Promise.all(
+                        thecase.records.map(async i => {
                             try {
                                 let res = await parser(thecase, i);
                                 return !res ? null : Object.assign(res, meta);
                             } catch (e) {
-                                if (e !== null) throw e;
-                                return null;
+                                if (!e.missingData) throw e;
                             }
                         })
                     );
-                    result.concat(records.filter(i => !!i));
+                    result.concat(thecase.records.filter(i => !!i));
                 }
             })
         );

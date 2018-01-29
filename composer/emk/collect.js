@@ -35,12 +35,8 @@ module.exports = async s => {
 
     return {
         clearCache: {
-            all: () => {
-                cache.clear();
-                doc.clearCache();
-            },
-            doc: () => doc.clearCache(),
-            ind: () => cache.clearCache()
+            collect: () => cache.clear(),
+            docParser: () => doc.clearCache()
         },
         getPatient: uid => parseIndividual(uid),
         getDoctors: async forms => {
