@@ -212,19 +212,32 @@ module.exports = async s => {
      */
     const parseDiagnosis = async (thecase, visit) => {
         if (!thecase || !visit) return missing('No case or no record while parsing diagnosis');
-        if (!visit.diagnoses) return missing('No diagnoses');
+        let diagnoses = $$(visit, 'diagnoses.diagnos', null);
+        if (diagnoses == null) return missing('No diagnoses');
         let mainDiagnosisCode = null;
         let characterDiagnosisCode = null;
         let concomitantDiagnosis = [];
-        for (let i of [].concat(visit.diagnoses.diagnos)) {
-            if (i.Main !== 'true') {
-                concomitantDiagnosis.push(i.diagnosMKB);
-            } else {
-                mainDiagnosisCode = i.diagnosMKB;
-                characterDiagnosisCode = deseaseTypeMatch(i.deseaseTypeId, i.injuryTypeId);
+        for (let diagnosis of diagnoses) {
+            if (diagnosis.typeId === '2') {
+                concomitantDiagnosis.push(diagnosis.diagnosMKB);
+            } else if (diagnosis.typeId === '1' || diagnosis.typeId === '3') {
+                mainDiagnosisCode = diagnosis.diagnosMKB;
+            }
+            if (!characterDiagnosisCode || characterDiagnosisCode === 99) {
+                characterDiagnosisCode = deseaseTypeMatch(diagnosis.deseaseTypeId, diagnosis.injuryTypeId);
             }
         }
-        if (!mainDiagnosisCode || !characterDiagnosisCode) return missing('No diagnoses\' codes');
+        if (mainDiagnosisCode == null || characterDiagnosisCode == null) {
+            let diagnosis = diagnoses.shift();
+            if (!diagnosis) return missing('No diagnoses\' codes');
+            mainDiagnosisCode = diagnosis.diagnosMKB;
+            characterDiagnosisCode = deseaseTypeMatch(diagnosis.deseaseTypeId, diagnosis.injuryTypeId);
+            concomitantDiagnosis = [];
+            for (let diagnosis of diagnoses) concomitantDiagnosis.push(diagnosis.diagnosMKB);
+        }
+        if (mainDiagnosisCode == null || characterDiagnosisCode == null) {
+            return missing('No diagnoses\' codes');
+        }
         return {
             mainDiagnosisCode,
             characterDiagnosisCode,

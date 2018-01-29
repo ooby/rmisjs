@@ -84,8 +84,7 @@ module.exports = async s => {
             CaseBegin: form.date
         };
         let id = await findDocument(data);
-        let date = dateFromObjectId(id);
-        let existing;
+        let existing = null;
         try {
             existing = await docs.search({
                 DocumentMcod: s.er14.muCode,
@@ -98,7 +97,7 @@ module.exports = async s => {
         delete data.caseId;
         Object.assign(data, {
             mcod: s.er14.muCode.toString(),
-            Date: moment(date).format('YYYY-MM-DD[T]HH:mm:ss'),
+            Date: moment(dateFromObjectId(id)).format('YYYY-MM-DD[T]HH:mm:ss'),
             CaseBegin: moment(data.CaseBegin).format('YYYY-MM-DD'),
             documentId: id,
             Type: {
