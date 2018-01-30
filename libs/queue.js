@@ -9,18 +9,18 @@ module.exports = class Queue {
         if (this.active >= this.limit || !this.tasks.length) return;
         this.active++;
         this.tasks.shift()()
-        .then(() => {
-            this.active--;
-            return this.probe();
-        });
+            .then(() => {
+                this.active--;
+                return this.probe();
+            });
     }
 
     push(task) {
         return new Promise((resolve, reject) => {
             this.tasks.push(() =>
                 task()
-                .then(data => resolve(data))
-                .catch(e => reject(e))
+                    .then(data => resolve(data))
+                    .catch(e => reject(e))
             );
             this.probe();
         });
