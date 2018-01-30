@@ -1,38 +1,44 @@
 const request = require('request');
 
-const handleError = (resolve, reject) =>
-    (err, res, body) => {
-        if (err) return reject(err);
-        body = JSON.parse(body);
-        if ('ErrorCode' in body) {
-            if (parseInt(body.ErrorCode) !== 0) {
-                throw new Error(body.ErrorText);
-            }
-        }
-        resolve(body);
-    };
-
-const handleRequest = (client, options) =>
+const handleRequest = options =>
     new Promise((resolve, reject) =>
-        client(options, handleError(resolve, reject))
+        request(options, (err, res, body) => {
+            if (err) return reject(err);
+            if (!body) return resolve();
+            if (typeof body === 'string') {
+                try {
+                    body = JSON.parse(body);
+                } catch (e) {
+                    console.error(body);
+                    reject(e);
+                }
+            }
+            if (!body.ErrorCode) return resolve(body);
+            if (parseInt(body.ErrorCode) !== 0) {
+                return reject({
+                    code: body.ErrorCode,
+                    text: body.ErrorText,
+                    data: options.qs || options.json
+                });
+            }
+            resolve(body);
+        })
     );
 
 module.exports = (s, service) => {
-    const client = request.defaults({
-        baseUrl: `${s.emk14.host}/${service}`
-    });
+    const _base = `${s.emk14.host}/${service}`;
     return {
         get: (action, data) =>
-            handleRequest(client, {
+            handleRequest({
                 method: 'GET',
-                url: action,
+                url: `${_base}/${action}`,
                 qs: data
             }),
 
         post: (action, data) =>
-            handleRequest(client, {
+            handleRequest({
                 method: 'POST',
-                url: action,
+                url: `${_base}/${action}`,
                 json: data
             })
     };

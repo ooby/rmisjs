@@ -8,49 +8,72 @@ module.exports = async s => {
         document(s)
     ]);
 
-    const parseIndividual = async(uid, defaultSnils) => {
+    const parseIndividual = async(uid, snils) => {
         if (cache.has(uid)) return cache.get(uid);
-        let [indiv, snils] = await Promise.all([
-            ind.getIndividual(uid),
-            defaultSnils || doc.getSnils(uid)
-        ]);
+        let indiv = await ind.getIndividual(uid);
+        if (!snils) {
+            snils = await doc.searchSnils(uid);
+            if (!snils) return null;
+            if (!snils.number) return null;
+            snils = snils.number;
+        }
         let data = {
             mcod: s.er14.muCode,
-            snils,
+            snils: snils.replace(/[-\s]/g, ''),
             LastName: indiv.surname,
             FirstName: indiv.name,
             MiddleName: indiv.patrName,
-            BirthDate: indiv.birthDate,
-            Sex: indiv.gender
+            BirthDate: indiv.birthDate ? indiv.birthDate.replace(/\+.*$/g, '') : null,
+            Sex: {
+                '@version': '1.0',
+                '$': indiv.gender
+            }
         };
         cache.set(uid, data);
         return data;
     };
 
     return {
-        clearCache: () => cache.clear(),
-        getPatient: data => parseIndividual(data[0]),
-        getDoctors: async data => {
-            let uids = [];
+        clearCache: {
+            collect: () => cache.clear(),
+            docParser: () => doc.clearCache()
+        },
+        getPatient: uid => parseIndividual(uid),
+        getDoctors: async forms => {
+            let uids = new Set([]);
             let doctors = [];
             await Promise.all(
-                data.slice(1).map(async i => {
-                    let services = i[Object.keys(i).pop()].Services;
-                    if (!services) return;
+                forms.map(async i => {
+                    if (!i) return null;
+                    if (Object.values(i).indexOf(null) > -1) return null;
+                    let services = i.form.Services;
+                    if (!services) return null;
                     services = [].concat(services.Service);
                     await Promise.all(
-                        services.map(async j => {
-                            let { doctor } = j;
-                            let { uid, snils } = doctor;
-                            if (uids.indexOf(uid) > -1) return;
-                            uids.push(uid);
+                        services.map(async service => {
+                            if (!service) return;
+                            let { doctor } = service;
+                            let {
+                                uid,
+                                snils,
+                                postCode,
+                                specialtyCode
+                            } = doctor;
+                            if (uids.has(uid)) return;
+                            uids.add(uid);
                             let parsed = await parseIndividual(uid, snils);
                             if (!parsed) return;
-                            doctors.push(parsed);
+                            doctors.push(
+                                Object.assign(parsed, {
+                                    postCode,
+                                    specialityCode: specialtyCode
+                                })
+                            );
                         })
                     );
                 })
             );
+            uids.clear();
             return doctors;
         }
     };

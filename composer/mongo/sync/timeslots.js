@@ -2,7 +2,7 @@ const createDates = require('../../libs/collect').createDates;
 const TimeSlot = require('../model/timeslot');
 const Location = require('../model/location');
 const moment = require('moment');
-const get = require('../getter');
+const get = require('../../../libs/getter');
 const rmisjs = require('../../../index');
 
 const toMidnight = dateString => moment(dateString).toDate();

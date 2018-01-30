@@ -1,7 +1,7 @@
 const Department = require('../model/department');
 const Location = require('../model/location');
 const rmisjs = require('../../../index');
-const get = require('../getter');
+const get = require('../../../libs/getter');
 
 /**
  * Выгрузка данных из РМИС о ресурсах

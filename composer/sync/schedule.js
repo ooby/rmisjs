@@ -11,7 +11,6 @@ const {
 exports.syncSchedules = async(s, d) => {
     try {
         const er14 = await rmisjs(s).integration.er14.process();
-        let bb = [];
         for (let i of d) {
             for (let j of i.interval) {
                 let schedules = await er14.getScheduleInfo(
@@ -37,28 +36,29 @@ exports.syncSchedules = async(s, d) => {
                     for (let k of rmIds) j.timePeriod.splice(k, 1);
                 }
                 if (j.timePeriod.length <= 0) continue;
-                let u = schedFormat({
-                    scheduleDate: j.date,
-                    muCode: s.er14.muCode,
-                    deptCode: i.department.code,
-                    docCode: i.snils,
-                    roomNumber: i.room,
-                    docSNILS: i.snils,
-                    specCode: Array.isArray(i.speciality) ? i.speciality[0] : i.speciality,
-                    positionCode: Array.isArray(i.position) ? i.position[0] : i.position
-                });
-                for (let k of j.timePeriod) {
-                    u += slotFormat({
-                        timeStart: k.from.replace(/\+09:00/g, 'Z'),
-                        timeFinish: k.to.replace(/\+09:00/g, 'Z'),
-                        slotType: 2,
-                        GUID: k._id,
-                        SlotState: k.status
-                    });
-                }
-                let log = await er14.updateSchedule({
-                    $xml: u
-                });
+                let log = await er14.updateSchedule(
+                    schedFormat({
+                        scheduleDate: j.date,
+                        muCode: s.er14.muCode,
+                        deptCode: i.department.code,
+                        docCode: i.snils,
+                        roomNumber: i.room,
+                        docSNILS: i.snils,
+                        specCode: [].concat(i.speciality)[0],
+                        positionCode: [].concat(i.position)[0],
+                        SlotElement: [].concat(
+                            j.timePeriod.map(k => {
+                                return slotFormat({
+                                    timeStart: k.from.replace(/\+.*$/g, 'Z'),
+                                    timeFinish: k.to.replace(/\+.*$/g, 'Z'),
+                                    slotType: 2,
+                                    GUID: k._id,
+                                    SlotState: k.status
+                                });
+                            })
+                        )
+                    })
+                );
                 if (!log) continue;
                 if (parseInt(log.ErrorCode) === 0) continue;
                 log.location = i.location;

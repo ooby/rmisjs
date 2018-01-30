@@ -1,32 +1,18 @@
 const mongoose = require('mongoose');
-const uuid = require('uuid/v4');
 const Schema = mongoose.Schema;
-
-function setUUID(v) {
-    if (typeof v === 'string') {
-        v = Buffer.from(v.replace(/-/g, ''), 'hex');
-    }
-    if (v instanceof Buffer) {
-        v = new mongoose.Types.Buffer(v).toObject(0x04);
-    }
-    return v;
-}
-
-function getUUID(v) {
-    if (typeof v === 'string') return v;
-    if (v instanceof Buffer) {
-        return uuid({
-            random: v
-        });
-    }
-}
+const {
+    getUUID,
+    setUUID,
+    generateUUID,
+    binaryToUUID
+} = require('../uuid');
 
 const TimeSlotSchema = new Schema({
     _id: {
         type: Buffer,
         get: getUUID,
         set: setUUID,
-        default: () => setUUID(uuid(null, new Buffer(16), 0))
+        default: () => generateUUID()
     },
     from: {
         type: Date,
@@ -97,11 +83,6 @@ const getAvailableSlots = (model, ...sources) =>
         'services.0': {
             $exists: true
         }
-    });
-
-const binaryToUUID = binary =>
-    uuid({
-        random: binary.buffer
     });
 
 TimeSlotSchema.statics.getDetailedLocationsBySource = async function (...sources) {

@@ -5,7 +5,7 @@ const q = new Queue(1);
 
 module.exports = s => {
     let c = createClient(s, 'patient');
-    
+
     return {
         /**
          * Поиск пациента

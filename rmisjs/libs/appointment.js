@@ -1,7 +1,7 @@
 const createClient = require('../client');
 const Queue = require('../../libs/queue');
 
-const q = new Queue(1);
+const q = new Queue(2);
 
 module.exports = async s => {
     let c = await createClient(s, 'appointment');
