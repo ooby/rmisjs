@@ -8,6 +8,8 @@ module.exports = async s => {
     return {
         describe: () => c.describe(),
         getDocument: d => q.push(() => c.getDocumentAsync(d)),
+        createDocument: d => q.push(() => c.createDocumentAsync(d)),
+        editDocument: d => q.push(() => c.editDocumentAsync(d)),
         getIndividual: d => q.push(() => c.getIndividualAsync(d)),
         searchIndividual: d => q.push(() => c.searchIndividualAsync(d)),
         getIndividualDocuments: d => q.push(() => c.getIndividualDocumentsAsync(d))
