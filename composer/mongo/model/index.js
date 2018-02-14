@@ -6,5 +6,6 @@ module.exports = {
     LastSync: require('./lastSync'),
     Document: require('./document'),
     Service: require('./service'),
+    Card: require('./card'),
     Room: require('./room')
 };

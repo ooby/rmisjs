@@ -249,33 +249,32 @@ module.exports = async s => {
      * Возвращает дату посещения
      * @param {Object} date - день посещения
      * @param {Object} time - время посещения
-     * @return {String}
+     * @return {Promise<String>}
      */
-    const parseDate = async (date, time) => {
+    const parseDate = (date, time) => {
         if (!date) return missing('No date');
-        if (date && !time) return date;
+        if (date && !time) return Promise.resolve(date);
         let dateTime = date.replace(/\+.*$/, '') + 'T';
         dateTime += time || ('00:00:00.000' + moment().format('Z'));
-        return dateTime;
+        return Promise.resolve(dateTime);
     };
 
-    const parsePaymentData = async thecase => {
+    const parsePaymentData = thecase => {
         if (!thecase) return missing('No case while parsing payment data');
-        let paymentData = await waitForObject({
-            typePaymentCode: Promise.resolve($(thecase, 'fundingSourceTypeId')),
-            policyNumber: Promise.resolve(thecase.Patient.polis),
-            insuranceCompanyCode: Promise.resolve($(thecase, 'document.issuerCode'))
-        });
+        let paymentData = {
+            typePaymentCode: $(thecase, 'fundingSourceTypeId'),
+            policyNumber: thecase.Patient.polis,
+            insuranceCompanyCode: $(thecase, 'document.issuerCode')
+        };
         let funding = parseInt($(thecase, 'fundingSourceTypeId'));
         if (!funding || funding === 2) return missing('No funding type ID');
         if (funding === 5) paymentData.typePaymentCode = '2';
-        if ('policyNumber' in paymentData) delete paymentData.policyNumber;
-        return paymentData;
+        return Promise.resolve(paymentData);
     };
 
     const parseVisit = async (thecase, visit) => {
         if (!thecase || !visit) return missing('No case or no record while parsing visits');
-        let dateTime = parseDate(visit.admissionDate, visit.admissionTime);
+        let dateTime = await parseDate(visit.admissionDate, visit.admissionTime);
         return !dateTime ? null : {
             dateTime,
             placeServicesCode: visit.placeId,
@@ -430,24 +429,24 @@ module.exports = async s => {
         }
         Object.assign(result, {
             anamnesisLife: { // WRONG
-                GeneralBioInfo: '', // WRONG
-                socialHistory: '', // WRONG
-                familyHistory: '', // WRONG
-                riskFactors: '' // WRONG
+                GeneralBioInfo: 'нет', // WRONG
+                socialHistory: 'нет', // WRONG
+                familyHistory: 'нет', // WRONG
+                riskFactors: 'нет' // WRONG
             },
             ObjectiveData: {
                 functionalExamination: {
                     functionalParameter: [{
-                        nameParameter: '',
-                        valueParameter: '',
-                        controlValue: '',
-                        measuringUnit: ''
+                        nameParameter: 'нет',
+                        valueParameter: 'нет',
+                        controlValue: 'нет',
+                        measuringUnit: 'нет'
                     }]
                 }
             },
-            provisionalDiagnosis: null,
-            planSurvey: '',
-            planTreatment: ''
+            provisionalDiagnosis: 'нет',
+            planSurvey: 'нет',
+            planTreatment: 'нет'
         });
         return result;
     };

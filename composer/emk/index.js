@@ -151,8 +151,6 @@ module.exports = async s => {
                 .map(form => syncForm(form))
             );
             console.log(new Date().toString(), patient, 'finished');
-        } catch (e) {
-            console.error(e);
         } finally {
             emds.clearCache.collect();
             emds.clearCache.docParser();
@@ -162,7 +160,11 @@ module.exports = async s => {
 
     const syncPatients = async (patients, lastDate) => {
         for (let patient of [].concat(patients)) {
-            await syncPatient(patient, lastDate);
+            try {
+                await syncPatient(patient, lastDate);
+            } catch (e) {
+                console.error(e);
+            }
         }
     };
 
