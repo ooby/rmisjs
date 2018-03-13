@@ -39,9 +39,10 @@
     "mongoose": "^4.13.1",
     "nconf": "^0.8.4",
     "refbooks": "^0.0.7",
-    "soap": "git+https://github.com/raviolin/node-soap.git#fix-checking-response-body",
+    "soap": "^0.23.0",
     "string-similarity": "^1.2.0",
-    "uuid": "^3.1.0"
+    "uuid": "^3.1.0",
+    "xlsx": "^0.12.0"
   },
   "devDependencies": {
     "ajv": "^5.5.1",

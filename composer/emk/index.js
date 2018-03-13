@@ -137,7 +137,7 @@ module.exports = async s => {
             );
             if (existing) data.Id = existing.Id;
         }
-        return docs.publish(data).catch(console.error);
+        return await docs.publish(data);
     };
 
     const syncPatient = async (patient, lastDate) => {
@@ -148,7 +148,11 @@ module.exports = async s => {
             if (!forms) return;
             await Promise.all(
                 [].concat(forms)
-                .map(form => syncForm(form))
+                .map(form =>
+                    syncForm(form)
+                    .then(data => console.log(data))
+                    .catch(console.error)
+                )
             );
             console.log(new Date().toString(), patient, 'finished');
         } finally {
