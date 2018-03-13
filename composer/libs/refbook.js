@@ -1,14 +1,14 @@
-const refbooks = require('refbooks');
 const rmisjs = require('../../index');
 const Queue = require('../../libs/queue');
 const ss = require('string-similarity');
 
 const cache = new Map();
-const queue = new Queue(1);
+const codes = new Map();
 
 module.exports = async s => {
-    const nsi = refbooks(s);
-    const rmis = await rmisjs(s).rmis.refbook();
+    const rmis = rmisjs(s);
+    const nsi = await rmis.integration.nsi();
+    const rmb = await rmis.rmis.refbook();
 
     const mapRMIS = (data, row) =>
         data[row].map(i =>
@@ -18,13 +18,24 @@ module.exports = async s => {
             }, {})
         );
 
-    const findRMIS = code =>
-        rmis.getRefbookList()
-        .then(list =>
-            mapRMIS(list, 'refbook')
-            .find(i => i.TABLE_NAME === code)
-            .CODE
-        );
+    const findRMIS = async code => {
+        if (!code) return null;
+        if (/^[\d\.]+$/.test(code)) return code;
+        if (codes.has(code)) return codes.get(code);
+        try {
+            let list = await rmb.getRefbookList();
+            let result = (
+                mapRMIS(list, 'refbook')
+                .find(i => i.TABLE_NAME === code)
+                .CODE
+            );
+            codes.set(code, result);
+            return result;
+        } catch (e) {
+            codes.delete(code);
+            return null;
+        }
+    };
 
     const mappedNSI = async({ code, version, indexes }) => {
         let key = JSON.stringify({
@@ -33,34 +44,26 @@ module.exports = async s => {
             indexes
         });
         if (cache.has(key)) return cache.get(key);
-        let parts = await queue.push(() =>
-            nsi.getRefbookParts({
-                code,
-                version
-            })
-        );
+        let parts = await nsi.getRefbookParts({ code, version });
+        parts = parts || {};
+        parts = parts.getRefBookPartsReturn || 0;
         if (!parts) return null;
         let refbook = [];
-        await Promise.all(
-            new Array(parts).fill(0).map((_, i) =>
-                queue.push(() =>
-                    nsi.getRefbook({
-                        code,
-                        version,
-                        part: i + 1
-                    })
-                ).then(r => {
-                    refbook = refbook.concat(
-                        r.data.map(j => {
-                            return {
-                                code: j[indexes[0]].value,
-                                name: j[indexes[1]].value
-                            };
-                        })
-                    );
-                })
-            )
-        );
+        for (let i = 1; i <= parts; i++) {
+            let r = await nsi.getRefbookPartial({
+                code,
+                version,
+                part: i
+            });
+            r = r.getRefBookPartialReturn || [];
+            for (let item of r) {
+                item = item.map.item;
+                refbook.push({
+                    code: item[indexes[0]].value.$value,
+                    name: item[indexes[1]].value.$value
+                });
+            }
+        }
         cache.set(key, refbook);
         return refbook;
     };
@@ -76,13 +79,13 @@ module.exports = async s => {
     };
 
     const mappedRMIS = async code => {
-        if (/^[a-z_]+$/.test(code)) code = await findRMIS(code);
-        if (!/^[\d\.]+$/.test(code)) return null;
+        code = await findRMIS(code);
+        if (!code) return null;
         if (cache.has(code)) return cache.get(code);
         let i = 0;
         let result = [];
         do {
-            let data = await rmis.getRefbookPartial({
+            let data = await rmb.getRefbookPartial({
                 refbookCode: code,
                 version: 'CURRENT',
                 partNumber: ++i
@@ -91,7 +94,7 @@ module.exports = async s => {
             result = result.concat(mapRMIS(data, 'row'));
         } while (true);
         if (!result.length) return null;
-        cache.set(cache, result);
+        cache.set(code, result);
         return result;
     };
 
@@ -104,7 +107,33 @@ module.exports = async s => {
         return row[res];
     };
 
-    const clearCache = () => cache.clear();
+    const getRowRMIS = async (code, col, val, res) => {
+        code = await findRMIS(code);
+        if (!code) return null;
+        let data = await rmb.getRefbookRowData({
+            refbookCode: code,
+            version: 'CURRENT',
+            column: {
+                name: col,
+                data: val
+            }
+        });
+        if (!data) return null;
+        data = data || {};
+        data = data.row || [];
+        data = data[0] || {};
+        data = data.column || [];
+        for (let col of data) {
+            col = col || {};
+            if (col.name === res) return col.data;
+        }
+        return null;
+    };
+
+    const clearCache = () => {
+        cache.clear();
+        codes.clear();
+    };
 
     return {
         mappedNSI,
@@ -112,6 +141,7 @@ module.exports = async s => {
         mappedRMIS,
         getCodeNSI,
         getValueRMIS,
+        getRowRMIS,
         clearCache
     };
 };

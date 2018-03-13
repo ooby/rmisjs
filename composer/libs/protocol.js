@@ -28,8 +28,13 @@ const mapData = (schema, data) => {
     let result = (
         Array.from(data.querySelectorAll('items'))
         .reduce((r, i) => {
-            let name = i.children[0].textContent;
-            let value = i.children[1].textContent;
+            if (!i.children) return r;
+            let children = [].concat(i.children);
+            if (!children.length) return r;
+            let [name, value] = children;
+            if (!name || !value) return r;
+            name = name.textContent;
+            value = value.textContent;
             for (let [k, v] of entries) {
                 if (name === v) {
                     r[k] = value;

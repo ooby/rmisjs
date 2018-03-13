@@ -137,7 +137,7 @@ module.exports = async s => {
             );
             if (existing) data.Id = existing.Id;
         }
-        return docs.publish(data).catch(console.error);
+        return await docs.publish(data);
     };
 
     const syncPatient = async (patient, lastDate) => {
@@ -148,11 +148,13 @@ module.exports = async s => {
             if (!forms) return;
             await Promise.all(
                 [].concat(forms)
-                .map(form => syncForm(form))
+                .map(form =>
+                    syncForm(form)
+                    .then(data => console.log(data))
+                    .catch(console.error)
+                )
             );
             console.log(new Date().toString(), patient, 'finished');
-        } catch (e) {
-            console.error(e);
         } finally {
             emds.clearCache.collect();
             emds.clearCache.docParser();
@@ -162,7 +164,11 @@ module.exports = async s => {
 
     const syncPatients = async (patients, lastDate) => {
         for (let patient of [].concat(patients)) {
-            await syncPatient(patient, lastDate);
+            try {
+                await syncPatient(patient, lastDate);
+            } catch (e) {
+                console.error(e);
+            }
         }
     };
 

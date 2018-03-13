@@ -32,7 +32,7 @@ const {
     getPortalDepartments,
     getDetailedDepartments
 } = require('./libs/department');
-const { syncSnils } = require('./sync/snilsOms');
+const snilsOms = require('./sync/snilsOms');
 const cased = require('./emk/cases');
 
 module.exports = s => {
@@ -64,6 +64,6 @@ module.exports = s => {
         syncEmk: () => emk(s).then(p => p.syncAll()),
         getCase: d => cased(s).then(p => p.getCase(d)),
         getProtocol: d => getProtocol(s, d),
-        syncSnils: d => syncSnils(s, d)
+        snilsOms: () => snilsOms(s)
     };
 };

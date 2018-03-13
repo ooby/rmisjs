@@ -27,7 +27,7 @@ module.exports = async s => {
         /**
          * Поиск СНИЛС по UID владельца.
          * @param {string} uid
-         * @return {Promise<Object>}
+         * @return {Promise<Object | null>}
          */
         searchSnils: uid =>
             searchDocuments(uid, '19', /^(\d{11}|\d{3}-\d{3}-\d{3}\s\d{2})$/)
