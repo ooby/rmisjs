@@ -14,24 +14,27 @@ const CardSchema = new Schema({
         type: Number,
         required: true
     },
-    name: {
-        type: String,
-        required: true
-    },
-    surname: {
-        type: String,
-        required: true
-    },
-    patronymic: String,
-    address: {
-        type: String,
-        required: true
-    },
     birth: {
         type: Date,
         required: true
     },
-    death: Date
+    address: String,
+    surname: String,
+    name: String,
+    patronymic: String,
+    death: Date,
+    text: String
 });
+
+CardSchema.index({
+    shelf: 1,
+    num: 1,
+    decade: 1,
+    birth: 1
+}, {
+    unique: true
+});
+
+CardSchema.index({ '$**': 'text' });
 
 module.exports = mongoose.model('Card', CardSchema);
