@@ -7,7 +7,7 @@ const rmisjs = require('../../index');
  * @param {Number} serviceId - ID услуги в РМИС
  * @return {Promise<Object>} - сведения об услуге
  */
-exports.getService = async(s, serviceId) => {
+exports.getService = async (s, serviceId) => {
     try {
         const services = await rmisjs(s).rmis.services();
         let data = await services.getService({
@@ -25,7 +25,7 @@ exports.getService = async(s, serviceId) => {
  * @param {Object} s - конфигурация
  * @return {Promise<Object>} - список услуг
  */
-exports.getServices = async(s) => {
+exports.getServices = async (s) => {
     const services = await rmisjs(s).rmis.services();
     let data = await services.getServices({
         clinic: s.rmis.clinicId
@@ -39,7 +39,7 @@ exports.getServices = async(s) => {
  * @param {object} d - данные пациента
  * @return {object}
  */
-exports.postReserve = async(s, d) => {
+exports.postReserve = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.postReserve(d);
@@ -57,7 +57,7 @@ exports.postReserve = async(s, d) => {
  * @param {object} d - данные пациента
  * @return {object}
  */
-exports.getReserve = async(s, d) => {
+exports.getReserve = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.getReserve(d);
@@ -75,7 +75,7 @@ exports.getReserve = async(s, d) => {
  * @param {object} d - объект слота
  * @return {object}
  */
-exports.getSlot = async(s, d) => {
+exports.getSlot = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.getSlot(d);
@@ -93,7 +93,7 @@ exports.getSlot = async(s, d) => {
  * @param {object} d - id слота
  * @return {object}
  */
-exports.deleteSlotByRefusal = async(s, d) => {
+exports.deleteSlotByRefusal = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.deleteSlot({
@@ -113,7 +113,7 @@ exports.deleteSlotByRefusal = async(s, d) => {
  * @param {object} d - данные пациента
  * @return {object}
  */
-exports.createPatient = async(s, d) => {
+exports.createPatient = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.patient();
         r = await r.createPatient(d);
@@ -131,7 +131,7 @@ exports.createPatient = async(s, d) => {
  * @param {object} id - идентификатор физического лица
  * @return {object}
  */
-exports.getPatient = async(s, id) => {
+exports.getPatient = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.patient();
         r = await r.getPatient(id);
@@ -149,7 +149,7 @@ exports.getPatient = async(s, id) => {
  * @param {object} id - идентификатор физического лица
  * @return {object}
  */
-exports.getPatientRegs = async(s, id) => {
+exports.getPatientRegs = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.patient();
         r = await r.getPatientRegs(id);
@@ -167,7 +167,7 @@ exports.getPatientRegs = async(s, id) => {
  * @param {object} id - идентификатор прикрепления
  * @return {object}
  */
-exports.getPatientReg = async(s, id) => {
+exports.getPatientReg = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.patient();
         r = await r.getPatientReg(id);
@@ -184,7 +184,7 @@ exports.getPatientReg = async(s, id) => {
  * @param {object} params - параметры поиска
  * @return {object}
  */
-exports.searchIndividual = async(s, params) => {
+exports.searchIndividual = async (s, params) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.searchIndividual(params);
@@ -202,7 +202,7 @@ exports.searchIndividual = async(s, params) => {
  * @param {number} id - идентификатор подразделения
  * @return {object}
  */
-exports.getDepartment = async(s, id) => {
+exports.getDepartment = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.department();
         r = await r.getDepartment({
@@ -224,9 +224,14 @@ exports.getDepartment = async(s, id) => {
 exports.getDepartments = async s => {
     try {
         let r = await rmisjs(s).rmis.department();
-        r = await r.getDepartments({
-            clinic: s.rmis.clinicId
-        });
+        // r = await r.getDepartments({
+        //     clinic: s.rmis.clinicId
+        // });
+        r = ['3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
+            '14', '15', '16', '17', '18', '19', '20', '21', '22', '23',
+            '24', '25', '26', '27', '28', '29', '30', '31', '32', '33',
+            '34', '35', '36', '37', '38', '39', '40', '41', '42', '44',
+            '46', '47', '48', '50', '51', '53', '54', '55'];
         return r;
     } catch (e) {
         console.error(e);
@@ -240,7 +245,7 @@ exports.getDepartments = async s => {
  * @param {object} id - объект с кодом и версией справочника
  * @return {object}
  */
-exports.getRefbook = async(s, id) => {
+exports.getRefbook = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.refbook();
         r = await r.getRefbook({
@@ -276,7 +281,7 @@ exports.getRefbookList = async s => {
  * @param {string} id - код справочника
  * @return {object}
  */
-exports.getVersionList = async(s, id) => {
+exports.getVersionList = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.refbook();
         r = await r.getVersionList({
@@ -296,7 +301,7 @@ exports.getVersionList = async(s, id) => {
  * @param {string} id - идентификатор ресурса
  * @return {object}
  */
-exports.getLocation = async(s, id) => {
+exports.getLocation = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.resource();
         r = await r.getLocation({
@@ -333,7 +338,7 @@ exports.getLocations = async s => {
  * @param {object} d - параметры запроса
  * @return {object}
  */
-exports.getLocationsWithOptions = async(s, d) => {
+exports.getLocationsWithOptions = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.resource();
         r = await r.getLocations(d);
@@ -351,7 +356,7 @@ exports.getLocationsWithOptions = async(s, d) => {
  * @param {date} date - дата расписания
  * @return {object}
  */
-exports.getTimes = async(s, id, date) => {
+exports.getTimes = async (s, id, date) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.getTimes({
@@ -365,7 +370,7 @@ exports.getTimes = async(s, id, date) => {
     }
 };
 
-exports.getReserveFiltered = async(s, date, location) => {
+exports.getReserveFiltered = async (s, date, location) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.getReserveFiltered({
@@ -386,7 +391,7 @@ exports.getReserveFiltered = async(s, date, location) => {
  * @param {number} id - идентификатор кабинета приема
  * @return {object}
  */
-exports.getRoom = async(s, id) => {
+exports.getRoom = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.room();
         r = await r.getRoom({
@@ -423,7 +428,7 @@ exports.getRooms = async s => {
  * @param {number} id - идентификатор сотрудника
  * @return {object}
  */
-exports.getEmployee = async(s, id) => {
+exports.getEmployee = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployee({
@@ -460,7 +465,7 @@ exports.getEmployees = async s => {
  * @param {Number} id - идентификатор должности
  * @return {Object} - сведения о должности
  */
-exports.getPosition = async(s, id) => {
+exports.getPosition = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getPosition({
@@ -479,7 +484,7 @@ exports.getPosition = async(s, id) => {
  * @param {number} id - идентификатор должности сотрудника
  * @return {object}
  */
-exports.getEmployeePosition = async(s, id) => {
+exports.getEmployeePosition = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployeePosition({
@@ -500,7 +505,7 @@ exports.getEmployeePosition = async(s, id) => {
  * @param {number} id - идентификатор сотрудника
  * @return {object}
  */
-exports.getEmployeePositions = async(s, id) => {
+exports.getEmployeePositions = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployeePositions({
@@ -520,7 +525,7 @@ exports.getEmployeePositions = async(s, id) => {
  * @param {number} id - идентификатор сотрудника
  * @return {object}
  */
-exports.getEmployeeSpecialities = async(s, id) => {
+exports.getEmployeeSpecialities = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployeeSpecialities({
@@ -540,7 +545,7 @@ exports.getEmployeeSpecialities = async(s, id) => {
  * @param {string} id - идентификатор физического лица
  * @return {object}
  */
-exports.getIndividual = async(s, id) => {
+exports.getIndividual = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.getIndividual(id);
@@ -559,7 +564,7 @@ exports.getIndividual = async(s, id) => {
  * @param {number} id - идентификатор документа
  * @return {object}
  */
-exports.getDocument = async(s, id) => {
+exports.getDocument = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.getDocument(id);
@@ -578,7 +583,7 @@ exports.getDocument = async(s, id) => {
  * @param {string} id - идентификатор физического лица
  * @return {object}
  */
-exports.getIndividualDocuments = async(s, id) => {
+exports.getIndividualDocuments = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.getIndividualDocuments(id);
