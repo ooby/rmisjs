@@ -388,8 +388,8 @@ module.exports = async s => {
             caseGivenYear: record.previousHospitalRecordId ? 2 : 1,
             hospitalized: 1 // WRONG
         }, {
-            dateTimeReceipt: date
-        });
+                dateTimeReceipt: date
+            });
     };
 
     const parseHspRecord = async (thecase, record) => {
@@ -578,7 +578,7 @@ module.exports = async s => {
          */
         getCase: d =>
             getCase(d)
-            .catch(e => console.error(e)),
+                .catch(e => console.error(e)),
 
         /**
          * Возвращает формы для ИЭМК
@@ -588,7 +588,7 @@ module.exports = async s => {
          */
         getForms: (patientUid, lastDate) =>
             getForms(patientUid, lastDate)
-            .catch(e => console.error(e)),
+                .catch(e => console.error(e)),
 
         clearCache
     };

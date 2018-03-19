@@ -33,8 +33,8 @@ module.exports = async s => {
                 await Service.update({
                     _id: service._id
                 }, service, {
-                    upsert: true
-                }).exec();
+                        upsert: true
+                    }).exec();
             })
         )
     );

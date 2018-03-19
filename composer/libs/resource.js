@@ -34,7 +34,7 @@ const TimeSlot = require('../mongo/model/timeslot');
  * @param {string} ref - наименование справочника
  * @return {string|object}
  */
-const getRefCode = async(s, ref) => {
+const getRefCode = async (s, ref) => {
     try {
         let k = await getRefbookList(s);
         let specRefCode;
@@ -58,7 +58,7 @@ const getRefCode = async(s, ref) => {
  * @param {string} code - OID код справочника
  * @return {string|object}
  */
-const getRefVersion = async(s, code) => {
+const getRefVersion = async (s, code) => {
     try {
         let specRefVersion;
         let k = await getVersionList(s, code);
@@ -95,7 +95,7 @@ const getCodeByName = (dict, name) => {
  * @param {object} c - справочник C33001
  * @return {string|object}
  */
-exports.getDetailedLocations = async(s, m, c) => {
+exports.getDetailedLocations = async (s, m, c) => {
     try {
         let data = await connect(s, () =>
             TimeSlot.getDetailedLocationsBySource('MIS')

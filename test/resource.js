@@ -14,49 +14,49 @@ const Ajv = require('ajv');
 const detailedLocationSchema = require('./detailedLocation');
 
 describe('[RMIS resource > describe]: ', () => {
-    it('describe method', async() => {
+    it('describe method', async () => {
         try {
             let r = await rmis.resource();
             return expect(r.describe()).to.have.property('locationService');
-        } catch (e) {}
+        } catch (e) { }
     });
 });
 
 describe('[RMIS resource > getLocation]: ', () => {
-    it('getLocation method', async() => {
+    it('getLocation method', async () => {
         try {
             let r = await rmis.resource();
             r = await r.getLocation({
                 location: 1431035
             });
             return expect(r).to.have.property('location');
-        } catch (e) {}
+        } catch (e) { }
     });
 });
 
 describe('[RMIS resource > getLocations]: ', () => {
-    it('getLocations method', async() => {
+    it('getLocations method', async () => {
         try {
             let r = await rmis.resource();
             r = await r.getLocations({
                 clinic: config.rmis.clinicId
             });
             return expect(r).to.have.property('location');
-        } catch (e) {}
+        } catch (e) { }
     });
 });
 
 describe('[RMIS composer > getLocationsWithPortal]: ', () => {
-    it('getLocationsWithPortal method', async() => {
+    it('getLocationsWithPortal method', async () => {
         try {
             let r = await composer.getLocationsWithPortal();
             return expect(r).deep.to.have.property('source');
-        } catch (e) {}
+        } catch (e) { }
     });
 });
 
 describe('[RMIS composer > getDetailedLocations]: ', () => {
-    it('getDetailedLocations method', async() => {
+    it('getDetailedLocations method', async () => {
         let [mdp365, c33001] = await Promise.all([
             rb.getRefbook({
                 code: 'MDP365',

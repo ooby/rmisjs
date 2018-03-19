@@ -27,8 +27,8 @@ module.exports = class TimedQueue {
         return new Promise((resolve, reject) => {
             this.tasks.push(() =>
                 task()
-                .then(data => resolve(data))
-                .catch(e => reject(e))
+                    .then(data => resolve(data))
+                    .catch(e => reject(e))
             );
             this.probe();
         });

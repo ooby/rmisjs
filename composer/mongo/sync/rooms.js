@@ -28,8 +28,8 @@ module.exports = async s => {
                 await Room.update({
                     _id: roomId
                 }, room, {
-                    upsert: true
-                }).exec();
+                        upsert: true
+                    }).exec();
             })
         )
     );

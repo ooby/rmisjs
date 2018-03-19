@@ -26,8 +26,8 @@ module.exports = async s => {
             let list = await rmb.getRefbookList();
             let result = (
                 mapRMIS(list, 'refbook')
-                .find(i => i.TABLE_NAME === code)
-                .CODE
+                    .find(i => i.TABLE_NAME === code)
+                    .CODE
             );
             codes.set(code, result);
             return result;
@@ -37,7 +37,7 @@ module.exports = async s => {
         }
     };
 
-    const mappedNSI = async({ code, version, indexes }) => {
+    const mappedNSI = async ({ code, version, indexes }) => {
         let key = JSON.stringify({
             code,
             version,
@@ -68,7 +68,7 @@ module.exports = async s => {
         return refbook;
     };
 
-    const getCodeNSI = async(name, { code, version, indexes }) => {
+    const getCodeNSI = async (name, { code, version, indexes }) => {
         if (!name) return null;
         let dict = await mappedNSI({ code, version, indexes });
         if (!dict) return null;

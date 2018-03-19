@@ -1,7 +1,7 @@
 const deptFormat = require('./format').deptFormat;
 const rmisjs = require('../../index');
 
-exports.syncDepartments = async(s, d) => {
+exports.syncDepartments = async (s, d) => {
     try {
         const er14 = await rmisjs(s).integration.er14.process();
         let r = await er14.getMuInfo({

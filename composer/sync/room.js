@@ -1,7 +1,7 @@
 const roomFormat = require('./format').roomFormat;
 const rmisjs = require('../../index');
 
-exports.syncRooms = async(s, d) => {
+exports.syncRooms = async (s, d) => {
     try {
         const er14 = await rmisjs(s).integration.er14.process();
         let r = await er14.getMuInfo({

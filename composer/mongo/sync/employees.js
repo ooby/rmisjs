@@ -67,8 +67,8 @@ module.exports = async s => {
                 await Employee.update({
                     _id: employeePosition.employee
                 }, data, {
-                    upsert: true
-                }).exec();
+                        upsert: true
+                    }).exec();
             })
         )
     );
