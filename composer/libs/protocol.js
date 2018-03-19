@@ -27,22 +27,22 @@ const mapData = (schema, data) => {
     let entries = Object.entries(schema);
     let result = (
         Array.from(data.querySelectorAll('items'))
-        .reduce((r, i) => {
-            if (!i.children) return r;
-            let children = [].concat(i.children);
-            if (!children.length) return r;
-            let [name, value] = children;
-            if (!name || !value) return r;
-            name = name.textContent;
-            value = value.textContent;
-            for (let [k, v] of entries) {
-                if (name === v) {
-                    r[k] = value;
-                    return r;
+            .reduce((r, i) => {
+                if (!i.children) return r;
+                let children = [].concat(i.children);
+                if (!children.length) return r;
+                let [name, value] = children;
+                if (!name || !value) return r;
+                name = name.textContent;
+                value = value.textContent;
+                for (let [k, v] of entries) {
+                    if (name === v) {
+                        r[k] = value;
+                        return r;
+                    }
                 }
-            }
-            return r;
-        }, {})
+                return r;
+            }, {})
     );
     return result;
 };

@@ -32,7 +32,7 @@ const TimeSlot = require('../mongo/model/timeslot');
  * @param {number} m.searchDocument.docNumber - номер документа
  * @return {Promise|object}
  */
-exports.validatePatient = async(s, m) => {
+exports.validatePatient = async (s, m) => {
     try {
         let r = await searchIndividual(s, m);
         r = await getPatientRegs(s, r);
@@ -55,7 +55,7 @@ exports.validatePatient = async(s, m) => {
  * @param {string} m.GUID - UUID талона
  * @return {Promise|object}
  */
-exports.searchVisit = async(s, m) => {
+exports.searchVisit = async (s, m) => {
     try {
         let timeslot = await connect(s, () =>
             TimeSlot.getByUUID(m.GUID).exec()
@@ -101,7 +101,7 @@ exports.searchVisit = async(s, m) => {
  * @param {string} m.GUID - UUID талона
  * @return {Promise|object}
  */
-exports.deleteVisit = async(s, m) => {
+exports.deleteVisit = async (s, m) => {
     try {
         let [appointmentService, visit] = await Promise.all([
             appointmentHelper(s),
@@ -133,7 +133,7 @@ exports.deleteVisit = async(s, m) => {
  * @param {string} m.GUID - UUID талона
  * @return {Promise|object}
  */
-exports.createVisit = async(s, m) => {
+exports.createVisit = async (s, m) => {
     try {
         let [appointmentService, timeslot, patient] = await Promise.all([
             appointmentHelper(s),
@@ -175,7 +175,7 @@ exports.createVisit = async(s, m) => {
  * @param {string} m.GUID - UUID талона
  * @return {Promise|object}
  */
-exports.getVisit = async(s, m) => {
+exports.getVisit = async (s, m) => {
     try {
         let [appointmentService, visit] = await Promise.all([
             appointmentHelper(s),

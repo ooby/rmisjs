@@ -8,7 +8,7 @@ module.exports = async s => {
         document(s)
     ]);
 
-    const parseIndividual = async(uid, snils) => {
+    const parseIndividual = async (uid, snils) => {
         if (cache.has(uid)) return cache.get(uid);
         let indiv = await ind.getIndividual(uid);
         if (!snils) {

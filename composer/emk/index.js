@@ -30,7 +30,7 @@ module.exports = async s => {
     const docs = emk14.document();
     const emds = await emd(s);
 
-    const syncIndividual = async(service, data) => {
+    const syncIndividual = async (service, data) => {
         if (!data) return null;
         if (Object.values(data).indexOf(null) > -1) return false;
         if (synced.has(data.snils)) return true;
@@ -68,12 +68,12 @@ module.exports = async s => {
         } = doctor;
         await Promise.all(
             form.doctors
-            .map(doctor => {
-                delete doctor.postCode;
-                delete doctor.specialityCode;
-                return syncIndividual(prof, doctor);
-            })
-            .concat(syncIndividual(ptnt, form.patient))
+                .map(doctor => {
+                    delete doctor.postCode;
+                    delete doctor.specialityCode;
+                    return syncIndividual(prof, doctor);
+                })
+                .concat(syncIndividual(ptnt, form.patient))
         );
         let data = {
             Type: _types[form.root],
@@ -133,7 +133,7 @@ module.exports = async s => {
         if (existing) {
             existing = (
                 [].concat(existing.DocumentList)
-                .find(i => i.documentId === data.documentId)
+                    .find(i => i.documentId === data.documentId)
             );
             if (existing) data.Id = existing.Id;
         }
@@ -148,11 +148,11 @@ module.exports = async s => {
             if (!forms) return;
             await Promise.all(
                 [].concat(forms)
-                .map(form =>
-                    syncForm(form)
-                    .then(data => console.log(data))
-                    .catch(console.error)
-                )
+                    .map(form =>
+                        syncForm(form)
+                            .then(data => console.log(data))
+                            .catch(console.error)
+                    )
             );
             console.log(new Date().toString(), patient, 'finished');
         } finally {
@@ -175,10 +175,10 @@ module.exports = async s => {
     const getLastDate = () =>
         connect(s, () =>
             LastSync
-            .find({})
-            .sort({ date: -1 })
-            .limit(1)
-            .exec()
+                .find({})
+                .sort({ date: -1 })
+                .limit(1)
+                .exec()
         ).then(data => data ? data.date : null);
 
     const setLastDate = async date => {

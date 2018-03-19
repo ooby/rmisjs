@@ -8,7 +8,7 @@ const {
     slotFormat
 } = require('./format');
 
-exports.syncSchedules = async(s, d) => {
+exports.syncSchedules = async (s, d) => {
     try {
         const er14 = await rmisjs(s).integration.er14.process();
         for (let i of d) {
@@ -71,7 +71,7 @@ exports.syncSchedules = async(s, d) => {
     }
 };
 
-exports.getSchedules = async(s, d) => {
+exports.getSchedules = async (s, d) => {
     try {
         const er14 = await rmisjs(s).integration.er14.process();
         return await er14.getScheduleInfo(
@@ -87,7 +87,7 @@ exports.getSchedules = async(s, d) => {
     }
 };
 
-exports.deleteSchedulesForDates = async(s, ...dates) => {
+exports.deleteSchedulesForDates = async (s, ...dates) => {
     try {
         const er14 = await rmisjs(s).integration.er14.process();
         let result = [];

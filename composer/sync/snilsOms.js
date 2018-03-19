@@ -77,7 +77,7 @@ module.exports = async s => {
             for (let j = i; j < i + pageLimit; j++) {
                 pages.push(
                     syncPage(j, patientLimit)
-                    .catch(console.error)
+                        .catch(console.error)
                 );
             }
             let results = await Promise.all(pages);

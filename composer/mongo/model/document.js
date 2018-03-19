@@ -45,7 +45,7 @@ DocumentSchema.index({
     PatientSnils: 1,
     ProfessionalSnils: 1,
 }, {
-    unique: true
-});
+        unique: true
+    });
 
 module.exports = mongoose.model('Document', DocumentSchema);

@@ -22,7 +22,7 @@ const requestReserve = (s, location, date, appointmentService) =>
         location
     });
 
-const update = async(s, date, location, appointmentService) => {
+const update = async (s, date, location, appointmentService) => {
     let midnight = toMidnight(date);
     let reserved = requestReserve(s, location, date, appointmentService);
     let times = await requestTime(s, location, date, appointmentService);
@@ -40,17 +40,17 @@ const update = async(s, date, location, appointmentService) => {
     let froms = times.map(i => i.from);
     times = times.concat(
         get(await reserved, [], 'slot')
-        .filter(i => !!i.timePeriod.to)
-        .map(i => {
-            return {
-                from: new Date(`${date}T${i.timePeriod.from}`),
-                to: new Date(`${date}T${i.timePeriod.to}`),
-                date: midnight,
-                location,
-                status: i.status
-            };
-        })
-        .filter(i => froms.indexOf(i.from.valueOf()) < 0)
+            .filter(i => !!i.timePeriod.to)
+            .map(i => {
+                return {
+                    from: new Date(`${date}T${i.timePeriod.from}`),
+                    to: new Date(`${date}T${i.timePeriod.to}`),
+                    date: midnight,
+                    location,
+                    status: i.status
+                };
+            })
+            .filter(i => froms.indexOf(i.from.valueOf()) < 0)
     );
     froms = times.map(i => i.from);
     await TimeSlot.remove({
@@ -70,24 +70,24 @@ const update = async(s, date, location, appointmentService) => {
         if (existing.indexOf(from) < 0) {
             promises.push(
                 new TimeSlot(time)
-                .save()
-                .catch(e => cosnole.error(e))
+                    .save()
+                    .catch(e => cosnole.error(e))
             );
             existing.push(from);
         } else {
             promises.push(
                 TimeSlot
-                .update({
-                    from: time.from,
-                    location
-                }, {
-                    $set: {
-                        to: time.to,
-                        status: time.status
-                    }
-                })
-                .exec()
-                .catch(e => console.error(e))
+                    .update({
+                        from: time.from,
+                        location
+                    }, {
+                            $set: {
+                                to: time.to,
+                                status: time.status
+                            }
+                        })
+                    .exec()
+                    .catch(e => console.error(e))
             );
         }
     }
@@ -119,7 +119,7 @@ module.exports = async s => {
                 Promise.all(
                     dates.map(date =>
                         update(s, date, location, appointmentService)
-                        .catch(e => console.error(e))
+                            .catch(e => console.error(e))
                     )
                 )
             )

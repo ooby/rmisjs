@@ -1,7 +1,7 @@
 const empFormat = require('./format').empFormat;
 const rmisjs = require('../../index');
 
-exports.syncEmployees = async(s, d) => {
+exports.syncEmployees = async (s, d) => {
     try {
         const er14 = await rmisjs(s).integration.er14.process();
         let result = [];

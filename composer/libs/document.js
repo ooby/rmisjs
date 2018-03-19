@@ -5,7 +5,7 @@ const cache = new Map();
 module.exports = async s => {
     const individual = await rmisjs(s).rmis.individual();
 
-    const searchDocuments = async(uid, type, pattern) => {
+    const searchDocuments = async (uid, type, pattern) => {
         uid = [].concat(uid).pop();
         if (!uid) return null;
         let key = `${uid}-${type}`;
@@ -31,7 +31,7 @@ module.exports = async s => {
          */
         searchSnils: uid =>
             searchDocuments(uid, '19', /^(\d{11}|\d{3}-\d{3}-\d{3}\s\d{2})$/)
-            .catch(console.error),
+                .catch(console.error),
 
         /**
          * Поиск полиса ОМС по UID владельца
@@ -40,7 +40,7 @@ module.exports = async s => {
          */
         searchPolis: uid =>
             searchDocuments(uid, '26', /^\d{16}$/)
-            .catch(console.error),
+                .catch(console.error),
 
         /**
          * Принудительно очистить кэш документов

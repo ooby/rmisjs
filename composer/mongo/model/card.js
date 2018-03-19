@@ -32,8 +32,8 @@ CardSchema.index({
     decade: 1,
     birth: 1
 }, {
-    unique: true
-});
+        unique: true
+    });
 
 CardSchema.index({ '$**': 'text' });
 
