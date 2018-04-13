@@ -5,8 +5,7 @@ const EmployeeSchema = new Schema({
     _id: Number,
     position: {
         type: Number,
-        required: true,
-        unique: true
+        required: true
     },
     positionName: {
         type: String,
@@ -39,9 +38,15 @@ const EmployeeSchema = new Schema({
     birthDate: Date,
     individual: {
         type: String,
-        unique: true,
         required: true
     }
+});
+
+EmployeeSchema.index({
+    individual: 1,
+    position: 1
+}, {
+    unique: true
 });
 
 EmployeeSchema.static.getById = function (_id, ...args) {

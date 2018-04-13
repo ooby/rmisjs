@@ -99,7 +99,7 @@ module.exports = async s => {
             mcod: s.er14.muCode.toString(),
             Date: moment(dateFromObjectId(id)).format('YYYY-MM-DD[T]HH:mm:ss'),
             CaseBegin: moment(data.CaseBegin).format('YYYY-MM-DD'),
-            documentId: id,
+            DocumentId: id,
             Type: {
                 '@version': '1.0',
                 '$': uuid.getUUID(data.Type.buffer)
@@ -148,11 +148,7 @@ module.exports = async s => {
             if (!forms) return;
             await Promise.all(
                 [].concat(forms)
-                    .map(form =>
-                        syncForm(form)
-                            .then(data => console.log(data))
-                            .catch(console.error)
-                    )
+                    .map(form => syncForm(form).catch(console.error))
             );
             console.log(new Date().toString(), patient, 'finished');
         } finally {
