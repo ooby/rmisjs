@@ -13,14 +13,14 @@ module.exports = s =>
             getRefbookList: d =>
                 q.push(() =>
                     client.getRefBookListAsync(d)
-                ),
+                ).then(d => d.shift()),
             getRefbookPartial: d =>
                 q.push(() =>
                     client.getRefBookPartialAsync(d)
-                ),
+                ).then(d => d.shift()),
             getRefbookParts: d =>
                 q.push(() =>
                     client.getRefBookPartsAsync(d)
-                )
+                .then(d => d.shift()))
         };
     };

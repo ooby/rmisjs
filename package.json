@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.4.52",
+  "version": "0.5.0",
   "engines": {
     "node": ">8.0.0"
   },
@@ -16,7 +16,8 @@
   },
   "scripts": {
     "precommit": "lint-staged",
-    "test": "mocha test --timeout 100000"
+    "test": "mocha test --timeout 100000",
+    "debug": "node ./debug"
   },
   "lint-staged": {
     "*.js": [
