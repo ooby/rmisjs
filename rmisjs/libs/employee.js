@@ -1,17 +1,18 @@
 const createClient = require('../client');
 const Queue = require('../../libs/queue');
+const wrap = require('../../libs/wrap');
 
-const q = new Queue(2);
+const q = new Queue(require('../limit'));
 
 module.exports = async s => {
     let c = await createClient(s, 'employee');
     return {
         describe: () => c.describe(),
-        getEmployee: d => q.push(() => c.getEmployeeAsync(d)),
-        getEmployees: d => q.push(() => c.getEmployeesAsync(d)),
-        getEmployeePosition: d => q.push(() => c.getEmployeePositionAsync(d)),
-        getEmployeePositions: d => q.push(() => c.getEmployeePositionsAsync(d)),
-        getEmployeeSpecialities: d => q.push(() => c.getEmployeeSpecialitiesAsync(d)),
-        getPosition: d => q.push(() => c.getPositionAsync(d))
+        getEmployee: d => wrap(q, () => c.getEmployeeAsync(d)),
+        getEmployees: d => wrap(q, () => c.getEmployeesAsync(d)),
+        getEmployeePosition: d => wrap(q, () => c.getEmployeePositionAsync(d)),
+        getEmployeePositions: d => wrap(q, () => c.getEmployeePositionsAsync(d)),
+        getEmployeeSpecialities: d => wrap(q, () => c.getEmployeeSpecialitiesAsync(d)),
+        getPosition: d => wrap(q, () => c.getPositionAsync(d))
     };
 };

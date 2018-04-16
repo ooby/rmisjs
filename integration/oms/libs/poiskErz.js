@@ -1,12 +1,13 @@
 const createClient = require('../client');
 const TimedQueue = require('../../../libs/tqueue');
+const wrap = require('../../../libs/wrap');
 
-const tq = new TimedQueue(5000);
+const q = new TimedQueue(require('../limit'));
 
 module.exports = async s => {
     let c = await createClient(s);
     return {
         describe: () => c.describe(),
-        PoiskERZ_FIO: d => tq.push(() => c.PoiskERZ_FIOAsync(d))
+        PoiskERZ_FIO: d => wrap(q, () => c.PoiskERZ_FIOAsync(d))
     };
 };

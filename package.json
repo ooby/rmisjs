@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.4.50",
+  "version": "0.5.0",
   "engines": {
     "node": ">8.0.0"
   },
@@ -16,7 +16,8 @@
   },
   "scripts": {
     "precommit": "lint-staged",
-    "test": "mocha test --timeout 100000"
+    "test": "mocha test --timeout 100000",
+    "debug": "node ./debug"
   },
   "lint-staged": {
     "*.js": [
@@ -46,7 +47,7 @@
     "mongoose": "^4.13.1",
     "nconf": "^0.8.4",
     "refbooks": "^0.0.7",
-    "soap": "^0.23.0",
+    "soap": "^0.24.0",
     "string-similarity": "^1.2.0",
     "uuid": "^3.1.0",
     "xlsx": "^0.12.0"

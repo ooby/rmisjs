@@ -1,46 +1,29 @@
 const createClient = require('../client');
 const Queue = require('../../../libs/queue');
+const wrap = require('../../../libs/wrap');
 
-const q = new Queue(1);
+const q = new Queue(require('../limit'));
 
 module.exports = async s => {
     let c = await createClient(s);
     return {
-        describe: () =>
-            c.describe(),
-        getMuInfo: d =>
-            q.push(() => c.getMuInfoAsync(d)),
-        updateMuInfo: d =>
-            q.push(() => c.updateMuInfoAsync(d)),
-        updateCabinetInfo: d =>
-            q.push(() => c.updateCabinetInfoAsync(d)),
-        updateStaffInfo: d =>
-            q.push(() => c.updateStaffInfoAsync(d)),
-        updateSchedule: d =>
-            q.push(() => c.updateScheduleAsync(d)),
-        changeSlotState: d =>
-            q.push(() => c.changeSlotStateAsync(d)),
-        changeCabinet: d =>
-            q.push(() => c.changeCabinetAsync(d)),
-        deleteSchedule: d =>
-            q.push(() => c.deleteScheduleAsync(d)),
-        updateSickLeaves: d =>
-            q.push(() => c.updateSickLeavesAsync(d)),
-        updateDistrict: d =>
-            q.push(() => c.updateDistrictAsync(d)),
-        getScheduleInfo: d =>
-            q.push(() => c.getScheduleInfoAsync(d)),
-        getAppointmentsBySNILS: d =>
-            q.push(() => c.getAppointmentsBySNILSAsync(d)),
-        readSlotState: d =>
-            q.push(() => c.readSlotStateAsync(d)),
-        deleteSlot: d =>
-            q.push(() => c.deleteSlotAsync(d)),
-        findDistrict: d =>
-            q.push(() => c.findDistrictAsync(d)),
-        getActualSpecialistList: d =>
-            q.push(() => c.getActualSpecialistListAsync(d)),
-        getSlotListByPeriod: d =>
-            q.push(() => c.getSlotListByPeriodAsync(d))
+        describe: () => c.describe(),
+        getMuInfo: d => wrap(q, () => c.getMuInfoAsync(d)),
+        updateMuInfo: d => wrap(q, () => c.updateMuInfoAsync(d)),
+        updateCabinetInfo: d => wrap(q, () => c.updateCabinetInfoAsync(d)),
+        updateStaffInfo: d => wrap(q, () => c.updateStaffInfoAsync(d)),
+        updateSchedule: d => wrap(q, () => c.updateScheduleAsync(d)),
+        changeSlotState: d => wrap(q, () => c.changeSlotStateAsync(d)),
+        changeCabinet: d => wrap(q, () => c.changeCabinetAsync(d)),
+        deleteSchedule: d => wrap(q, () => c.deleteScheduleAsync(d)),
+        updateSickLeaves: d => wrap(q, () => c.updateSickLeavesAsync(d)),
+        updateDistrict: d => wrap(q, () => c.updateDistrictAsync(d)),
+        getScheduleInfo: d => wrap(q, () => c.getScheduleInfoAsync(d)),
+        getAppointmentsBySNILS: d => wrap(q, () => c.getAppointmentsBySNILSAsync(d)),
+        readSlotState: d => wrap(q, () => c.readSlotStateAsync(d)),
+        deleteSlot: d => wrap(q, () => c.deleteSlotAsync(d)),
+        findDistrict: d => wrap(q, () => c.findDistrictAsync(d)),
+        getActualSpecialistList: d => wrap(q, () => c.getActualSpecialistListAsync(d)),
+        getSlotListByPeriod: d => wrap(q, () => c.getSlotListByPeriodAsync(d))
     };
 };

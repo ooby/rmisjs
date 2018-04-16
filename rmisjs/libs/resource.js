@@ -1,13 +1,14 @@
 const createClient = require('../client');
 const Queue = require('../../libs/queue');
+const wrap = require('../../libs/wrap');
 
-const q = new Queue(2);
+const q = new Queue(require('../limit'));
 
 module.exports = async s => {
     let c = await createClient(s, 'resource');
     return {
         describe: () => c.describe(),
-        getLocation: d => q.push(() => c.getLocationAsync(d)),
-        getLocations: d => q.push(() => c.getLocationsAsync(d))
+        getLocation: d => wrap(q, () => c.getLocationAsync(d)),
+        getLocations: d => wrap(q, () => c.getLocationsAsync(d))
     };
 };
