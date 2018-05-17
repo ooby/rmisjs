@@ -9,19 +9,22 @@ const refbook = require('./libs/refbook');
 const resource = require('./libs/resource');
 const services = require('./libs/services');
 const room = require('./libs/room');
+const Queue = require('../libs/queue');
+
+const q = new Queue(5);
 
 module.exports = s => {
     return {
-        address: () => address(s),
-        appointment: () => appointment(s),
-        department: () => department(s),
-        district: () => district(s),
-        employee: () => employee(s),
-        individual: () => individual(s),
-        patient: () => patient(s),
-        refbook: () => refbook(s),
-        resource: () => resource(s),
-        services: () => services(s),
-        room: () => room(s)
+        address: () => address(s, q),
+        appointment: () => appointment(s, q),
+        department: () => department(s, q),
+        district: () => district(s, q),
+        employee: () => employee(s, q),
+        individual: () => individual(s, q),
+        patient: () => patient(s, q),
+        refbook: () => refbook(s, q),
+        resource: () => resource(s, q),
+        services: () => services(s, q),
+        room: () => room(s, q)
     };
 };

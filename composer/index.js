@@ -9,6 +9,7 @@ const mongoLocations = require('./mongo/sync/locations');
 const mongoEmployees = require('./mongo/sync/employees');
 const mongoTimeSlots = require('./mongo/sync/timeslots');
 const mongoDepartments = require('./mongo/sync/departments');
+const mongoAppCache = require('./mongo/sync/appcache');
 const getProtocol = require('./libs/protocol');
 const emk = require('./emk');
 const {
@@ -61,6 +62,7 @@ module.exports = s => {
         mongoEmployees: () => mongoEmployees(s),
         mongoTimeSlots: () => mongoTimeSlots(s),
         mongoServices: () => mongoServices(s),
+        mongoAppCache: () => mongoAppCache(s),
         syncEmk: () => emk(s).then(p => p.syncAll()),
         getCase: d => cased(s).then(p => p.getCase(d)),
         getProtocol: d => getProtocol(s, d),

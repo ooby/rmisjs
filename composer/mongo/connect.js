@@ -1,15 +1,13 @@
-const createConnectionString = require('./parseUri');
-const mongoose = require('mongoose');
-mongoose.Promise = Promise;
+const connector = require('./connector');
 
 module.exports = async (config, cb) => {
     try {
-        await mongoose.connect(createConnectionString(config), config.mongo.mongoose.options);
+        await connector.connect();
         return await cb();
     } catch (e) {
         console.error(e);
         return e;
     } finally {
-        await mongoose.disconnect();
+        await connector.close();
     }
 };
