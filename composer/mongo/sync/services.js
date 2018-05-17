@@ -20,21 +20,25 @@ module.exports = async s => {
             })
         ).concat(
             services.map(async service => {
-                service = {
-                    _id: service.id,
-                    name: service.name
-                };
-                service.repeated = (/повтор/i).test(service.name);
-                let details = await servicesService.getService({
-                    serviceId: service._id
-                });
-                details = details.service;
-                if (details.repeated) service.repeated = details.repeated;
-                await Service.update({
-                    _id: service._id
-                }, service, {
+                try {
+                    service = {
+                        _id: service.id,
+                        name: service.name
+                    };
+                    service.repeated = (/повтор/i).test(service.name);
+                    let details = await servicesService.getService({
+                        serviceId: service._id
+                    });
+                    details = details.service;
+                    if (details.repeated) service.repeated = details.repeated;
+                    await Service.update({
+                        _id: service._id
+                    }, service, {
                         upsert: true
                     }).exec();
+                } catch (e) {
+                    console.error(e);
+                }
             })
         )
     );

@@ -21,8 +21,8 @@ module.exports = async s => {
                 await Department.update({
                     _id: dept.id
                 }, dept, {
-                        upsert: true
-                    }).exec();
+                    upsert: true
+                }).exec();
             })
         )
     );

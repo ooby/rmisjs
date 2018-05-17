@@ -40,8 +40,8 @@ module.exports = async s => {
                 await Location.update({
                     _id: id
                 }, location, {
-                        upsert: true
-                    }).exec();
+                    upsert: true
+                }).exec();
             })
         )
     );
