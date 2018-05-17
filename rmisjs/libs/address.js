@@ -2,9 +2,7 @@ const createClient = require('../client');
 const Queue = require('../../libs/queue');
 const wrap = require('../../libs/wrap');
 
-const q = new Queue(require('../limit'));
-
-module.exports = async s => {
+module.exports = async (s, q) => {
     let c = await createClient(s, 'address');
     return {
         describe: () => c.describe(),

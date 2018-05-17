@@ -373,4 +373,60 @@ TimeSlotSchema.statics.timeTableWithDuration = function (department, ...sources)
     );
 };
 
+TimeSlotSchema.statics.appCache = function(sources) {
+    return this.aggregate()
+        .match({
+            'unavailable': { $nin: sources },
+            'services.0': { $exists: true }
+        })
+        .project({
+            _id: '$_id',
+            from: '$from',
+            to: '$to',
+            status: '$status',
+            location: '$location'
+        })
+        .group({
+            _id: '$location',
+            times: { $push: '$$ROOT' }
+        })
+        .lookup({
+            from: 'locations',
+            as: 'location',
+            foreignField: '_id',
+            localField: '_id'
+        })
+        .unwind('location')
+        .match({
+            'location.source': { $in: sources }
+        })
+        .lookup({
+            from: 'employees',
+            as: 'employee',
+            foreignField: 'position',
+            localField: 'location.positions'
+        })
+        .unwind('employee')
+        .lookup({
+            from: 'rooms',
+            as: 'rooms',
+            foreignField: '_id',
+            localField: 'location.rooms'
+        })
+        .addFields({
+            room: { $arrayElemAt: ['$rooms', 0] }
+        })
+        .project({
+            _id: '$_id',
+            position: '$employee.positionName',
+            name: [
+                '$employee.surname',
+                '$employee.firstName',
+                '$employee.patrName'
+            ],
+            room: '$room.name',
+            times: '$times'
+        });
+};
+
 module.exports = mongoose.model('TimeSlot', TimeSlotSchema);

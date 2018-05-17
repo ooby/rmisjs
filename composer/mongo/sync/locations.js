@@ -27,15 +27,13 @@ module.exports = async s => {
                 });
                 if (!location) return;
                 else location = location.location;
+                location.service = [].concat(location.service || []);
                 if (
                     depts.indexOf(parseInt(location.department)) < 0 ||
                     !location.source ||
-                    !location.employeePositionList
-                ) {
-                    return await Location.remove({
-                        _id: id
-                    }).exec();
-                };
+                    !location.employeePositionList ||
+                    !location.service.length
+                ) return await Location.remove({ _id: id }).exec();
                 location.positions = location.employeePositionList.EmployeePosition.map(i => i.employeePosition);
                 location.rooms = get(location, [], 'roomList', 'Room').map(i => i.room);
                 location._id = id;
