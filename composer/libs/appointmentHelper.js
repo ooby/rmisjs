@@ -19,10 +19,8 @@ module.exports = async s => {
          */
         async getAppointmentNumber(id) {
             try {
-                let slip = await c.getAppointmentNumberAsync({
-                    id
-                });
-                return slip ? slip.number.number : null;
+                let [{ number: { number } }] = await c.getAppointmentNumberAsync({ id });
+                return number || null;
             } catch (e) {
                 console.error(e);
                 return e;
