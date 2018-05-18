@@ -2,7 +2,7 @@ const connector = require('./connector');
 
 module.exports = async (config, cb) => {
     try {
-        await connector.connect();
+        await connector.connect(config);
         return await cb();
     } catch (e) {
         console.error(e);
