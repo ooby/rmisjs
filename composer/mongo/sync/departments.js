@@ -7,23 +7,18 @@ const Department = require('../model/department');
  */
 module.exports = async s => {
     let depts = await getPortalDepartments(s);
-    await Promise.all(
-        [].concat(
-            Department.remove({
-                _id: {
-                    $nin: depts.map(i => i.id)
-                }
-            }).exec()
-        ).concat(
-            depts.map(async dept => {
-                dept._id = dept.id;
-                dept.type = dept.departmentType;
-                await Department.update({
-                    _id: dept.id
-                }, dept, {
-                    upsert: true
-                }).exec();
-            })
-        )
-    );
+    let ids = depts.map(i => i.id);
+    await Promise.all([
+        Department
+            .remove({ _id: { $nin: ids } })
+            .exec()
+    ].concat(
+        depts.map(async dept => {
+            dept._id = dept.id;
+            dept.type = dept.departmentType;
+            await Department
+                .update({ _id: dept.id }, dept, { upsert: true })
+                .exec();
+        })
+    ));
 };
