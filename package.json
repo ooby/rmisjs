@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "engines": {
     "node": ">8.0.0"
   },
@@ -44,20 +44,20 @@
     "js2xmlparser": "^3.0.0",
     "jsdom": "^11.5.1",
     "moment": "^2.18.1",
-    "mongoose": "^4.13.1",
-    "nconf": "^0.8.4",
+    "mongoose": "^5.1.1",
+    "nconf": "^0.10.0",
     "refbooks": "^0.0.8",
     "soap": "^0.24.0",
     "string-similarity": "^1.2.0",
     "uuid": "^3.1.0",
-    "xlsx": "^0.12.0"
+    "xlsx": "^0.12.13"
   },
   "devDependencies": {
-    "ajv": "^5.5.1",
+    "ajv": "^6.5.0",
     "chai": "^4.1.0",
-    "chai-http": "^3.0.0",
+    "chai-http": "^4.0.0",
     "husky": "^0.14.3",
-    "lint-staged": "^7.0.0",
-    "mocha": "^3.4.2"
+    "lint-staged": "^7.1.1",
+    "mocha": "^5.2.0"
   }
 }
