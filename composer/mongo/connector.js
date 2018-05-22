@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 mongoose.Promise = Promise;
 
 const connect = s =>
-    mongoose.connect(createConnectionString(s), s.mongo.mongoose.options);
+    mongoose.connect(createConnectionString(s), s.mongo.options || s.mongo.mongoose.options);
 
 const close = () =>
     mongoose.connection.close();
