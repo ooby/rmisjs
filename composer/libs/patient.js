@@ -112,9 +112,7 @@ exports.deleteVisit = async (s, m) => {
         let slot = await getSlot(s, {
             slot: visit.slot.id
         });
-        await connect(s, () =>
-            visit.timeslot.updateStatus(slot.status).exec()
-        );
+        await connect(s, () => visit.timeslot.updateStatus(slot.status));
         return slip;
     } catch (e) {
         console.error(e);
@@ -154,9 +152,7 @@ exports.createVisit = async (s, m) => {
         let slot = await getSlot(s, {
             slot: slotId
         });
-        await connect(s, () =>
-            timeslot.updateStatus(slot.status).exec()
-        );
+        await connect(s, () => timeslot.updateStatus(slot.status));
         return slip;
     } catch (e) {
         console.error(e);

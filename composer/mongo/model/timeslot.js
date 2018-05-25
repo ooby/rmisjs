@@ -28,7 +28,7 @@ const TimeSlotSchema = new Schema({
     },
     date: {
         type: Date,
-        required: true
+        required: true,
     },
     unavailable: {
         type: [String],
@@ -48,15 +48,24 @@ TimeSlotSchema.index({
     from: 1,
     location: 1
 }, {
-        unique: true
-    });
+    unique: true
+});
 
-TimeSlotSchema.methods.updateStatus = function (status) {
-    return this.update({
-        $set: {
-            status
-        }
-    });
+TimeSlotSchema.methods.updateStatus = async function (status) {
+    await Promise.all([
+        mongoose.connection.collection('appcaches').update({
+            'times._id': setUUID(this._id)
+        }, {
+            $set: {
+                'times.$.status': status
+            }
+        }),
+        this.update({
+            $set: {
+                status
+            }
+        })
+    ]);
 };
 
 TimeSlotSchema.statics.getUUID = getUUID;
