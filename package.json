@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "engines": {
     "node": ">8.0.0"
   },
@@ -42,9 +42,9 @@
   "homepage": "https://github.com/ooby/rmisjs#readme",
   "dependencies": {
     "js2xmlparser": "^3.0.0",
-    "jsdom": "^11.10.0",
+    "jsdom": "^11.11.0",
     "moment": "^2.22.1",
-    "mongoose": "^5.1.1",
+    "mongoose": "^5.1.2",
     "nconf": "^0.10.0",
     "refbooks": "^0.0.8",
     "soap": "^0.24.0",
@@ -57,7 +57,7 @@
     "chai": "^4.1.2",
     "chai-http": "^4.0.0",
     "husky": "^0.14.3",
-    "lint-staged": "^7.1.1",
+    "lint-staged": "^7.1.2",
     "mocha": "^5.2.0"
   }
 }

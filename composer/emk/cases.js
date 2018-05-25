@@ -136,7 +136,7 @@ module.exports = async s => {
      * @return {Promise<Object>}
      */
     const getCase = async d => {
-        let data = await c.searchCaseAsync(d);
+        let [data] = await c.searchCaseAsync(d);
         return $$(data, 'cases.caseComplex', null);
     };
 
