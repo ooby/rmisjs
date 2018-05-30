@@ -20,16 +20,20 @@ module.exports = async s => {
             }).exec()
         ).concat(
             rooms.map(async roomId => {
-                let room = await roomService.getRoom({
-                    roomId
-                });
-                room = room.room;
-                room._id = roomId;
-                await Room.update({
-                    _id: roomId
-                }, room, {
-                    upsert: true
-                }).exec();
+                try {
+                    let room = await roomService.getRoom({
+                        roomId
+                    });
+                    room = room.room;
+                    room._id = roomId;
+                    await Room.update({
+                        _id: roomId
+                    }, room, {
+                        upsert: true
+                    }).exec();
+                } catch (e) {
+                    console.error(e);
+                }
             })
         )
     );

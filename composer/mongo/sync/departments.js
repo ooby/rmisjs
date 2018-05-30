@@ -14,11 +14,15 @@ module.exports = async s => {
             .exec()
     ].concat(
         depts.map(async dept => {
-            dept._id = dept.id;
-            dept.type = dept.departmentType;
-            await Department
-                .update({ _id: dept.id }, dept, { upsert: true })
-                .exec();
+            try {
+                dept._id = dept.id;
+                dept.type = dept.departmentType;
+                await Department
+                    .update({ _id: dept.id }, dept, { upsert: true })
+                    .exec();
+            } catch (e) {
+                console.error(e);
+            }
         })
     ));
 };
