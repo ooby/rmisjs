@@ -5,7 +5,6 @@ const rmisjs = require('../../index');
 const moment = require('moment');
 const soap = require('soap');
 const url = require('url');
-const j2x = require('js2xmlparser');
 
 const wsdl = '/carbondss/services/MedbaseCases/MedbaseCases.SecureSOAP11Endpoint.xml';
 const endpoint = '/carbondss/services/MedbaseCases.SOAP11Endpoint/';
@@ -235,8 +234,14 @@ module.exports = async s => {
         }
         concomitantDiagnosis.delete(mainDiagnosisCode);
         return {
-            mainDiagnosisCode,
-            characterDiagnosisCode,
+            mainDiagnosisCode: {
+                '@': { version: '1.0' },
+                '#': mainDiagnosisCode
+            },
+            characterDiagnosisCode: {
+                '@': { version: '1.0' },
+                '#': characterDiagnosisCode
+            },
             concomitantDiagnosis: Array.from(concomitantDiagnosis)
         };
     };
@@ -258,9 +263,15 @@ module.exports = async s => {
     const parsePaymentData = thecase => {
         if (!thecase) return missing('No case while parsing payment data');
         let paymentData = {
-            typePaymentCode: $(thecase, 'fundingSourceTypeId'),
+            typePaymentCode: {
+                '@': { verion: '1.0' },
+                '#': $(thecase, 'fundingSourceTypeId')
+            },
             policyNumber: thecase.Patient.polis,
-            insuranceCompanyCode: $(thecase, 'document.issuerCode')
+            insuranceCompanyCode: {
+                '@': { version: '1.0' },
+                '#': $(thecase, 'document.issuerCode')
+            }
         };
         let funding = parseInt($(thecase, 'fundingSourceTypeId'));
         if (!funding || funding === 2) return missing('No funding type ID');
@@ -273,11 +284,26 @@ module.exports = async s => {
         let dateTime = await parseDate(visit.admissionDate, visit.admissionTime);
         return !dateTime ? null : {
             dateTime,
-            placeServicesCode: visit.placeId,
-            purposeVisitCode: visit.goalId,
-            typeTreatmentCode: !visit.repeated ? '2' : '1',
-            typeAssistanceCode: thecase.careLevelCode,
-            formCode: thecase.careProvidingFormCode
+            placeServicesCode: {
+                '@': { version: '1.0' },
+                '#': visit.placeId
+            },
+            purposeVisitCode: {
+                '@': { version: '1.0' },
+                '#': visit.goalId
+            },
+            typeTreatmentCode: {
+                '@': { version: '1.0' },
+                '#': !visit.repeated ? '2' : '1'
+            },
+            typeAssistanceCode: {
+                '@': { version: '1.0' },
+                '#': thecase.careLevelCode
+            },
+            formCode: {
+                '@': { version: '1.0' },
+                '#': thecase.careProvidingFormCod
+            }
         };
     };
 
@@ -288,73 +314,81 @@ module.exports = async s => {
         let renderedServices = visit.renderedServices ? [].concat(visit.renderedServices.renderedService) : [];
         return {
             Service: await Promise.all(
-                renderedServices.map(i => {
-                    return waitForObject({
+                renderedServices.map(i =>
+                    waitForObject({
                         serviceCode: waitForObject({
                             serviceDictionary: Promise.resolve('HST0020'),
-                            Code: waitForObject({
-                                '@': Promise.resolve({ version: '1.0' }),
-                                '#': rb.getCodeNSI(i.serviceName, keys['HST0020'])
-                            })
+                            Code: rb.getCodeNSI(i.serviceName, keys['HST0020'])
                         }),
-                        unitCode: Promise.resolve(1), // WRONG
+                        unitCode: Promise.resolve({
+                            '@': { version: '1.0' },
+                            '#': 1, // WRONG
+                        }),
                         quantityServices: Promise.resolve(renderedServices.length),
                         PaymentData: parsePaymentData(thecase),
                         doctor: Promise.resolve(doctor)
-                    });
-                })
+                    })
+                )
             )
         };
     };
 
     const parseVisitResult = async resultId => {
         if (!resultId) return missing('No result ID');
-        return rb.getRowRMIS('mc_step_result', 'ID', resultId, 'CODE');
+        return {
+            '@': { version: '1.0' },
+            '#': await rb.getRowRMIS('mc_step_result', 'ID', resultId, 'CODE')
+        };
     };
 
     const parseDiseaseResult = async deseaseResultId => {
         if (!deseaseResultId) return missing('No result disease ID');
-        return rb.getRowRMIS('mc_step_care_result', 'ID', deseaseResultId, 'CODE');
+        return {
+            '@': { version: '1.0' },
+            '#': await rb.getRowRMIS('mc_step_care_result', 'ID', deseaseResultId, 'CODE')
+        };
     };
 
     const parse025Visit = async (thecase, visit) => {
         if (!thecase || !visit) return missing('No case or no visit while parsing form 025');
+        let diagnosis = await parseDiagnosis(thecase, visit);
+        if (!diagnosis) return missing('No form data');
         let data = await waitForObject({
-            diagnosis: parseDiagnosis(thecase, visit),
-            resultCode: parseVisitResult(visit.visitResultId),
-            outcomeCode: parseDiseaseResult(visit.deseaseResultId),
             visit: parseVisit(thecase, visit),
-            PaymentData: parsePaymentData(thecase),
+            mainDiagnosisCode: Promise.resolve(diagnosis.mainDiagnosisCode),
+            characterDiagnosisCode: Promise.resolve(diagnosis.characterDiagnosisCode),
             Services: parseService(thecase, visit),
+            resultCode: parseVisitResult(visit.visitResultId),
+            outcomeCode: parseDiseaseResult(visit.deseaseResultId)
         });
         if (!data) return missing('No form data');
-        let diagnosis = data.diagnosis;
         delete data.diagnosis;
         return {
             root: 'Form025',
-            form: Object.assign(data, diagnosis)
+            form: data
         };
     };
 
     const parseAmbulatorySummary = async (thecase, visit) => {
         if (!thecase || !visit) return missing('No case or no visit while parsing AbulatorySummary');
+        let diagnosis = await parseDiagnosis(thecase, visit);
+        if (!diagnosis) return missing('No form data');
         let data = await waitForObject({
-            diagnosis: parseDiagnosis(thecase, visit),
+            mainDiagnosisCode: Promise.resolve(diagnosis.mainDiagnosisCode),
+            characterDiagnosisCode: Promise.resolve(diagnosis.characterDiagnosisCode),
             Services: parseService(thecase, visit),
             InformationDisease: waitForObject({
-                visit: parseVisit(thecase, visit),
-                resultCode: parseVisitResult(visit.visitResultId),
-                outcomeCode: parseDiseaseResult(visit.deseaseResultId)
+                Visit: parseVisit(thecase, visit),
+                ResultDisease: parseVisitResult(visit.visitResultId),
+                OutcomeDisease: parseDiseaseResult(visit.deseaseResultId)
             }),
-            PrimaryExamination: parseExaminatiion(thecase, visit),
-            InformationTreatment: 'n/a'
+            PrimaryExamination: parseExamination(thecase, visit),
+            InformationTreatment: Promise.resolve('n/a')
         });
         if (!data) return missing('No form data');
-        let diagnosis = data.diagnosis;
-        delete data.diagnosis;
         return {
             root: 'AmbulatorySummary',
-            form: Object.assign(diagnosis, data)
+            form: data
         };
     };
 
@@ -389,28 +423,28 @@ module.exports = async s => {
             channelHospitalizationCode: 8, // WRONG
             caseGivenYear: record.previousHospitalRecordId ? 2 : 1,
             hospitalized: 1 // WRONG
-        }, {
-                dateTimeReceipt: date
-            });
+        }, { dateTimeReceipt: date });
     };
 
     const parseHspRecord = async (thecase, record) => {
-        let form = await waitForObject({
+        let data = await waitForObject({
             PrimaryInformationAdmission: parseAdmission(thecase, record),
             // RegistrationNewborn: null, // 0
-            CertifiedExtract: parseDiagnosis(thecase, record),
+            CertifiedExtract: parseCertifiedExtract(thecase),
             Services: parseService(thecase, record),
             // DisabilityCertificate: null // 0
         });
-        return !form ? null : {
+        if (!data) return missing('No form data');
+        return {
             root: 'Form066',
-            form
+            form: data
         };
     };
 
     // WRONG
-    const parseExaminatiion = (thecase, record) =>
-        Promise.resolve({
+    const parseExamination = async (thecase, record) => {
+        let diagnosis = await parseDiagnosis(thecase, record);
+        return {
             complaining: 'n/a',
             anamnesisDisease: {
                 historyDisease: 'n/a'
@@ -424,17 +458,21 @@ module.exports = async s => {
             ObjectiveData: {
                 functionalExamination: {
                     functionalParameter: [{
-                        nameParameter: 'n/a',
+                        nameParameter: {
+                            '@': { version: '1.0' },
+                            '#': 0
+                        },
                         valueParameter: 'n/a',
                         controlValue: 'n/a',
                         measuringUnit: 'n/a'
                     }]
                 }
             },
-            provisionalDiagnosis: 'n/a',
+            provisionalDiagnosis: diagnosis.mainDiagnosisCode,
             planSurvey: 'n/a',
             planTreatment: 'n/a'
-        });
+        };
+    };
 
     const parseNumberBedDays = async (admissionDate, admissionTime, dischargeDate, dischargeTime) => {
         let [admission, discharge] = await Promise.all([
@@ -484,7 +522,7 @@ module.exports = async s => {
                 PrimaryInformationAdmission: parseAdmission(thecase, first), // WRONG
                 CertifiedExtract: parseCertifiedExtract(thecase),
                 Services: parseAllServices(thecase),
-                PrimaryExamination: parseExaminatiion(thecase, first)
+                PrimaryExamination: parseExamination(thecase, first)
             })
         };
     };

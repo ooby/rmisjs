@@ -13,14 +13,17 @@ const exclude = form => {
     return form;
 };
 
-const convertToXml = data =>
-    j2x.parse(data.root, exclude(data.form), {
+const convertToXml = data => {
+    console.log(JSON.stringify(data));
+    return j2x.parse(data.root, exclude(data.form), {
         format: {
+            doubleQuotes: true,
             indent: '',
             newline: '',
             pretty: false
         }
     });
+};
 
 module.exports = async s => {
     let collector = await collect(s);

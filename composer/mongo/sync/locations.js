@@ -22,26 +22,30 @@ module.exports = async s => {
             }).exec()
         ).concat(
             get(await ids, [], 'location').map(async id => {
-                let location = await resource.getLocation({
-                    location: id
-                });
-                if (!location) return;
-                else location = location.location;
-                location.service = [].concat(location.service || []);
-                if (
-                    depts.indexOf(parseInt(location.department)) < 0 ||
-                    !location.source ||
-                    !location.employeePositionList ||
-                    !location.service.length
-                ) return await Location.remove({ _id: id }).exec();
-                location.positions = location.employeePositionList.EmployeePosition.map(i => i.employeePosition);
-                location.rooms = get(location, [], 'roomList', 'Room').map(i => i.room);
-                location._id = id;
-                await Location.update({
-                    _id: id
-                }, location, {
-                    upsert: true
-                }).exec();
+                try {
+                    let location = await resource.getLocation({
+                        location: id
+                    });
+                    if (!location) return;
+                    else location = location.location;
+                    location.service = [].concat(location.service || []);
+                    if (
+                        depts.indexOf(parseInt(location.department)) < 0 ||
+                        !location.source ||
+                        !location.employeePositionList ||
+                        !location.service.length
+                    ) return await Location.remove({ _id: id }).exec();
+                    location.positions = location.employeePositionList.EmployeePosition.map(i => i.employeePosition);
+                    location.rooms = get(location, [], 'roomList', 'Room').map(i => i.room);
+                    location._id = id;
+                    await Location.update({
+                        _id: id
+                    }, location, {
+                        upsert: true
+                    }).exec();
+                } catch (e) {
+                    console.error(e);
+                }
             })
         )
     );

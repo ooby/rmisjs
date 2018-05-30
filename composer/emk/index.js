@@ -122,11 +122,11 @@ module.exports = async s => {
             },
             ProfessionalPost: {
                 '@version': '1.0',
-                '$': postCode
+                '$': postCode['#']
             },
             ProfessionalSpec: {
                 '@version': '1.0',
-                '$': specialityCode
+                '$': specialityCode['#']
             },
             StructuredBody: Buffer.from(emds.convertToXml(form)).toString('base64')
         });

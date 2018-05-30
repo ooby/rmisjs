@@ -23,73 +23,77 @@ const requestReserve = (s, location, date, appointmentService) =>
     });
 
 const update = async (s, date, location, appointmentService) => {
-    let midnight = toMidnight(date);
-    let reserved = requestReserve(s, location, date, appointmentService);
-    let times = await requestTime(s, location, date, appointmentService);
-    times = get(times, [], 'interval', 'timePeriod').map(i => {
-        return {
-            from: new Date(`${date}T${i.from}`),
-            to: new Date(`${date}T${i.to}`),
-            date: midnight,
-            status: 1,
+    try {
+        let midnight = toMidnight(date);
+        let reserved = requestReserve(s, location, date, appointmentService);
+        let times = await requestTime(s, location, date, appointmentService);
+        times = get(times, [], 'interval', 'timePeriod').map(i => {
+            return {
+                from: new Date(`${date}T${i.from}`),
+                to: new Date(`${date}T${i.to}`),
+                date: midnight,
+                status: 1,
+                location,
+                unavailable: get(i, [], 'notAvailableSources', 'notAvailableSource').map(i => i.source),
+                services: get(i, [], 'availableServices', 'service')
+            };
+        });
+        let froms = times.map(i => i.from);
+        times = times.concat(
+            get(await reserved, [], 'slot')
+                .filter(i => !!i.timePeriod.to)
+                .map(i => {
+                    return {
+                        from: new Date(`${date}T${i.timePeriod.from}`),
+                        to: new Date(`${date}T${i.timePeriod.to}`),
+                        date: midnight,
+                        location,
+                        status: i.status
+                    };
+                })
+                .filter(i => froms.indexOf(i.from.valueOf()) < 0)
+        );
+        froms = times.map(i => i.from);
+        await TimeSlot.remove({
             location,
-            unavailable: get(i, [], 'notAvailableSources', 'notAvailableSource').map(i => i.source),
-            services: get(i, [], 'availableServices', 'service')
-        };
-    });
-    let froms = times.map(i => i.from);
-    times = times.concat(
-        get(await reserved, [], 'slot')
-            .filter(i => !!i.timePeriod.to)
-            .map(i => {
-                return {
-                    from: new Date(`${date}T${i.timePeriod.from}`),
-                    to: new Date(`${date}T${i.timePeriod.to}`),
-                    date: midnight,
-                    location,
-                    status: i.status
-                };
-            })
-            .filter(i => froms.indexOf(i.from.valueOf()) < 0)
-    );
-    froms = times.map(i => i.from);
-    await TimeSlot.remove({
-        location,
-        date: midnight,
-        from: {
-            $nin: froms
+            date: midnight,
+            from: {
+                $nin: froms
+            }
+        }).exec();
+        let existing = await TimeSlot.distinct('from', {
+            date: midnight,
+            location
+        }).exec();
+        existing = existing.map(i => i.valueOf());
+        for (let time of times) {
+            let from = time.from.valueOf();
+            if (existing.indexOf(from) < 0) {
+                promises.push(
+                    new TimeSlot(time)
+                        .save()
+                        .catch(e => cosnole.error(e))
+                );
+                existing.push(from);
+            } else {
+                promises.push(
+                    TimeSlot
+                        .update({
+                            from: time.from,
+                            location
+                        }, {
+                                $set: {
+                                    to: time.to,
+                                    status: time.status
+                                }
+                            })
+                        .exec()
+                        .catch(e => console.error(e))
+                );
+            }
         }
-    }).exec();
-    let existing = await TimeSlot.distinct('from', {
-        date: midnight,
-        location
-    }).exec();
-    existing = existing.map(i => i.valueOf());
-    for (let time of times) {
-        let from = time.from.valueOf();
-        if (existing.indexOf(from) < 0) {
-            promises.push(
-                new TimeSlot(time)
-                    .save()
-                    .catch(e => cosnole.error(e))
-            );
-            existing.push(from);
-        } else {
-            promises.push(
-                TimeSlot
-                    .update({
-                        from: time.from,
-                        location
-                    }, {
-                            $set: {
-                                to: time.to,
-                                status: time.status
-                            }
-                        })
-                    .exec()
-                    .catch(e => console.error(e))
-            );
-        }
+    } catch (e) {
+        console.error(e);
     }
 };
 
@@ -117,10 +121,13 @@ module.exports = async s => {
         ).concat(
             locations.map(location =>
                 Promise.all(
-                    dates.map(date =>
-                        update(s, date, location, appointmentService)
-                            .catch(e => console.error(e))
-                    )
+                    dates.map(async date => {
+                        try {
+                            await update(s, date, location, appointmentService);
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    })
                 )
             )
         )
