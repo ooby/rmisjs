@@ -1,4 +1,4 @@
-const j2x = require('js2xmlparser');
+const xmljs = require('xml-js');
 const cases = require('./cases');
 const collect = require('./collect');
 
@@ -13,51 +13,59 @@ const exclude = form => {
     return form;
 };
 
-const convertToXml = data => {
-    console.log(JSON.stringify(data));
-    return j2x.parse(data.root, exclude(data.form), {
-        format: {
-            doubleQuotes: true,
-            indent: '',
-            newline: '',
-            pretty: false
-        }
+const convertToXml = data =>
+    xmljs.js2xml({
+        _declaration: {
+            _attributes: {
+                version: '1.0',
+                encoding: 'utf-8'
+            }
+        },
+        [data.root]: Object.assign({
+            _attributes: {
+                'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
+                'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                'xmlns:tns': 'http://hostco.ru/iemk'
+            }
+        }, exclude(data.form))
+    }, {
+        compact: true,
+        elementNameFn: val => `tns:${val}`
     });
+
+const missing = (uid, part) => {
+    console.log(new Date().toString(), uid, `missing ${part}`);
+    return null;
+};
+
+const forArray = async cb => {
+    let data = []
+        .concat(await cb())
+        .filter(i => !!i);
+    return data.length ? data : null;
 };
 
 module.exports = async s => {
     let collector = await collect(s);
     let cased = await cases(s);
+
+    const getForms = async (uid, lastDate) => {
+        let patient = await collector.getPatient(uid);
+        if (!patient) return missing(uid, 'patient data');
+        let forms = await forArray(() => cased.getForms(uid, lastDate));
+        if (!forms) return missing(uid, 'form data');
+        let doctors = await forArray(() => collector.getDoctors(forms));
+        if (!doctors) return missing(uid, 'doctor data');
+        return forms.map(i =>
+            Object.assign(i, {
+                doctors,
+                patient
+            })
+        );
+    };
+
     return {
-        getForms: async (uid, lastDate) => {
-            let patient = await collector.getPatient(uid);
-            if (!patient) {
-                console.log(new Date().toString(), uid, 'missing patient data');
-                return null;
-            }
-            let forms = await cased.getForms(uid, lastDate);
-            forms = [].concat(forms);
-            if (!forms.length || (forms.length === 1 && !forms[0])) {
-                console.log(new Date().toString(), uid, 'missing form data');
-                return null;
-            }
-            let doctors = await collector.getDoctors(forms);
-            if (!doctors) {
-                console.log(new Date().toString(), uid, 'missing doctor data');
-                return null;
-            }
-            doctors = [].concat(doctors);
-            if (!doctors.length) {
-                console.log(new Date().toString(), uid, 'missing doctor data');
-                return null;
-            }
-            return forms.map(i =>
-                Object.assign(i, {
-                    doctors,
-                    patient
-                })
-            );
-        },
+        getForms,
         convertToXml,
         clearCache: Object.assign(cased.clearCache, collector.clearCache)
     };
