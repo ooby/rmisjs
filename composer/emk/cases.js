@@ -20,26 +20,16 @@ const match = (pattern, arr) => {
 const deseaseTypeMatch = (id, injury) => {
     if (parseInt(injury) !== 0) return 9;
     switch (parseInt(id)) {
-        case 1:
-            return 5;
-        case 2:
-            return 6;
-        case 3:
-            return 7;
-        case 4:
-            return 3;
-        case 5:
-            return 2;
-        case 6:
-            return 99;
-        case 7:
-            return 2;
-        case 8:
-            return 0;
-        case 9:
-            return 99;
-        default:
-            return 99;
+        case 1: return 5;
+        case 2: return 6;
+        case 3: return 7;
+        case 4: return 3;
+        case 5: return 2;
+        case 6: return 99;
+        case 7: return 2;
+        case 8: return 0;
+        case 9: return 99;
+        default: return 99;
     }
 };
 
@@ -71,7 +61,7 @@ const keys = {
     C33001: {
         code: 'C33001',
         version: '1.0',
-        indexes: [0, 3]
+        indexes: [2, 3]
     }
 };
 
@@ -146,7 +136,11 @@ module.exports = async s => {
      */
     const parseDoctorPost = async positionName => {
         if (!positionName) return missing('No doctor position name');
-        let code = await rb.getCodeNSI(positionName, keys['MDP365']);
+        let key = keys['MDP365'];
+        let code = {
+            '_attributes': { version: key.version },
+            '_text': await rb.getCodeNSI(positionName, key)
+        };
         return !code ? missing('No doctor post code') : code;
     };
 
@@ -164,7 +158,11 @@ module.exports = async s => {
         if (!speciality) return missing('No doctor speciality');
         let specName = await rb.getRowRMIS('pim_speciality', 'ID', speciality, 'NAME');
         if (!specName) return missing('No doctor speciality name');
-        let specCode = await rb.getCodeNSI(specName, keys['C33001']);
+        let key = keys['C33001'];
+        let specCode = {
+            '_attributes': { version: key.version },
+            '_text': await rb.getCodeNSI(specName, key)
+        };
         return specCode || missing('No doctor speciality code');
     };
 
@@ -235,12 +233,12 @@ module.exports = async s => {
         concomitantDiagnosis.delete(mainDiagnosisCode);
         return {
             mainDiagnosisCode: {
-                '@': { version: '1.0' },
-                '#': mainDiagnosisCode
+                '_attributes': { version: '1.0' },
+                '_text': mainDiagnosisCode
             },
             characterDiagnosisCode: {
-                '@': { version: '1.0' },
-                '#': characterDiagnosisCode
+                '_attributes': { version: '1.0' },
+                '_text': characterDiagnosisCode
             },
             concomitantDiagnosis: Array.from(concomitantDiagnosis)
         };
@@ -254,23 +252,22 @@ module.exports = async s => {
      */
     const parseDate = (date, time) => {
         if (!date) return missing('No date');
-        if (date && !time) return Promise.resolve(date);
         let dateTime = date.replace(/\+.*$/, '') + 'T';
         dateTime += time || ('00:00:00.000' + moment().format('Z'));
-        return Promise.resolve(dateTime);
+        return Promise.resolve(moment.utc(dateTime).toISOString());
     };
 
     const parsePaymentData = thecase => {
         if (!thecase) return missing('No case while parsing payment data');
         let paymentData = {
             typePaymentCode: {
-                '@': { verion: '1.0' },
-                '#': $(thecase, 'fundingSourceTypeId')
+                '_attributes': { version: '1.0' },
+                '_text': $(thecase, 'fundingSourceTypeId')
             },
             policyNumber: thecase.Patient.polis,
             insuranceCompanyCode: {
-                '@': { version: '1.0' },
-                '#': $(thecase, 'document.issuerCode')
+                '_attributes': { version: '1.0' },
+                '_text': $(thecase, 'document.issuerCode')
             }
         };
         let funding = parseInt($(thecase, 'fundingSourceTypeId'));
@@ -285,25 +282,22 @@ module.exports = async s => {
         return !dateTime ? null : {
             dateTime,
             placeServicesCode: {
-                '@': { version: '1.0' },
-                '#': visit.placeId
+                '_attributes': { version: '1.0' },
+                '_text': visit.placeId
             },
             purposeVisitCode: {
-                '@': { version: '1.0' },
-                '#': visit.goalId
+                '_attributes': { version: '1.0' },
+                '_text': visit.goalId
             },
             typeTreatmentCode: {
-                '@': { version: '1.0' },
-                '#': !visit.repeated ? '2' : '1'
+                '_attributes': { version: '1.0' },
+                '_text': !visit.repeated ? '2' : '1'
             },
             typeAssistanceCode: {
-                '@': { version: '1.0' },
-                '#': thecase.careLevelCode
+                '_attributes': { version: '1.0' },
+                '_text': thecase.careLevelCode
             },
-            formCode: {
-                '@': { version: '1.0' },
-                '#': thecase.careProvidingFormCod
-            }
+            formCode: thecase.careProvidingFormCode
         };
     };
 
@@ -312,17 +306,21 @@ module.exports = async s => {
         let doctor = await parseDoctor(thecase, visit);
         if (!doctor) return missing('No doctor while parsing services');
         let renderedServices = visit.renderedServices ? [].concat(visit.renderedServices.renderedService) : [];
+        let key = 'HST0020';
         return {
             Service: await Promise.all(
                 renderedServices.map(i =>
                     waitForObject({
                         serviceCode: waitForObject({
-                            serviceDictionary: Promise.resolve('HST0020'),
-                            Code: rb.getCodeNSI(i.serviceName, keys['HST0020'])
+                            serviceDictionary: Promise.resolve(key),
+                            Code: waitForObject({
+                                '_attributes': Promise.resolve({ version: keys[key].version }),
+                                '_text': rb.getCodeNSI(i.serviceName, keys[key])
+                            })
                         }),
                         unitCode: Promise.resolve({
-                            '@': { version: '1.0' },
-                            '#': 1, // WRONG
+                            '_attributes': { version: '1.0' },
+                            '_text': 1, // WRONG
                         }),
                         quantityServices: Promise.resolve(renderedServices.length),
                         PaymentData: parsePaymentData(thecase),
@@ -336,16 +334,16 @@ module.exports = async s => {
     const parseVisitResult = async resultId => {
         if (!resultId) return missing('No result ID');
         return {
-            '@': { version: '1.0' },
-            '#': await rb.getRowRMIS('mc_step_result', 'ID', resultId, 'CODE')
+            '_attributes': { version: '1.0' },
+            '_text': await rb.getRowRMIS('mc_step_result', 'ID', resultId, 'CODE')
         };
     };
 
     const parseDiseaseResult = async deseaseResultId => {
         if (!deseaseResultId) return missing('No result disease ID');
         return {
-            '@': { version: '1.0' },
-            '#': await rb.getRowRMIS('mc_step_care_result', 'ID', deseaseResultId, 'CODE')
+            '_attributes': { version: '1.0' },
+            '_text': await rb.getRowRMIS('mc_step_care_result', 'ID', deseaseResultId, 'CODE')
         };
     };
 
@@ -378,12 +376,16 @@ module.exports = async s => {
             characterDiagnosisCode: Promise.resolve(diagnosis.characterDiagnosisCode),
             Services: parseService(thecase, visit),
             InformationDisease: waitForObject({
-                Visit: parseVisit(thecase, visit),
+                Visit: Promise.all(
+                    thecase.records.map(i =>
+                        parseVisit(thecase, i)
+                    )
+                ),
                 ResultDisease: parseVisitResult(visit.visitResultId),
                 OutcomeDisease: parseDiseaseResult(visit.deseaseResultId)
             }),
             PrimaryExamination: parseExamination(thecase, visit),
-            InformationTreatment: Promise.resolve('n/a')
+            informationTreatment: Promise.resolve('n/a')
         });
         if (!data) return missing('No form data');
         return {
@@ -405,8 +407,12 @@ module.exports = async s => {
         if (!careProvidingFormId) return missing('No form ID');
         let name = await rb.getRowRMIS('md_care_providing_form', 'ID', careProvidingFormId, 'NAME');
         if (!name) return missing('No form name');
-        let code = await rb.getCodeNSI(name, keys['PRK470']);
-        if (!code) return missing('No form code');
+        let key = keys['PRK470'];
+        let code = {
+            '_attributes': { version: key.version },
+            '_text': await rb.getCodeNSI(name, key)
+        };
+        if (!code['_text']) return missing('No form code');
         return code;
     };
 
@@ -459,8 +465,8 @@ module.exports = async s => {
                 functionalExamination: {
                     functionalParameter: [{
                         nameParameter: {
-                            '@': { version: '1.0' },
-                            '#': 0
+                            '_attributes': { version: '1.0' },
+                            '_text': 0
                         },
                         valueParameter: 'n/a',
                         controlValue: 'n/a',

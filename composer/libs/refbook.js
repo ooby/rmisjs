@@ -75,10 +75,7 @@ module.exports = async s => {
         let names = dict.map(i => i.name.toUpperCase());
         let index = ss.findBestMatch(name.toUpperCase(), names);
         index = names.indexOf(index.bestMatch.target);
-        return {
-            '#': dict[index].code,
-            '@': { version }
-        };
+        return dict[index].code;
     };
 
     const mappedRMIS = async code => {

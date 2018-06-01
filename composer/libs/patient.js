@@ -133,27 +133,27 @@ exports.deleteVisit = async (s, m) => {
  */
 exports.createVisit = async (s, m) => {
     try {
-        let [appointmentService, timeslot, patient] = await Promise.all([
-            appointmentHelper(s),
+        let appointment = await appointmentHelper(s);
+        let [timeslot, patient] = await Promise.all([
             connect(s, () => TimeSlot.getByUUID(m.GUID).exec()),
             searchIndividual(s, {
                 birthDate: m.birthDate,
-                searchDocument: m.searchDocument
+                searchDocument: {
+                    docTypeId: m.searchDocument.docTypeId,
+                    docNumber: m.searchDocument.docNumber
+                }
             })
         ]);
         let slotId = await postReserve(s, {
             location: timeslot.location,
-            dateTime: moment(timeslot.from).format('GGGG-MM-DDTHH:mm:ss.SSSZ'),
+            dateTime: moment(timeslot.from).format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
             service: timeslot.services[0],
             urgency: false,
             patient
         });
-        let slip = await appointmentService.getAppointmentNumber(slotId);
-        let slot = await getSlot(s, {
-            slot: slotId
-        });
+        let slot = await getSlot(s, { slot: slotId });
         await connect(s, () => timeslot.updateStatus(slot.status));
-        return slip;
+        return await appointment.getAppointmentNumber(slotId);
     } catch (e) {
         console.error(e);
         return '';

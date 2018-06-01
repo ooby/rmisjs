@@ -122,18 +122,21 @@ module.exports = async s => {
             },
             ProfessionalPost: {
                 '@version': '1.0',
-                '$': postCode['#']
+                '$': postCode['_text']
             },
             ProfessionalSpec: {
                 '@version': '1.0',
-                '$': specialityCode['#']
+                '$': specialityCode['_text']
             },
             StructuredBody: Buffer.from(emds.convertToXml(form)).toString('base64')
         });
         if (existing) {
             existing = (
                 [].concat(existing.DocumentList)
-                    .find(i => i.documentId === data.documentId)
+                .find(i =>
+                    i.documentId === data.documentId &&
+                    i.Type['$'].toUpperCase() === data.Type['$'].toUpperCase()
+                )
             );
             if (existing) data.Id = existing.Id;
         }
