@@ -16,7 +16,10 @@ const {
  * @param {Object} s - конфигурация
  */
 module.exports = async s => {
-    let specs = await getRefbook(s, s.mongo.specbook);
+    let specs = await getRefbook(s, {
+        code: '1.2.643.5.1.13.3.2861820518965.1.1.118',
+        version: 'CURRENT'
+    });
     specs = new Map(
         specs.row.map(i => {
             let r = [];

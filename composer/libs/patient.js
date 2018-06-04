@@ -18,7 +18,6 @@ const {
     timeFormat
 } = require('./collect');
 const appointmentHelper = require('./appointmentHelper');
-const connect = require('../mongo/connect');
 const moment = require('moment');
 const TimeSlot = require('../mongo/model/timeslot');
 
@@ -45,7 +44,8 @@ exports.validatePatient = async (s, m) => {
 };
 
 /**
- * Поиск записи к врачу
+ * Поиск записи к врачу.
+ * Требуется активное подключение к базе данных.
  * @param {object} s - конфигурация
  * @param {object} m - парамаетры для записи
  * @param {string} m.birthDate - дата рождения - '1980-01-31'
@@ -57,9 +57,7 @@ exports.validatePatient = async (s, m) => {
  */
 exports.searchVisit = async (s, m) => {
     try {
-        let timeslot = await connect(s, () =>
-            TimeSlot.getByUUID(m.GUID).exec()
-        );
+        let timeslot = await TimeSlot.getByUUID(m.GUID).exec();
         if (!timeslot) return '';
         const from = timeslot.from.valueOf();
         const location = timeslot.location.toString();
@@ -91,7 +89,8 @@ exports.searchVisit = async (s, m) => {
 };
 
 /**
- * Удаление записи к врачу
+ * Удаление записи к врачу.
+ * Требуется активное подключение к базе данных.
  * @param {object} s - конфигурация
  * @param {object} m - парамаетры для записи
  * @param {string} m.birthDate - дата рождения - '1980-01-31'
@@ -112,7 +111,7 @@ exports.deleteVisit = async (s, m) => {
         let slot = await getSlot(s, {
             slot: visit.slot.id
         });
-        await connect(s, () => visit.timeslot.updateStatus(slot.status));
+        await visit.timeslot.updateStatus(slot.status);
         return slip;
     } catch (e) {
         console.error(e);
@@ -121,21 +120,22 @@ exports.deleteVisit = async (s, m) => {
 };
 
 /**
- * Создание записи к врачу
- * @param {object} s - конфигурация
- * @param {object} m - парамаетры для записи
- * @param {string} m.birthDate - дата рождения - '1980-01-31'
- * @param {object} m.searchDocument - параметры документа
- * @param {number} m.searchDocument.docTypeId - тип документа - 26 для полиса
- * @param {number} m.searchDocument.docNumber - номер документа
- * @param {string} m.GUID - UUID талона
+ * Создание записи к врачую.
+ * Требуется активное подключение к базе данных.
+ * @param {object} s конфигурация
+ * @param {object} m парамаетры для записи
+ * @param {string} m.birthDate дата рождения - '1980-01-31'
+ * @param {object} m.searchDocument параметры документа
+ * @param {number} m.searchDocument.docTypeId тип документа - 26 для полиса
+ * @param {number} m.searchDocument.docNumber номер документа
+ * @param {string} m.GUID UUID талона
  * @return {Promise|object}
  */
 exports.createVisit = async (s, m) => {
     try {
         let appointment = await appointmentHelper(s);
         let [timeslot, patient] = await Promise.all([
-            connect(s, () => TimeSlot.getByUUID(m.GUID).exec()),
+            TimeSlot.getByUUID(m.GUID).exec(),
             searchIndividual(s, {
                 birthDate: m.birthDate,
                 searchDocument: {
@@ -152,7 +152,7 @@ exports.createVisit = async (s, m) => {
             patient
         });
         let slot = await getSlot(s, { slot: slotId });
-        await connect(s, () => timeslot.updateStatus(slot.status));
+        await timeslot.updateStatus(slot.status);
         return await appointment.getAppointmentNumber(slotId);
     } catch (e) {
         console.error(e);

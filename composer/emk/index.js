@@ -4,7 +4,6 @@ const emd = require('./emd');
 const uuid = require('../mongo/uuid');
 const rmisjs = require('../../index');
 
-const connect = require('../mongo/connect');
 const Document = require('../mongo/model/document');
 const LastSync = require('../mongo/model/lastSync');
 
@@ -47,15 +46,14 @@ module.exports = async s => {
         }
     };
 
-    const findDocument = data =>
-        connect(s, async () => {
-            let doc = await Document.findOne(data).exec();
-            if (!doc) {
-                doc = new Document(data);
-                await doc.save();
-            }
-            return doc._id.toString();
-        });
+    const findDocument = async data => {
+        let doc = await Document.findOne(data).exec();
+        if (!doc) {
+            doc = new Document(data);
+            await doc.save();
+        }
+        return doc._id.toString();
+    };
 
     const syncForm = async form => {
         if (!form) return;
@@ -171,21 +169,18 @@ module.exports = async s => {
         }
     };
 
-    const getLastDate = () =>
-        connect(s, () =>
-            LastSync
-                .find({})
-                .sort({ date: -1 })
-                .limit(1)
-                .exec()
-        ).then(data => data ? data.date : null);
+    const getLastDate = async () => {
+        let data = await LastSync.find({})
+            .sort({ date: -1 })
+            .limit(1)
+            .exec();
+        return data ? data.date : null;
+    };
 
     const setLastDate = async date => {
         let doc = new LastSync({ date });
-        await connect(s, async () => {
-            await LastSync.remove({});
-            await doc.save();
-        });
+        await LastSync.remove({});
+        await doc.save();
     };
 
     return {
