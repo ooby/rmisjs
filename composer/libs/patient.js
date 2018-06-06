@@ -55,6 +55,7 @@ exports.validatePatient = async (s, m) => {
  * @param {Number | String} m.searchDocument.docTypeId тип документа - 26 для полиса
  * @param {Number | String} m.searchDocument.docNumber номер документа
  * @param {String} m.GUID UUID талона
+ * @param {String} [m.patientUid] UID пациента
  * @return {Promise<{} | null>}
  */
 exports.searchVisit = async (s, m) => {
@@ -63,17 +64,13 @@ exports.searchVisit = async (s, m) => {
         if (!timeslot) return '';
         const from = timeslot.from.valueOf();
         const location = timeslot.location.toString();
-        let patient = await searchIndividual(s, {
+        let patient = m.patientUid || await searchIndividual(s, {
             birthDate: m.birthDate,
             searchDocument: m.searchDocument
         });
-        let slots = await getReserve(s, {
-            patient
-        });
+        let slots = await getReserve(s, { patient });
         for (let id of slots.reverse()) {
-            let slot = await getSlot(s, {
-                slot: id
-            });
+            let slot = await getSlot(s, { slot: id });
             if (slot.locationId !== location ||
                 new Date(slot.date).valueOf() !== from
             ) continue;
@@ -100,6 +97,7 @@ exports.searchVisit = async (s, m) => {
  * @param {Number | String} m.searchDocument.docTypeId тип документа - 26 для полиса
  * @param {Number | String} m.searchDocument.docNumber номер документа
  * @param {String} m.GUID UUID талона
+ * @param {String} [m.patientUid] UID пациента
  * @return {Promise<String>}
  */
 exports.deleteVisit = async (s, m) => {
@@ -131,6 +129,7 @@ exports.deleteVisit = async (s, m) => {
  * @param {Number | String} m.searchDocument.docTypeId тип документа - 26 для полиса
  * @param {Number | String} m.searchDocument.docNumber номер документа
  * @param {String} m.GUID UUID талона
+ * @param {String} [m.patientUid] UID пациента
  * @return {Promise<String>}
  */
 exports.createVisit = async (s, m) => {
@@ -138,7 +137,7 @@ exports.createVisit = async (s, m) => {
         let appointment = await appointmentHelper(s);
         let [timeslot, patient] = await Promise.all([
             TimeSlot.getByUUID(m.GUID).exec(),
-            searchIndividual(s, {
+            m.patientUid ? Promise.resolve(m.patientUid) : searchIndividual(s, {
                 birthDate: m.birthDate,
                 searchDocument: {
                     docTypeId: m.searchDocument.docTypeId,
@@ -180,83 +179,6 @@ exports.getVisit = async (s, m) => {
             exports.searchVisit(s, m)
         ]);
         return await appointmentService.getAppointmentNumber(visit.slot.id);
-    } catch (e) {
-        console.error(e);
-        return '';
-    }
-};
-
-/**
- * Получение данных пациента для создания/удаления записи.
- * @param {{}} s Конфигурация
- * @param {String} uid UID пациента
- * @return {Promise<{} | null>}
- */
-exports.getVisitCredentials = async (s, uid) => {
-    try {
-        const documents = await docs(s);
-        let [docNumber, birthDate] = await Promise.all([
-            documents.searchPolis(uid, false),
-            documents.getBirthDate(uid)
-        ]);
-        if (!docNumber || !birthDate) return null;
-        if (!docNumber.number || !birthDate.length) return null;
-        docNumber = docNumber.number;
-        return { docNumber, birthDate };
-    } catch (e) {
-        console.error(e);
-        return null;
-    }
-};
-
-/**
- * Создание записи к врачу.
- * Требуется активное подключение к базе данных.
- * @param {{}} s Конфигурация
- * @param {String} uid UID пациента
- * @param {String} GUID UUID талона
- * @return {Promise<String>}
- */
-exports.createVisitByUID = async (s, uid, GUID) => {
-    try {
-        let data = await exports.getVisitCredentials(s, uid);
-        if (!data) return null;
-        let { docNumber, birthDate } = data;
-        return await exports.createVisit(s, {
-            birthDate,
-            searchDocument: {
-                docTypeId: '26',
-                docNumber
-            },
-            GUID
-        });
-    } catch (e) {
-        console.error(e);
-        return '';
-    }
-};
-
-/**
- * Удаление записи к врачу.
- * Требуется активное подключение к базе данных.
- * @param {{}} s Конфигурация
- * @param {String} uid UID пациента
- * @param {String} GUID UUID талона
- * @return {Promise<String | null>}
- */
-exports.deleteVisitByUID = async (s, uid, GUID) => {
-    try {
-        let data = await exports.getVisitCredentials(s, uid);
-        if (!data) return null;
-        let { docNumber, birthDate } = data;
-        return await exports.deleteVisit(s, {
-            birthDate,
-            searchDocument: {
-                docTypeId: '26',
-                docNumber
-            },
-            GUID
-        });
     } catch (e) {
         console.error(e);
         return '';
