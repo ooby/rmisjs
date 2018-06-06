@@ -25,7 +25,6 @@ const {
 const getDetailedEmployees = require('./employee').getDetailedEmployees;
 const moment = require('moment');
 const uuid = require('uuid/v4');
-const connect = require('../mongo/connect');
 const TimeSlot = require('../mongo/model/timeslot');
 
 /**
@@ -89,7 +88,8 @@ const getCodeByName = (dict, name) => {
 
 /**
  * Формирует из ресурсов коллекцию детализированных данных
- * для отправки в инетграционные сервисы, возвращает Promise
+ * для отправки в инетграционные сервисы, возвращает Promise.
+ * Требуется активное подключение к базе данных.
  * @param {object} s - конфигурация
  * @param {object} m - справочник MDP365
  * @param {object} c - справочник C33001
@@ -97,9 +97,7 @@ const getCodeByName = (dict, name) => {
  */
 exports.getDetailedLocations = async (s, m, c) => {
     try {
-        let data = await connect(s, () =>
-            TimeSlot.getDetailedLocationsBySource('MIS')
-        );
+        let data = await TimeSlot.getDetailedLocationsBySource('MIS');
         for (let location of data) {
             for (let interval of location.interval) {
                 interval.date = dateFormat(interval.date);

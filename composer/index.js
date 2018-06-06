@@ -23,7 +23,9 @@ const {
     createVisit,
     deleteVisit,
     searchVisit,
-    validatePatient
+    validatePatient,
+    createVisitByUID,
+    deleteVisitByUID
 } = require('./libs/patient');
 const {
     getLocations,
@@ -35,6 +37,7 @@ const {
 } = require('./libs/department');
 const snilsOms = require('./sync/snilsOms');
 const cased = require('./emk/cases');
+const connection = require('./mongo/connection');
 
 module.exports = s => {
     return {
@@ -47,7 +50,9 @@ module.exports = s => {
         getSchedules: d => getSchedules(s, d),
         validatePatient: d => validatePatient(s, d),
         createVisit: d => createVisit(s, d),
+        createVisitByUID: (uid, GUID) => createVisitByUID(s, uid, GUID),
         deleteVisit: d => deleteVisit(s, d),
+        deleteVisitByUID: (uid, GUID) => deleteVisitByUID(s, uid, GUID),
         searchVisit: d => searchVisit(s, d),
         getVisit: d => getVisit(s, d),
         syncDepartments: d => syncDepartments(s, d),
@@ -63,6 +68,8 @@ module.exports = s => {
         mongoTimeSlots: () => mongoTimeSlots(s),
         mongoServices: () => mongoServices(s),
         mongoAppCache: () => mongoAppCache(s),
+        mongoConnect: () => connection.open(s),
+        mongoDisconnect: () => connection.close(),
         syncEmk: () => emk(s).then(p => p.syncAll()),
         getCase: d => cased(s).then(p => p.getCase(d)),
         getProtocol: d => getProtocol(s, d),
