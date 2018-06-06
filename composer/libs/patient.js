@@ -20,16 +20,18 @@ const {
 const appointmentHelper = require('./appointmentHelper');
 const moment = require('moment');
 const TimeSlot = require('../mongo/model/timeslot');
+const docs = require('./document');
 
 /**
  * Валидация пациента о наличии и прикреплении в больнице
- * @param {object} s - конфигурация
- * @param {object} m - параметры поиска
- * @param {string} m.birthDate - дата рождения - '1980-01-31'
- * @param {object} m.searchDocument - параметры документа
- * @param {number} m.searchDocument.docTypeId - тип документа - 26 для полиса
- * @param {number} m.searchDocument.docNumber - номер документа
- * @return {Promise|object}
+ * @param {{}} s конфигурация
+ * @param {Object} m парамаетры для записи
+ * @param {String} m.birthDate дата рождения - '1980-01-31'
+ * @param {Object} m.searchDocument параметры документа
+ * @param {Number | String} m.searchDocument.docTypeId тип документа - 26 для полиса
+ * @param {Number | String} m.searchDocument.docNumber номер документа
+ * @param {String} m.GUID UUID талона
+ * @return {Promise<{} | null>}
  */
 exports.validatePatient = async (s, m) => {
     try {
@@ -46,14 +48,14 @@ exports.validatePatient = async (s, m) => {
 /**
  * Поиск записи к врачу.
  * Требуется активное подключение к базе данных.
- * @param {object} s - конфигурация
- * @param {object} m - парамаетры для записи
- * @param {string} m.birthDate - дата рождения - '1980-01-31'
- * @param {object} m.searchDocument - параметры документа
- * @param {number} m.searchDocument.docTypeId - тип документа - 26 для полиса
- * @param {number} m.searchDocument.docNumber - номер документа
- * @param {string} m.GUID - UUID талона
- * @return {Promise|object}
+ * @param {{}} s конфигурация
+ * @param {Object} m парамаетры для записи
+ * @param {String} m.birthDate дата рождения - '1980-01-31'
+ * @param {Object} m.searchDocument параметры документа
+ * @param {Number | String} m.searchDocument.docTypeId тип документа - 26 для полиса
+ * @param {Number | String} m.searchDocument.docNumber номер документа
+ * @param {String} m.GUID UUID талона
+ * @return {Promise<{} | null>}
  */
 exports.searchVisit = async (s, m) => {
     try {
@@ -91,14 +93,14 @@ exports.searchVisit = async (s, m) => {
 /**
  * Удаление записи к врачу.
  * Требуется активное подключение к базе данных.
- * @param {object} s - конфигурация
- * @param {object} m - парамаетры для записи
- * @param {string} m.birthDate - дата рождения - '1980-01-31'
- * @param {object} m.searchDocument - параметры документа
- * @param {number} m.searchDocument.docTypeId - тип документа - 26 для полиса
- * @param {number} m.searchDocument.docNumber - номер документа
- * @param {string} m.GUID - UUID талона
- * @return {Promise|object}
+ * @param {{}} s конфигурация
+ * @param {Object} m парамаетры для записи
+ * @param {String} m.birthDate дата рождения - '1980-01-31'
+ * @param {Object} m.searchDocument параметры документа
+ * @param {Number | String} m.searchDocument.docTypeId тип документа - 26 для полиса
+ * @param {Number | String} m.searchDocument.docNumber номер документа
+ * @param {String} m.GUID UUID талона
+ * @return {Promise<String>}
  */
 exports.deleteVisit = async (s, m) => {
     try {
@@ -120,16 +122,16 @@ exports.deleteVisit = async (s, m) => {
 };
 
 /**
- * Создание записи к врачую.
+ * Создание записи к врачу.
  * Требуется активное подключение к базе данных.
- * @param {object} s конфигурация
- * @param {object} m парамаетры для записи
- * @param {string} m.birthDate дата рождения - '1980-01-31'
- * @param {object} m.searchDocument параметры документа
- * @param {number} m.searchDocument.docTypeId тип документа - 26 для полиса
- * @param {number} m.searchDocument.docNumber номер документа
- * @param {string} m.GUID UUID талона
- * @return {Promise|object}
+ * @param {{}} s конфигурация
+ * @param {Object} m парамаетры для записи
+ * @param {String} m.birthDate дата рождения - '1980-01-31'
+ * @param {Object} m.searchDocument параметры документа
+ * @param {Number | String} m.searchDocument.docTypeId тип документа - 26 для полиса
+ * @param {Number | String} m.searchDocument.docNumber номер документа
+ * @param {String} m.GUID UUID талона
+ * @return {Promise<String>}
  */
 exports.createVisit = async (s, m) => {
     try {
@@ -162,14 +164,14 @@ exports.createVisit = async (s, m) => {
 
 /**
  * Получение номера талона
- * @param {object} s - конфигурация
- * @param {object} m - парамаетры для записи
- * @param {string} m.birthDate - дата рождения - '1980-01-31'
- * @param {object} m.searchDocument - параметры документа
- * @param {number} m.searchDocument.docTypeId - тип документа - 26 для полиса
- * @param {number} m.searchDocument.docNumber - номер документа
- * @param {string} m.GUID - UUID талона
- * @return {Promise|object}
+ * @param {{}} s конфигурация
+ * @param {Object} m парамаетры для записи
+ * @param {String} m.birthDate дата рождения - '1980-01-31'
+ * @param {Object} m.searchDocument параметры документа
+ * @param {Number | String} m.searchDocument.docTypeId тип документа - 26 для полиса
+ * @param {Number | String} m.searchDocument.docNumber номер документа
+ * @param {String} m.GUID UUID талона
+ * @return {Promise<String>}
  */
 exports.getVisit = async (s, m) => {
     try {
@@ -178,6 +180,83 @@ exports.getVisit = async (s, m) => {
             exports.searchVisit(s, m)
         ]);
         return await appointmentService.getAppointmentNumber(visit.slot.id);
+    } catch (e) {
+        console.error(e);
+        return '';
+    }
+};
+
+/**
+ * Получение данных пациента для создания/удаления записи.
+ * @param {{}} s Конфигурация
+ * @param {String} uid UID пациента
+ * @return {Promise<{} | null>}
+ */
+exports.getVisitCredentials = async (s, uid) => {
+    try {
+        const documents = await docs(s);
+        let [docNumber, birthDate] = await Promise.all([
+            documents.searchPolis(uid, false),
+            documents.getBirthDate(uid)
+        ]);
+        if (!docNumber || !birthDate) return null;
+        if (!docNumber.number || !birthDate.length) return null;
+        docNumber = docNumber.number;
+        return { docNumber, birthDate };
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+};
+
+/**
+ * Создание записи к врачу.
+ * Требуется активное подключение к базе данных.
+ * @param {{}} s Конфигурация
+ * @param {String} uid UID пациента
+ * @param {String} GUID UUID талона
+ * @return {Promise<String>}
+ */
+exports.createVisitByUID = async (s, uid, GUID) => {
+    try {
+        let data = await exports.getVisitCredentials(s, uid);
+        if (!data) return null;
+        let { docNumber, birthDate } = data;
+        return await exports.createVisit(s, {
+            birthDate,
+            searchDocument: {
+                docTypeId: '26',
+                docNumber
+            },
+            GUID
+        });
+    } catch (e) {
+        console.error(e);
+        return '';
+    }
+};
+
+/**
+ * Удаление записи к врачу.
+ * Требуется активное подключение к базе данных.
+ * @param {{}} s Конфигурация
+ * @param {String} uid UID пациента
+ * @param {String} GUID UUID талона
+ * @return {Promise<String | null>}
+ */
+exports.deleteVisitByUID = async (s, uid, GUID) => {
+    try {
+        let data = await exports.getVisitCredentials(s, uid);
+        if (!data) return null;
+        let { docNumber, birthDate } = data;
+        return await exports.deleteVisit(s, {
+            birthDate,
+            searchDocument: {
+                docTypeId: '26',
+                docNumber
+            },
+            GUID
+        });
     } catch (e) {
         console.error(e);
         return '';

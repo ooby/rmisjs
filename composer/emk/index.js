@@ -97,34 +97,35 @@ module.exports = async s => {
             mcod: s.er14.muCode.toString(),
             Date: moment(dateFromObjectId(id)).format('YYYY-MM-DD[T]HH:mm:ss'),
             CaseBegin: moment(data.CaseBegin).format('YYYY-MM-DD'),
+            CaseEnd: null,
             DocumentId: id,
             Type: {
-                '@version': '1.0',
-                '$': uuid.getUUID(data.Type.buffer)
+                '$': uuid.getUUID(data.Type.buffer),
+                '@version': '1.0'
             },
             ProfessionalRole: {
-                '@version': '1.0',
-                '$': 'DOC'
+                '$': 'DOC',
+                '@version': '1.0'
             },
             Confdentiality: {
-                '@version': '1.0',
-                '$': 'V'
+                '$': 'V',
+                '@version': '1.0'
             },
             PatientConfidentiality: {
-                '@version': '1.0',
-                '$': 'R'
+                '$': 'R',
+                '@version': '1.0'
             },
             AssigneeConfidentiality: {
-                '@version': '1.0',
-                '$': 'R'
+                '$': 'R',
+                '@version': '1.0'
             },
             ProfessionalPost: {
-                '@version': '1.0',
-                '$': postCode['_text']
+                '$': postCode['_text'],
+                '@version': '1.0'
             },
             ProfessionalSpec: {
-                '@version': '1.0',
-                '$': specialityCode['_text']
+                '$': specialityCode['_text'],
+                '@version': '1.0'
             },
             StructuredBody: Buffer.from(emds.convertToXml(form)).toString('base64')
         });
