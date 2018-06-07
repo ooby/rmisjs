@@ -107,7 +107,7 @@ module.exports = async s => {
                 '$': 'DOC',
                 '@version': '1.0'
             },
-            Confdentiality: {
+            Confidentiality: {
                 '$': 'V',
                 '@version': '1.0'
             },
