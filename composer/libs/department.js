@@ -26,11 +26,8 @@ exports.getPortalDepartments = async s => {
             let k = await getDepartment(s, i);
             if (!k.portalDepartment) continue;
             if (!k.portalDepartment.isVisible) continue;
-            result.push(
-                Object.assign(k, {
-                    id: i
-                })
-            );
+            k.id = i;
+            result.push(k);
         }
         return result;
     } catch (e) {

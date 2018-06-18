@@ -35,7 +35,9 @@ const DocumentSchema = new Schema({
     },
     CaseEnd: {
         type: Date
-    }
+    },
+    UploadDate: Date,
+    ErrorText: String
 });
 
 DocumentSchema.index({
@@ -44,8 +46,6 @@ DocumentSchema.index({
     CaseBegin: 1,
     PatientSnils: 1,
     ProfessionalSnils: 1,
-}, {
-        unique: true
-    });
+}, { unique: true });
 
 module.exports = mongoose.model('Document', DocumentSchema);

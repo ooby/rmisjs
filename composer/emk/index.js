@@ -56,90 +56,104 @@ module.exports = async s => {
     };
 
     const syncForm = async form => {
-        if (!form) return;
-        if (Object.values(form).indexOf(null) > -1) return;
-        let doctor = form.doctors.find(i => !!i.specialityCode && !!i.postCode);
-        if (!doctor) return null;
-        let {
-            specialityCode,
-            postCode
-        } = doctor;
-        await Promise.all(
-            form.doctors
-                .map(doctor => {
-                    delete doctor.postCode;
-                    delete doctor.specialityCode;
-                    return syncIndividual(prof, doctor);
-                })
-                .concat(syncIndividual(ptnt, form.patient))
-        );
-        let data = {
-            Type: _types[form.root],
-            caseId: form.caseId,
-            PatientSnils: form.patient.snils.replace(/[-\s]/g, ''),
-            ProfessionalSnils: doctor.snils.replace(/[-\s]/g, ''),
-            CardNumber: form.patientId,
-            CaseBegin: form.date
-        };
-        let id = await findDocument(data);
-        let existing = null;
+        let error = null;
+        let id;
         try {
-            existing = await docs.search({
-                DocumentMcod: s.er14.muCode,
-                PatientSnils: data.PatientSnils
-            });
-        } catch (e) {
-            if (!e) throw e;
-            if (e.code !== -3) throw e;
-        }
-        delete data.caseId;
-        Object.assign(data, {
-            mcod: s.er14.muCode.toString(),
-            Date: moment(dateFromObjectId(id)).format('YYYY-MM-DD[T]HH:mm:ss'),
-            CaseBegin: moment(data.CaseBegin).format('YYYY-MM-DD'),
-            CaseEnd: null,
-            DocumentId: id,
-            Type: {
-                '$': uuid.getUUID(data.Type.buffer),
-                '@version': '1.0'
-            },
-            ProfessionalRole: {
-                '$': 'DOC',
-                '@version': '1.0'
-            },
-            Confidentiality: {
-                '$': 'V',
-                '@version': '1.0'
-            },
-            PatientConfidentiality: {
-                '$': 'R',
-                '@version': '1.0'
-            },
-            AssigneeConfidentiality: {
-                '$': 'R',
-                '@version': '1.0'
-            },
-            ProfessionalPost: {
-                '$': postCode['_text'],
-                '@version': '1.0'
-            },
-            ProfessionalSpec: {
-                '$': specialityCode['_text'],
-                '@version': '1.0'
-            },
-            StructuredBody: Buffer.from(emds.convertToXml(form)).toString('base64')
-        });
-        if (existing) {
-            existing = (
-                [].concat(existing.DocumentList)
-                .find(i =>
-                    i.documentId === data.documentId &&
-                    i.Type['$'].toUpperCase() === data.Type['$'].toUpperCase()
-                )
+            if (!form) return;
+            if (Object.values(form).indexOf(null) > -1) return;
+            let doctor = form.doctors.find(i => !!i.specialityCode && !!i.postCode);
+            if (!doctor) return null;
+            let {
+                specialityCode,
+                postCode
+            } = doctor;
+            await Promise.all(
+                form.doctors
+                    .map(doctor => {
+                        delete doctor.postCode;
+                        delete doctor.specialityCode;
+                        return syncIndividual(prof, doctor);
+                    })
+                    .concat(syncIndividual(ptnt, form.patient))
             );
-            if (existing) data.Id = existing.Id;
+            let data = {
+                Type: _types[form.root],
+                caseId: form.caseId,
+                PatientSnils: form.patient.snils.replace(/[-\s]/g, ''),
+                ProfessionalSnils: doctor.snils.replace(/[-\s]/g, ''),
+                CardNumber: form.patientId,
+                CaseBegin: form.date
+            };
+            id = await findDocument(data);
+            let existing = null;
+            try {
+                existing = await docs.search({
+                    DocumentMcod: s.er14.muCode,
+                    PatientSnils: data.PatientSnils
+                });
+            } catch (e) {
+                if (!e) throw e;
+                if (e.code !== -3) throw e;
+            }
+            delete data.caseId;
+            Object.assign(data, {
+                mcod: s.er14.muCode.toString(),
+                Date: moment(dateFromObjectId(id)).format('YYYY-MM-DD[T]HH:mm:ss'),
+                CaseBegin: moment(data.CaseBegin).format('YYYY-MM-DD'),
+                CaseEnd: null,
+                DocumentId: id,
+                Type: {
+                    '$': uuid.getUUID(data.Type.buffer),
+                    '@version': '1.0'
+                },
+                ProfessionalRole: {
+                    '$': 'DOC',
+                    '@version': '1.0'
+                },
+                Confidentiality: {
+                    '$': 'V',
+                    '@version': '1.0'
+                },
+                PatientConfidentiality: {
+                    '$': 'R',
+                    '@version': '1.0'
+                },
+                AssigneeConfidentiality: {
+                    '$': 'R',
+                    '@version': '1.0'
+                },
+                ProfessionalPost: {
+                    '$': postCode['_text'],
+                    '@version': '1.0'
+                },
+                ProfessionalSpec: {
+                    '$': specialityCode['_text'],
+                    '@version': '1.0'
+                },
+                StructuredBody: Buffer.from(emds.convertToXml(form)).toString('base64')
+            });
+            if (existing) {
+                existing = (
+                    [].concat(existing.DocumentList)
+                    .find(i =>
+                        i.documentId === data.documentId &&
+                        i.Type['$'].toUpperCase() === data.Type['$'].toUpperCase()
+                    )
+                );
+                if (existing) data.Id = existing.Id;
+            }
+            await docs.publish(data);
+        } catch (e) {
+            error = e;
+            console.error(e);
+        } finally {
+            await Document.findOneAndUpdate({ _id: id }, {
+                $set: {
+                    UploadDate: new Date(),
+                    ErrorText: JSON.stringify(error)
+                }
+            });
         }
-        return await docs.publish(data);
     };
 
     const syncPatient = async (patient, lastDate) => {
