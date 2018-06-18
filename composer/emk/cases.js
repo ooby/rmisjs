@@ -1,4 +1,3 @@
-const getProtocol = require('../libs/protocol');
 const document = require('../libs/document');
 const refbook = require('../libs/refbook');
 const rmisjs = require('../../index');
@@ -8,14 +7,6 @@ const url = require('url');
 
 const wsdl = '/carbondss/services/MedbaseCases/MedbaseCases.SecureSOAP11Endpoint.xml';
 const endpoint = '/carbondss/services/MedbaseCases.SOAP11Endpoint/';
-
-const match = (pattern, arr) => {
-    for (let item of [].concat(arr)) {
-        if (!pattern.test(item)) continue;
-        return item;
-    }
-    return null;
-};
 
 const deseaseTypeMatch = (id, injury) => {
     if (parseInt(injury) !== 0) return 9;

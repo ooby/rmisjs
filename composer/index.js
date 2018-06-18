@@ -23,9 +23,7 @@ const {
     createVisit,
     deleteVisit,
     searchVisit,
-    validatePatient,
-    createVisitByUID,
-    deleteVisitByUID
+    validatePatient
 } = require('./libs/patient');
 const {
     getLocations,
@@ -50,9 +48,7 @@ module.exports = s => {
         getSchedules: d => getSchedules(s, d),
         validatePatient: d => validatePatient(s, d),
         createVisit: d => createVisit(s, d),
-        createVisitByUID: (uid, GUID) => createVisitByUID(s, uid, GUID),
         deleteVisit: d => deleteVisit(s, d),
-        deleteVisitByUID: (uid, GUID) => deleteVisitByUID(s, uid, GUID),
         searchVisit: d => searchVisit(s, d),
         getVisit: d => getVisit(s, d),
         syncDepartments: d => syncDepartments(s, d),
