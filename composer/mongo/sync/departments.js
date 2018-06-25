@@ -1,4 +1,4 @@
-const getPortalDepartments = require('../../libs/department').getPortalDepartments;
+const { getPortalDepartments } = require('../../libs/department');
 const Department = require('../model/department');
 
 /**

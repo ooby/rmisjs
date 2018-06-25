@@ -1,4 +1,4 @@
-const empFormat = require('./format').empFormat;
+const { empFormat } = require('./format');
 const rmisjs = require('../../index');
 
 exports.syncEmployees = async (s, d) => {

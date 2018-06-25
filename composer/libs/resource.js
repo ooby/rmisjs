@@ -1,30 +1,11 @@
 const ss = require('string-similarity');
 const {
     dateFormat,
-    createDates,
-    isSnils,
-    snils,
-    getService,
-    getDepartment,
-    getDocument,
-    getEmployee,
-    getEmployees,
-    getEmployeePosition,
-    getEmployeeSpecialities,
-    getIndividual,
-    getIndividualDocuments,
-    getLocation,
-    getLocations,
-    getRefbook,
     getRefbookList,
-    getRoom,
-    getTimes,
     getVersionList
 } = require('./collect');
 
-const getDetailedEmployees = require('./employee').getDetailedEmployees;
 const moment = require('moment');
-const uuid = require('uuid/v4');
 const TimeSlot = require('../mongo/model/timeslot');
 
 /**
