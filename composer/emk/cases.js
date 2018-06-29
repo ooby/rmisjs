@@ -524,6 +524,11 @@ module.exports = async s => {
         };
     };
 
+    const parseCaseEnd = records =>
+        records.map(i => i.admissionDate)
+            .sort((a, b) => a > b)
+            .pop();
+
     const getForms = async (patientUid, lastDate) => {
         const cases = await getCase(
             Object.assign({
@@ -558,7 +563,8 @@ module.exports = async s => {
                 let meta = {
                     patientId: patientUid,
                     caseId: thecase.id,
-                    date: moment(thecase.createdDate, 'YYYY-MM-DDZ').toDate()
+                    date: moment(thecase.createdDate, 'YYYY-MM-DDZ').toDate(),
+                    end: moment(parseCaseEnd(thecase.records), 'YYYY-MM-DDZ').toDate()
                 };
                 let data;
                 try {
