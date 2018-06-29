@@ -525,9 +525,7 @@ module.exports = async s => {
     };
 
     const parseCaseEnd = records =>
-        records.map(i => i.admissionDate)
-            .sort((a, b) => a > b)
-            .pop();
+        records.map(i => i.admissionDate).sort().pop();
 
     const getForms = async (patientUid, lastDate) => {
         const cases = await getCase(
