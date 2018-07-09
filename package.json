@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "engines": {
     "node": ">8.0.0"
   },
@@ -15,15 +15,8 @@
     "test": "test"
   },
   "scripts": {
-    "precommit": "lint-staged",
     "test": "mocha test --timeout 100000",
     "debug": "node ./debug"
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "git add"
-    ]
   },
   "repository": {
     "type": "git",
@@ -57,7 +50,6 @@
     "chai": "^4.1.2",
     "chai-http": "^4.0.0",
     "husky": "^0.14.3",
-    "lint-staged": "^7.2.0",
     "mocha": "^5.2.0"
   }
 }
