@@ -82,7 +82,8 @@ module.exports = async s => {
                 PatientSnils: form.patient.snils.replace(/[-\s]/g, ''),
                 ProfessionalSnils: doctor.snils.replace(/[-\s]/g, ''),
                 CardNumber: form.patientId,
-                CaseBegin: form.date
+                CaseBegin: form.date,
+                CaseEnd: form.end
             };
             id = await findDocument(data);
             let existing = null;
@@ -100,7 +101,7 @@ module.exports = async s => {
                 mcod: s.er14.muCode.toString(),
                 Date: moment(dateFromObjectId(id)).format('YYYY-MM-DD[T]HH:mm:ss'),
                 CaseBegin: moment(data.CaseBegin).format('YYYY-MM-DD'),
-                CaseEnd: null,
+                CaseEnd: moment(data.CaseEnd).format('YYYY-MM-DD'),
                 DocumentId: id,
                 Type: {
                     '$': uuid.getUUID(data.Type.buffer),
