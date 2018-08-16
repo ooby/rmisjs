@@ -2,7 +2,7 @@ const createClient = require('../client');
 const wrap = require('../../libs/wrap');
 
 module.exports = async (s, q) => {
-    let c = await createClient(s, 'individual');
+    let c = await q.push(() => createClient(s, 'individual'));
     return {
         describe: () => c.describe(),
         getDocument: d => wrap(q, () => c.getDocumentAsync(d)),

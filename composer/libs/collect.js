@@ -1,8 +1,5 @@
 const moment = require('moment');
 const rmisjs = require('../../index');
-const Queue = require('../../libs/queue');
-
-const q = new Queue(1);
 
 /**
  * Получение сведений об услуге
@@ -10,7 +7,7 @@ const q = new Queue(1);
  * @param {Number} serviceId - ID услуги в РМИС
  * @return {Promise<Object>} - сведения об услуге
  */
-exports.getService = (s, serviceId) => q.push(async () => {
+exports.getService = async (s, serviceId) => {
     try {
         const services = await rmisjs(s).rmis.services();
         let data = await services.getService({
@@ -21,20 +18,20 @@ exports.getService = (s, serviceId) => q.push(async () => {
         console.error(e);
         return e;
     }
-});
+};
 
 /**
  * Получение списка услуг
  * @param {Object} s - конфигурация
  * @return {Promise<Object>} - список услуг
  */
-exports.getServices = (s) => q.push(async () => {
+exports.getServices = async (s) => {
     const services = await rmisjs(s).rmis.services();
     let data = await services.getServices({
         clinic: s.rmis.clinicId
     });
     return data.services;
-});
+};
 
 /**
  * Создание талона по данным пациента
@@ -42,7 +39,7 @@ exports.getServices = (s) => q.push(async () => {
  * @param {object} d - данные пациента
  * @return {object}
  */
-exports.postReserve = (s, d) => q.push(async () => {
+exports.postReserve = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.postReserve(d);
@@ -52,7 +49,7 @@ exports.postReserve = (s, d) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Получение списка записей по данным пациента
@@ -60,7 +57,7 @@ exports.postReserve = (s, d) => q.push(async () => {
  * @param {object} d - данные пациента
  * @return {object}
  */
-exports.getReserve = (s, d) => q.push(async () => {
+exports.getReserve = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.getReserve(d);
@@ -70,7 +67,7 @@ exports.getReserve = (s, d) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Получение информации талона по id
@@ -78,7 +75,7 @@ exports.getReserve = (s, d) => q.push(async () => {
  * @param {object} d - объект слота
  * @return {object}
  */
-exports.getSlot = (s, d) => q.push(async () => {
+exports.getSlot = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.getSlot(d);
@@ -88,7 +85,7 @@ exports.getSlot = (s, d) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Освобождение талона по отказу пациента
@@ -96,7 +93,7 @@ exports.getSlot = (s, d) => q.push(async () => {
  * @param {object} d - id слота
  * @return {object}
  */
-exports.deleteSlotByRefusal = (s, d) => q.push(async () => {
+exports.deleteSlotByRefusal = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.deleteSlot({
@@ -108,7 +105,7 @@ exports.deleteSlotByRefusal = (s, d) => q.push(async () => {
         console.error(e);
         return r;
     }
-});
+};
 
 /**
  * Создание записи пациента по номеру физлица
@@ -116,7 +113,7 @@ exports.deleteSlotByRefusal = (s, d) => q.push(async () => {
  * @param {object} d - данные пациента
  * @return {object}
  */
-exports.createPatient = (s, d) => q.push(async () => {
+exports.createPatient = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.patient();
         r = await r.createPatient(d);
@@ -126,7 +123,7 @@ exports.createPatient = (s, d) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Получение пациента по номеру физлица
@@ -134,7 +131,7 @@ exports.createPatient = (s, d) => q.push(async () => {
  * @param {object} id - идентификатор физического лица
  * @return {object}
  */
-exports.getPatient = (s, id) => q.push(async () => {
+exports.getPatient = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.patient();
         r = await r.getPatient(id);
@@ -144,7 +141,7 @@ exports.getPatient = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Получение информации о прикреплениях пациента
@@ -152,7 +149,7 @@ exports.getPatient = (s, id) => q.push(async () => {
  * @param {object} id - идентификатор физического лица
  * @return {object}
  */
-exports.getPatientRegs = (s, id) => q.push(async () => {
+exports.getPatientRegs = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.patient();
         r = await r.getPatientRegs(id);
@@ -162,7 +159,7 @@ exports.getPatientRegs = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Получение информации о прикреплении пациента
@@ -170,7 +167,7 @@ exports.getPatientRegs = (s, id) => q.push(async () => {
  * @param {object} id - идентификатор прикрепления
  * @return {object}
  */
-exports.getPatientReg = (s, id) => q.push(async () => {
+exports.getPatientReg = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.patient();
         r = await r.getPatientReg(id);
@@ -179,7 +176,7 @@ exports.getPatientReg = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Поиск физического лица по параметрам
@@ -187,7 +184,7 @@ exports.getPatientReg = (s, id) => q.push(async () => {
  * @param {object} params - параметры поиска
  * @return {object}
  */
-exports.searchIndividual = (s, params) => q.push(async () => {
+exports.searchIndividual = async (s, params) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.searchIndividual(params);
@@ -197,7 +194,7 @@ exports.searchIndividual = (s, params) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает подразделение по идентификатору
@@ -205,7 +202,7 @@ exports.searchIndividual = (s, params) => q.push(async () => {
  * @param {number} id - идентификатор подразделения
  * @return {object}
  */
-exports.getDepartment = (s, id) => q.push(async () => {
+exports.getDepartment = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.department();
         r = await r.getDepartment({
@@ -217,14 +214,14 @@ exports.getDepartment = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает список подразделений
  * @param {object} s - конфигурация
  * @return {object}
  */
-exports.getDepartments = s => q.push(async () => {
+exports.getDepartments = async s => {
     try {
         return {
             department: ['3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '44', '46', '47', '48', '50', '51', '53', '54', '55']
@@ -238,7 +235,7 @@ exports.getDepartments = s => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает справочник по коду и версии
@@ -246,7 +243,7 @@ exports.getDepartments = s => q.push(async () => {
  * @param {object} id - объект с кодом и версией справочника
  * @return {object}
  */
-exports.getRefbook = (s, id) => q.push(async () => {
+exports.getRefbook = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.refbook();
         r = await r.getRefbook({
@@ -258,14 +255,14 @@ exports.getRefbook = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает список справочников
  * @param {object} s - конфигурация
  * @return {object}
  */
-exports.getRefbookList = s => q.push(async () => {
+exports.getRefbookList = async s => {
     try {
         let r = await rmisjs(s).rmis.refbook();
         r = await r.getRefbookList();
@@ -274,7 +271,7 @@ exports.getRefbookList = s => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает список версий справочника по коду
@@ -282,7 +279,7 @@ exports.getRefbookList = s => q.push(async () => {
  * @param {string} id - код справочника
  * @return {object}
  */
-exports.getVersionList = (s, id) => q.push(async () => {
+exports.getVersionList = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.refbook();
         r = await r.getVersionList({
@@ -294,7 +291,7 @@ exports.getVersionList = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает ресурс по идентификатору
@@ -302,7 +299,7 @@ exports.getVersionList = (s, id) => q.push(async () => {
  * @param {string} id - идентификатор ресурса
  * @return {object}
  */
-exports.getLocation = (s, id) => q.push(async () => {
+exports.getLocation = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.resource();
         r = await r.getLocation({
@@ -314,14 +311,14 @@ exports.getLocation = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает список идентификаторов ресурсов
  * @param {object} s - конфигурация
  * @return {object}
  */
-exports.getLocations = s => q.push(async () => {
+exports.getLocations = async s => {
     try {
         let r = await rmisjs(s).rmis.resource();
         r = await r.getLocations({
@@ -331,7 +328,7 @@ exports.getLocations = s => q.push(async () => {
     } catch (e) {
         return e;
     }
-});
+};
 
 /**
  * Запрашивает и возвращает список идентификаторов ресурсов
@@ -339,7 +336,7 @@ exports.getLocations = s => q.push(async () => {
  * @param {object} d - параметры запроса
  * @return {object}
  */
-exports.getLocationsWithOptions = (s, d) => q.push(async () => {
+exports.getLocationsWithOptions = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.resource();
         r = await r.getLocations(d);
@@ -347,7 +344,7 @@ exports.getLocationsWithOptions = (s, d) => q.push(async () => {
     } catch (e) {
         return e;
     }
-});
+};
 
 /**
  * Запрашивает и возвращает список таймслотов для расписания
@@ -357,7 +354,7 @@ exports.getLocationsWithOptions = (s, d) => q.push(async () => {
  * @param {date} date - дата расписания
  * @return {object}
  */
-exports.getTimes = (s, id, date) => q.push(async () => {
+exports.getTimes = async (s, id, date) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.getTimes({
@@ -369,9 +366,9 @@ exports.getTimes = (s, id, date) => q.push(async () => {
     } catch (e) {
         return e;
     }
-});
+};
 
-exports.getReserveFiltered = (s, date, location) => q.push(async () => {
+exports.getReserveFiltered = async (s, date, location) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.getReserveFiltered({
@@ -384,7 +381,7 @@ exports.getReserveFiltered = (s, date, location) => q.push(async () => {
     } catch (e) {
         return e;
     }
-});
+};
 
 /**
  * Запрашивает и возвращает кабинет приема по идентификатору
@@ -392,7 +389,7 @@ exports.getReserveFiltered = (s, date, location) => q.push(async () => {
  * @param {number} id - идентификатор кабинета приема
  * @return {object}
  */
-exports.getRoom = (s, id) => q.push(async () => {
+exports.getRoom = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.room();
         r = await r.getRoom({
@@ -404,14 +401,14 @@ exports.getRoom = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает список идентификаторов кабинетов приема
  * @param {object} s - конфигурация
  * @return {object}
  */
-exports.getRooms = s => q.push(async () => {
+exports.getRooms = async s => {
     try {
         let r = await rmisjs(s).rmis.room();
         r = await r.getRooms({
@@ -421,7 +418,7 @@ exports.getRooms = s => q.push(async () => {
     } catch (e) {
         return e;
     }
-});
+};
 
 /**
  * Запрашивает и возвращает сотрудника по идентификатору
@@ -429,7 +426,7 @@ exports.getRooms = s => q.push(async () => {
  * @param {number} id - идентификатор сотрудника
  * @return {object}
  */
-exports.getEmployee = (s, id) => q.push(async () => {
+exports.getEmployee = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployee({
@@ -441,14 +438,14 @@ exports.getEmployee = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает список идентификаторов сотрудников
  * @param {object} s - конфигурация
  * @return {object}
  */
-exports.getEmployees = s => q.push(async () => {
+exports.getEmployees = async s => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployees({
@@ -458,7 +455,7 @@ exports.getEmployees = s => q.push(async () => {
     } catch (e) {
         return e;
     }
-});
+};
 
 /**
  * Запрышивает и возвращает сведения о должности
@@ -466,7 +463,7 @@ exports.getEmployees = s => q.push(async () => {
  * @param {Number} id - идентификатор должности
  * @return {Object} - сведения о должности
  */
-exports.getPosition = (s, id) => q.push(async () => {
+exports.getPosition = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getPosition({
@@ -477,7 +474,7 @@ exports.getPosition = (s, id) => q.push(async () => {
     } catch (e) {
         return e;
     }
-});
+};
 
 /**
  * Запрашивает и возвращает должность сотрудника по идентификатору должности
@@ -485,7 +482,7 @@ exports.getPosition = (s, id) => q.push(async () => {
  * @param {number} id - идентификатор должности сотрудника
  * @return {object}
  */
-exports.getEmployeePosition = (s, id) => q.push(async () => {
+exports.getEmployeePosition = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployeePosition({
@@ -497,7 +494,7 @@ exports.getEmployeePosition = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает список идентификаторов должностей сотрудника
@@ -506,7 +503,7 @@ exports.getEmployeePosition = (s, id) => q.push(async () => {
  * @param {number} id - идентификатор сотрудника
  * @return {object}
  */
-exports.getEmployeePositions = (s, id) => q.push(async () => {
+exports.getEmployeePositions = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployeePositions({
@@ -517,7 +514,7 @@ exports.getEmployeePositions = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает список идентификаторов специальностей сотрудника
@@ -526,7 +523,7 @@ exports.getEmployeePositions = (s, id) => q.push(async () => {
  * @param {number} id - идентификатор сотрудника
  * @return {object}
  */
-exports.getEmployeeSpecialities = (s, id) => q.push(async () => {
+exports.getEmployeeSpecialities = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.employee();
         r = await r.getEmployeeSpecialities({
@@ -537,7 +534,7 @@ exports.getEmployeeSpecialities = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает информацию о физическом лице
@@ -546,7 +543,7 @@ exports.getEmployeeSpecialities = (s, id) => q.push(async () => {
  * @param {string} id - идентификатор физического лица
  * @return {object}
  */
-exports.getIndividual = (s, id) => q.push(async () => {
+exports.getIndividual = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.getIndividual(id);
@@ -556,7 +553,7 @@ exports.getIndividual = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 
 /**
@@ -565,7 +562,7 @@ exports.getIndividual = (s, id) => q.push(async () => {
  * @param {number} id - идентификатор документа
  * @return {object}
  */
-exports.getDocument = (s, id) => q.push(async () => {
+exports.getDocument = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.getDocument(id);
@@ -575,7 +572,7 @@ exports.getDocument = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Запрашивает и возвращает список идентификаторов документов
@@ -584,7 +581,7 @@ exports.getDocument = (s, id) => q.push(async () => {
  * @param {string} id - идентификатор физического лица
  * @return {object}
  */
-exports.getIndividualDocuments = (s, id) => q.push(async () => {
+exports.getIndividualDocuments = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.getIndividualDocuments(id);
@@ -594,7 +591,7 @@ exports.getIndividualDocuments = (s, id) => q.push(async () => {
         console.error(e);
         return e;
     };
-});
+};
 
 /**
  * Формирует и возвращает список дат в формате YYYY-MM-DD

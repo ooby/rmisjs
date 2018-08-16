@@ -5,7 +5,7 @@ const wrap = require('../../../libs/wrap');
 const q = new Queue(require('../limit'));
 
 module.exports = async s => {
-    let c = await createClient(s);
+    let c = await q.push(() => createClient(s));
     return {
         describe: () => c.describe(),
         getMuInfo: d => wrap(q, () => c.getMuInfoAsync(d)),

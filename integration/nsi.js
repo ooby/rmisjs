@@ -6,9 +6,7 @@ const q = new Queue(1);
 
 module.exports = s =>
     async () => {
-        const client = await soap.createClientAsync(s.er14.refbooks, {
-
-        });
+        const client = await q.push(() => soap.createClientAsync(s.er14.refbooks, {}));
         return {
             getRefbookList: d =>
                 q.push(() =>

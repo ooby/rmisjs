@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.6.11",
+  "version": "0.6.12",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -1321,7 +1321,7 @@
       }
     },
     "xlsx": {
-      "version": "0.13.3",
+      "version": "0.13.4",
       "requires": {
         "adler-32": "~1.2.0",
         "cfb": "~1.0.8",

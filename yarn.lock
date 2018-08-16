@@ -36,7 +36,7 @@ ajv@^5.3.0:
     fast-json-stable-stringify "^2.0.0"
     json-schema-traverse "^0.3.0"
 
-ajv@^6.5.1:
+ajv@^6.5.2:
   version "6.5.2"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.5.2.tgz#678495f9b82f7cca6be248dd92f59bff5e1f4360"
   dependencies:
@@ -613,7 +613,7 @@ jsbn@~0.1.0:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/jsbn/-/jsbn-0.1.1.tgz#a5e654c2e5a2deb5f201d96cefbca80c0ef2f513"
 
-jsdom@^11.11.0:
+jsdom@^11.12.0:
   version "11.12.0"
   resolved "https://registry.yarnpkg.com/jsdom/-/jsdom-11.12.0.tgz#1a80d40ddd378a1de59656e9e6dc5a3ba8657bc8"
   dependencies:
@@ -816,7 +816,7 @@ mongoose@^4.11.6:
     regexp-clone "0.0.1"
     sliced "1.0.1"
 
-mongoose@^5.1.6:
+mongoose@^5.2.8:
   version "5.2.8"
   resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-5.2.8.tgz#dd74ce0c4df803cb816c37ee1228d6663e2c2254"
   dependencies:
@@ -1312,7 +1312,7 @@ util-deprecate@~1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
 
-uuid@^3.1.0, uuid@^3.2.1, uuid@^3.3.2:
+uuid@^3.1.0, uuid@^3.3.2:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.3.2.tgz#1b4af4955eb3077c501c23872fc6513811587131"
 
@@ -1377,9 +1377,9 @@ ws@^5.2.0:
   dependencies:
     async-limiter "~1.0.0"
 
-xlsx@^0.13.1:
-  version "0.13.3"
-  resolved "https://registry.yarnpkg.com/xlsx/-/xlsx-0.13.3.tgz#99da3641119b7e4683e302b39b93c4a84cd244be"
+xlsx@^0.13.4:
+  version "0.13.4"
+  resolved "https://registry.yarnpkg.com/xlsx/-/xlsx-0.13.4.tgz#e7b482f72fd7c05373d0cba98d07dcc06a4a19ba"
   dependencies:
     adler-32 "~1.2.0"
     cfb "~1.0.8"
@@ -1396,7 +1396,7 @@ xml-crypto@~0.8.0:
     xmldom "=0.1.19"
     xpath.js ">=0.0.3"
 
-xml-js@^1.6.4:
+xml-js@^1.6.7:
   version "1.6.7"
   resolved "https://registry.yarnpkg.com/xml-js/-/xml-js-1.6.7.tgz#a99b40c18a16d3e06537b3ae026a27bd60ffe8ab"
   dependencies:

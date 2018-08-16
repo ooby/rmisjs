@@ -2,7 +2,7 @@ const request = require('request');
 
 const handleRequest = options =>
     new Promise((resolve, reject) =>
-        request(options, (err, res, body) => {
+        request(options, (err, _, body) => {
             if (err) return reject(err);
             if (!body) return resolve();
             if (typeof body === 'string') {

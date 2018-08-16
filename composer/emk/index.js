@@ -22,12 +22,14 @@ module.exports = async s => {
         rmis,
         integration
     } = rmisjs(s);
-    const patient = await rmis.patient();
     const { emk14 } = integration;
-    const prof = emk14.professional();
-    const ptnt = emk14.patient();
-    const docs = emk14.document();
-    const emds = await emd(s);
+    const [patient, prof, ptnt, docs, emds] = await Promise.all([
+        rmis.patient(),
+        emk14.professional(),
+        emk14.patient(),
+        emk14.document(),
+        emd(s)
+    ]);
 
     const syncIndividual = async (service, data) => {
         if (!data) return null;

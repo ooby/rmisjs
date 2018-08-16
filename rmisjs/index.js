@@ -11,7 +11,7 @@ const services = require('./libs/services');
 const room = require('./libs/room');
 const Queue = require('../libs/queue');
 
-const q = new Queue(5);
+const q = new Queue(1);
 
 module.exports = s => {
     return {
