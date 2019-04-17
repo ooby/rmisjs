@@ -1,10 +1,12 @@
 const createClient = require('../client');
 const Queue = require('../../../libs/queue');
 const wrap = require('../../../libs/wrap');
+const _ = require('lodash');
 
-const q = new Queue(require('../limit'));
+let q = null;
 
 module.exports = async s => {
+    if (!q) q = new Queue(_.get(s, 'er14.limit', 50));
     let c = await q.push(() => createClient(s));
     return {
         describe: () => c.describe(),
@@ -19,11 +21,13 @@ module.exports = async s => {
         updateSickLeaves: d => wrap(q, () => c.updateSickLeavesAsync(d)),
         updateDistrict: d => wrap(q, () => c.updateDistrictAsync(d)),
         getScheduleInfo: d => wrap(q, () => c.getScheduleInfoAsync(d)),
-        getAppointmentsBySNILS: d => wrap(q, () => c.getAppointmentsBySNILSAsync(d)),
+        getAppointmentsBySNILS: d =>
+            wrap(q, () => c.getAppointmentsBySNILSAsync(d)),
         readSlotState: d => wrap(q, () => c.readSlotStateAsync(d)),
         deleteSlot: d => wrap(q, () => c.deleteSlotAsync(d)),
         findDistrict: d => wrap(q, () => c.findDistrictAsync(d)),
-        getActualSpecialistList: d => wrap(q, () => c.getActualSpecialistListAsync(d)),
+        getActualSpecialistList: d =>
+            wrap(q, () => c.getActualSpecialistListAsync(d)),
         getSlotListByPeriod: d => wrap(q, () => c.getSlotListByPeriodAsync(d))
     };
 };

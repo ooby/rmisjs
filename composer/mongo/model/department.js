@@ -14,10 +14,13 @@ const DepartmentSchema = new Schema({
     }
 });
 
-DepartmentSchema.statics.getById = function (_id, ...args) {
-    return this.findOne({
-        _id
-    }, ...args);
+DepartmentSchema.statics.getById = function(_id, ...args) {
+    return this.findOne(
+        {
+            _id
+        },
+        ...args
+    );
 };
 
 module.exports = mongoose.model('Department', DepartmentSchema);

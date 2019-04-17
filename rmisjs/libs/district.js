@@ -7,6 +7,6 @@ module.exports = async (s, q) => {
         describe: () => c.describe(),
         getDistrict: d => wrap(q, () => c.getDistrictAsync(d)),
         getSeparation: d => wrap(q, () => c.getSeparationAsync(d)),
-        searchDistricts: d => wrap(q, () => c.searchDistrictsAsync(d)),
+        searchDistricts: d => wrap(q, () => c.searchDistrictsAsync(d))
     };
 };

@@ -21,9 +21,6 @@ module.exports = async (s, q) => {
          * @param {Object} d - сведения о медработнике
          * @return {Promise<Object>} - код ошибки
          */
-        publish: d =>
-            q.push(() =>
-                c.post('publish', d)
-            )
+        publish: d => q.push(() => c.post('publish', d))
     };
 };

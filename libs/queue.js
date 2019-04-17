@@ -8,7 +8,8 @@ module.exports = class Queue {
     probe() {
         if (this.active >= this.limit || !this.tasks.length) return;
         this.active++;
-        this.tasks.shift()()
+        this.tasks
+            .shift()()
             .then(() => {
                 this.active--;
                 return this.probe();

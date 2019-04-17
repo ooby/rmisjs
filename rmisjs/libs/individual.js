@@ -10,6 +10,7 @@ module.exports = async (s, q) => {
         editDocument: d => wrap(q, () => c.editDocumentAsync(d)),
         getIndividual: d => wrap(q, () => c.getIndividualAsync(d)),
         searchIndividual: d => wrap(q, () => c.searchIndividualAsync(d)),
-        getIndividualDocuments: d => wrap(q, () => c.getIndividualDocumentsAsync(d))
+        getIndividualDocuments: d =>
+            wrap(q, () => c.getIndividualDocumentsAsync(d))
     };
 };

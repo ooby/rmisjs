@@ -23,10 +23,12 @@ module.exports = async s => {
             LastName: indiv.surname,
             FirstName: indiv.name,
             MiddleName: indiv.patrName,
-            BirthDate: indiv.birthDate ? indiv.birthDate.replace(/\+.*$/g, '') : null,
+            BirthDate: indiv.birthDate
+                ? indiv.birthDate.replace(/\+.*$/g, '')
+                : null,
             Sex: {
                 '@version': '1.0',
-                '$': indiv.gender
+                $: indiv.gender
             }
         };
         cache.set(uid, data);

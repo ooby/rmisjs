@@ -1,26 +1,15 @@
 const {
-    createDates,
-    createPatient,
-    dateFormat,
-    getLocation,
-    getLocations,
-    getLocationsWithOptions,
-    getPatient,
     getPatientReg,
     getPatientRegs,
     getReserve,
     getSlot,
     deleteSlotByRefusal,
-    getTimes,
-    isoTimeFormat,
     postReserve,
-    searchIndividual,
-    timeFormat
+    searchIndividual
 } = require('./collect');
 const appointmentHelper = require('./appointmentHelper');
 const moment = require('moment');
 const TimeSlot = require('../mongo/model/timeslot');
-const docs = require('./document');
 
 /**
  * Валидация пациента о наличии и прикреплении в больнице
@@ -38,7 +27,7 @@ exports.validatePatient = async (s, m) => {
         let r = await searchIndividual(s, m);
         r = await getPatientRegs(s, r);
         r = await getPatientReg(s, Array.isArray(r) ? r[0] : r);
-        return (r) ? r : null;
+        return r ? r : null;
     } catch (e) {
         console.error(e);
         return e;
@@ -64,16 +53,20 @@ exports.searchVisit = async (s, m) => {
         if (!timeslot) return '';
         const from = timeslot.from.valueOf();
         const location = timeslot.location.toString();
-        let patient = m.patientUid || await searchIndividual(s, {
-            birthDate: m.birthDate,
-            searchDocument: m.searchDocument
-        });
+        let patient =
+            m.patientUid ||
+            (await searchIndividual(s, {
+                birthDate: m.birthDate,
+                searchDocument: m.searchDocument
+            }));
         let slots = await getReserve(s, { patient });
         for (let id of slots.reverse()) {
             let slot = await getSlot(s, { slot: id });
-            if (slot.locationId !== location ||
+            if (
+                slot.locationId !== location ||
                 new Date(slot.date).valueOf() !== from
-            ) continue;
+            )
+                continue;
             slot.id = id;
             return {
                 slot,
@@ -135,16 +128,17 @@ exports.deleteVisit = async (s, m) => {
 exports.createVisit = async (s, m) => {
     try {
         let appointment = await appointmentHelper(s);
-        let [timeslot, patient] = await Promise.all([
-            TimeSlot.getByUUID(m.GUID).exec(),
-            m.patientUid ? Promise.resolve(m.patientUid) : searchIndividual(s, {
+        let timeslot = await TimeSlot.getByUUID(m.GUID).exec();
+        let patient = m.patientUid;
+        if (!patient) {
+            patient = await searchIndividual(s, {
                 birthDate: m.birthDate,
                 searchDocument: {
                     docTypeId: m.searchDocument.docTypeId,
                     docNumber: m.searchDocument.docNumber
                 }
-            })
-        ]);
+            });
+        }
         let slotId = await postReserve(s, {
             location: timeslot.location,
             dateTime: moment(timeslot.from).format('YYYY-MM-DDTHH:mm:ss.SSSZ'),

@@ -10,7 +10,8 @@ module.exports = async (s, q) => {
         getAddressInfo: d => wrap(q, () => c.getAddressInfoAsync(d)),
         getAddressAllInfo: d => wrap(q, () => c.getAddressAllInfoAsync(d)),
         getAddressLevelInfo: d => wrap(q, () => c.getAddressLevelInfoAsync(d)),
-        getAddressDisplayName: d => wrap(q, () => c.getAddressDisplayNameAsync(d)),
+        getAddressDisplayName: d =>
+            wrap(q, () => c.getAddressDisplayNameAsync(d)),
         getAddressType: d => wrap(q, () => c.getAddressTypeAsync(d)),
         getBatchAddressInfo: d => wrap(q, () => c.getBatchAddressInfoAsync(d)),
         searchAddress: d => wrap(q, () => c.searchAddressAsync(d)),

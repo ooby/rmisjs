@@ -13,8 +13,12 @@ exports.syncEmployees = async (s, d) => {
                     firstName: i.firstName,
                     middleName: i.patrName,
                     lastName: i.surname,
-                    specCode: Array.isArray(i.speciality) ? i.speciality[0] : i.speciality,
-                    positionCode: Array.isArray(i.position) ? i.position[0] : i.position,
+                    specCode: Array.isArray(i.speciality)
+                        ? i.speciality[0]
+                        : i.speciality,
+                    positionCode: Array.isArray(i.position)
+                        ? i.position[0]
+                        : i.position,
                     muCode: s.er14.muCode
                 })
             );

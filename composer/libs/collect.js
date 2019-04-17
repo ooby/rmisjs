@@ -25,7 +25,7 @@ exports.getService = async (s, serviceId) => {
  * @param {Object} s - конфигурация
  * @return {Promise<Object>} - список услуг
  */
-exports.getServices = async (s) => {
+exports.getServices = async s => {
     const services = await rmisjs(s).rmis.services();
     let data = await services.getServices({
         clinic: s.rmis.clinicId
@@ -43,12 +43,12 @@ exports.postReserve = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.postReserve(d);
-        r = (r) ? r.slot : null;
+        r = r ? r.slot : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -61,12 +61,12 @@ exports.getReserve = async (s, d) => {
     try {
         let r = await rmisjs(s).rmis.appointment();
         r = await r.getReserve(d);
-        r = (r) ? r.slot : null;
+        r = r ? r.slot : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -84,7 +84,7 @@ exports.getSlot = async (s, d) => {
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -122,7 +122,7 @@ exports.createPatient = async (s, d) => {
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -140,7 +140,7 @@ exports.getPatient = async (s, id) => {
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -153,12 +153,12 @@ exports.getPatientRegs = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.patient();
         r = await r.getPatientRegs(id);
-        r = (r) ? r.registration : null;
+        r = r ? r.registration : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -175,7 +175,7 @@ exports.getPatientReg = async (s, id) => {
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -188,12 +188,12 @@ exports.searchIndividual = async (s, params) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.searchIndividual(params);
-        r = (r) ? r.individual : null;
+        r = r ? r.individual : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -208,12 +208,12 @@ exports.getDepartment = async (s, id) => {
         r = await r.getDepartment({
             departmentId: id
         });
-        r = (r) ? r.department : null;
+        r = r ? r.department : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -224,7 +224,57 @@ exports.getDepartment = async (s, id) => {
 exports.getDepartments = async s => {
     try {
         return {
-            department: ['3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '44', '46', '47', '48', '50', '51', '53', '54', '55']
+            department: [
+                '3',
+                '4',
+                '5',
+                '6',
+                '7',
+                '8',
+                '9',
+                '10',
+                '11',
+                '12',
+                '13',
+                '14',
+                '15',
+                '16',
+                '17',
+                '18',
+                '19',
+                '20',
+                '21',
+                '22',
+                '23',
+                '24',
+                '25',
+                '26',
+                '27',
+                '28',
+                '29',
+                '30',
+                '31',
+                '32',
+                '33',
+                '34',
+                '35',
+                '36',
+                '37',
+                '38',
+                '39',
+                '40',
+                '41',
+                '42',
+                '44',
+                '46',
+                '47',
+                '48',
+                '50',
+                '51',
+                '53',
+                '54',
+                '55'
+            ]
         };
         // let r = await rmisjs(s).rmis.department();
         // r = await r.getDepartments({
@@ -234,7 +284,7 @@ exports.getDepartments = async s => {
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -254,7 +304,7 @@ exports.getRefbook = async (s, id) => {
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -270,7 +320,7 @@ exports.getRefbookList = async s => {
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -285,12 +335,12 @@ exports.getVersionList = async (s, id) => {
         r = await r.getVersionList({
             refbookCode: id
         });
-        r = (r) ? r.version : null;
+        r = r ? r.version : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -305,12 +355,12 @@ exports.getLocation = async (s, id) => {
         r = await r.getLocation({
             location: id
         });
-        r = (r) ? r.location : null;
+        r = r ? r.location : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -361,7 +411,7 @@ exports.getTimes = async (s, id, date) => {
             location: id,
             date: date
         });
-        r = (r) ? r.interval : null;
+        r = r ? r.interval : null;
         return r;
     } catch (e) {
         return e;
@@ -376,7 +426,7 @@ exports.getReserveFiltered = async (s, date, location) => {
             organization: s.rmis.clinicId,
             location
         });
-        r = (r) ? r.slot : null;
+        r = r ? r.slot : null;
         return r;
     } catch (e) {
         return e;
@@ -395,12 +445,12 @@ exports.getRoom = async (s, id) => {
         r = await r.getRoom({
             roomId: id
         });
-        r = (r) ? r.room : null;
+        r = r ? r.room : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -432,12 +482,12 @@ exports.getEmployee = async (s, id) => {
         r = await r.getEmployee({
             id: id
         });
-        r = (r) ? r.employee : null;
+        r = r ? r.employee : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -469,7 +519,7 @@ exports.getPosition = async (s, id) => {
         r = await r.getPosition({
             id
         });
-        r = (r) ? r.position : null;
+        r = r ? r.position : null;
         return r;
     } catch (e) {
         return e;
@@ -488,12 +538,12 @@ exports.getEmployeePosition = async (s, id) => {
         r = await r.getEmployeePosition({
             id: id
         });
-        r = (r) ? r.employeePosition : null;
+        r = r ? r.employeePosition : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -513,7 +563,7 @@ exports.getEmployeePositions = async (s, id) => {
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -533,7 +583,7 @@ exports.getEmployeeSpecialities = async (s, id) => {
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -547,14 +597,13 @@ exports.getIndividual = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.getIndividual(id);
-        r = (r) ? r : null;
+        r = r ? r : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
-
 
 /**
  * Запрашивает и возвращает информацию о документе по идентификатору
@@ -566,12 +615,12 @@ exports.getDocument = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.getDocument(id);
-        r = (r) ? r : null;
+        r = r ? r : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -585,12 +634,12 @@ exports.getIndividualDocuments = async (s, id) => {
     try {
         let r = await rmisjs(s).rmis.individual();
         r = await r.getIndividualDocuments(id);
-        r = (r) ? r.document : null;
+        r = r ? r.document : null;
         return r;
     } catch (e) {
         console.error(e);
         return e;
-    };
+    }
 };
 
 /**
@@ -637,7 +686,8 @@ exports.isoTimeFormat = t => moment(t).format();
  * @param {string} s
  * @return {boolean}
  */
-exports.isSnils = s => (s.replace(/-/g, '').replace(/ /g, '').length === 11) ? true : false;
+exports.isSnils = s =>
+    s.replace(/-/g, '').replace(/ /g, '').length === 11 ? true : false;
 
 /**
  * Убирает из строки все символы '-' и ' '

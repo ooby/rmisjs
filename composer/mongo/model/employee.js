@@ -42,17 +42,23 @@ const EmployeeSchema = new Schema({
     }
 });
 
-EmployeeSchema.index({
-    individual: 1,
-    position: 1
-}, {
-    unique: true
-});
+EmployeeSchema.index(
+    {
+        individual: 1,
+        position: 1
+    },
+    {
+        unique: true
+    }
+);
 
-EmployeeSchema.static.getById = function (_id, ...args) {
-    return this.findOne({
-        _id
-    }, ...args);
+EmployeeSchema.static.getById = function(_id, ...args) {
+    return this.findOne(
+        {
+            _id
+        },
+        ...args
+    );
 };
 
 module.exports = mongoose.model('Employee', EmployeeSchema);

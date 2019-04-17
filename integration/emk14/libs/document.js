@@ -33,10 +33,7 @@ module.exports = async (s, q) => {
          * @param {Object} d - сведения о документе
          * @return {Promise<Object>} - код ошибки
          */
-        publish: d =>
-            q.push(() =>
-                c.post('publish', d)
-            ),
+        publish: d => q.push(() => c.post('publish', d)),
 
         /**
          * Удаление докмента

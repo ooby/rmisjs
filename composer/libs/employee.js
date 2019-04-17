@@ -19,7 +19,9 @@ exports.getDetailedEmployees = async s => {
             k = await getIndividual(s, data.individual);
             if (!k) continue;
             if (!k.surname || !k.name || !k.patrName) continue;
-            k.fio = [k.surname, k.name, k.patrName].map(j => j.toUpperCase()).join(' ');
+            k.fio = [k.surname, k.name, k.patrName]
+                .map(j => j.toUpperCase())
+                .join(' ');
             k.firstname = k.name;
             delete k.name;
             data = Object.assign(data, k);
@@ -27,7 +29,9 @@ exports.getDetailedEmployees = async s => {
             if (!k) continue;
             if (!k.speciality) continue;
             data = Object.assign(data, {
-                speciality: Array.isArray(k.speciality) ? k.speciality[0] : k.speciality
+                speciality: Array.isArray(k.speciality)
+                    ? k.speciality[0]
+                    : k.speciality
             });
             delete data.number;
             delete data.dismissed;

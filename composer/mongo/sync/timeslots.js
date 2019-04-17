@@ -34,7 +34,12 @@ const update = async (s, date, location, appointmentService) => {
                 date: midnight,
                 status: 1,
                 location,
-                unavailable: get(i, [], 'notAvailableSources', 'notAvailableSource').map(i => i.source),
+                unavailable: get(
+                    i,
+                    [],
+                    'notAvailableSources',
+                    'notAvailableSource'
+                ).map(i => i.source),
                 services: get(i, [], 'availableServices', 'service')
             };
         });
@@ -70,23 +75,23 @@ const update = async (s, date, location, appointmentService) => {
             let from = time.from.valueOf();
             if (existing.indexOf(from) < 0) {
                 promises.push(
-                    new TimeSlot(time)
-                        .save()
-                        .catch(e => cosnole.error(e))
+                    new TimeSlot(time).save().catch(e => cosnole.error(e))
                 );
                 existing.push(from);
             } else {
                 promises.push(
-                    TimeSlot
-                        .update({
+                    TimeSlot.update(
+                        {
                             from: time.from,
                             location
-                        }, {
-                                $set: {
-                                    to: time.to,
-                                    status: time.status
-                                }
-                            })
+                        },
+                        {
+                            $set: {
+                                to: time.to,
+                                status: time.status
+                            }
+                        }
+                    )
                         .exec()
                         .catch(e => console.error(e))
                 );
@@ -106,31 +111,41 @@ module.exports = async s => {
     let dates = createDates();
     let locations = await Location.distinct('_id').exec();
     await Promise.all(
-        [].concat(
-            TimeSlot.remove({
-                $or: [{
-                    date: {
-                        $nin: dates.map(i => toMidnight(i))
-                    }
-                }, {
-                    location: {
-                        $nin: locations
-                    }
-                }]
-            }).exec()
-        ).concat(
-            locations.map(location =>
-                Promise.all(
-                    dates.map(async date => {
-                        try {
-                            await update(s, date, location, appointmentService);
-                        } catch (e) {
-                            console.error(e);
+        []
+            .concat(
+                TimeSlot.remove({
+                    $or: [
+                        {
+                            date: {
+                                $nin: dates.map(i => toMidnight(i))
+                            }
+                        },
+                        {
+                            location: {
+                                $nin: locations
+                            }
                         }
-                    })
+                    ]
+                }).exec()
+            )
+            .concat(
+                locations.map(location =>
+                    Promise.all(
+                        dates.map(async date => {
+                            try {
+                                await update(
+                                    s,
+                                    date,
+                                    location,
+                                    appointmentService
+                                );
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        })
+                    )
                 )
             )
-        )
     );
     await Promise.all(promises);
     promises = [];

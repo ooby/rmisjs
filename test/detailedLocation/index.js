@@ -6,7 +6,22 @@ const snilsTest = /^\d{11}$/.source.toString();
 
 module.exports = {
     type: 'object',
-    requied: ['name', 'location', 'positionName', 'individual', 'id', 'surname', 'patrName', 'firstName', 'speciality', 'fio', 'snils', 'room', 'position', 'interval'],
+    requied: [
+        'name',
+        'location',
+        'positionName',
+        'individual',
+        'id',
+        'surname',
+        'patrName',
+        'firstName',
+        'speciality',
+        'fio',
+        'snils',
+        'room',
+        'position',
+        'interval'
+    ],
     properties: {
         name: stringSchema(),
         location: {
