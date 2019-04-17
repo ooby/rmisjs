@@ -26,14 +26,17 @@ const CardSchema = new Schema({
     text: String
 });
 
-CardSchema.index({
-    shelf: 1,
-    num: 1,
-    decade: 1,
-    birth: 1
-}, {
+CardSchema.index(
+    {
+        shelf: 1,
+        num: 1,
+        decade: 1,
+        birth: 1
+    },
+    {
         unique: true
-    });
+    }
+);
 
 CardSchema.index({ '$**': 'text' });
 

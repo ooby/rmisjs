@@ -10,10 +10,12 @@ const resource = require('./libs/resource');
 const services = require('./libs/services');
 const room = require('./libs/room');
 const Queue = require('../libs/queue');
+const _ = require('lodash');
 
-const q = new Queue(5);
+let q = null;
 
 module.exports = s => {
+    if (!q) q = new Queue(_.get(s, 'rmis.limit', 50));
     return {
         address: () => address(s, q),
         appointment: () => appointment(s, q),

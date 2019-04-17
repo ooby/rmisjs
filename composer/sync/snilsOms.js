@@ -8,7 +8,7 @@ module.exports = async s => {
         rmis.patient(),
         rmis.individual(),
         oms.poiskErz(s),
-        document(s),
+        document(s)
     ]);
 
     const syncPatient = async i => {
@@ -18,20 +18,20 @@ module.exports = async s => {
         snils = '';
         let ind = await rmisIndiv.getIndividual(i);
         if (!ind) return ['', 'ind'];
-        if (!ind.surname ||
-            !ind.name ||
-            !ind.patrName ||
-            !ind.birthDate) return ['', 'ind'];
+        if (!ind.surname || !ind.name || !ind.patrName || !ind.birthDate)
+            return ['', 'ind'];
         let omsInd = await omsIndiv.PoiskERZ_FIO({
             FAM: ind.surname,
             IM: ind.name,
             OT: ind.patrName,
             DR: ind.birthDate.replace(/\+.*/, '').trim()
         });
-        if (omsInd &&
+        if (
+            omsInd &&
             omsInd.Results &&
             omsInd.Results.Insurant &&
-            omsInd.Results.Insurant.PFR) {
+            omsInd.Results.Insurant.PFR
+        ) {
             snils = omsInd.Results.Insurant.PFR || '';
         }
         let valid = isSnils(snils);
@@ -64,7 +64,11 @@ module.exports = async s => {
                     } catch (e) {
                         console.error(e.message || e);
                     } finally {
-                        console.log(Number((p - 1) * 25 + vrb++), i, ...[].concat(log));
+                        console.log(
+                            Number((p - 1) * 25 + vrb++),
+                            i,
+                            ...[].concat(log)
+                        );
                     }
                 })
             );
@@ -75,10 +79,7 @@ module.exports = async s => {
         for (let i = from; i <= to; i += pageLimit) {
             let pages = [];
             for (let j = i; j < i + pageLimit; j++) {
-                pages.push(
-                    syncPage(j, patientLimit)
-                        .catch(console.error)
-                );
+                pages.push(syncPage(j, patientLimit).catch(console.error));
             }
             let results = await Promise.all(pages);
             if (results.indexOf(null) > -1) return null;
@@ -100,7 +101,6 @@ module.exports = async s => {
             composeMethod(() => syncPage(page, patientLimit)),
         syncPages: (from, to, pageLimit, patientLimit) =>
             composeMethod(() => syncPages(from, to, pageLimit, patientLimit)),
-        syncPatient: uid =>
-            composeMethod(() => syncPatient(uid))
+        syncPatient: uid => composeMethod(() => syncPatient(uid))
     };
 };

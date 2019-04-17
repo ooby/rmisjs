@@ -18,10 +18,13 @@ const RoomSchema = new Schema({
     }
 });
 
-RoomSchema.statics.getbyId = function (_id, ...args) {
-    return this.findOne({
-        _id
-    }, ...args);
+RoomSchema.statics.getbyId = function(_id, ...args) {
+    return this.findOne(
+        {
+            _id
+        },
+        ...args
+    );
 };
 
 module.exports = mongoose.model('Room', RoomSchema);

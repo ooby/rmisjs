@@ -14,24 +14,31 @@ const exclude = form => {
 };
 
 const convertToXml = data =>
-    xmljs.js2xml({
-        _declaration: {
-            _attributes: {
-                version: '1.0',
-                encoding: 'utf-8'
-            }
+    xmljs.js2xml(
+        {
+            _declaration: {
+                _attributes: {
+                    version: '1.0',
+                    encoding: 'utf-8'
+                }
+            },
+            [data.root]: Object.assign(
+                {
+                    _attributes: {
+                        'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
+                        'xmlns:xsi':
+                            'http://www.w3.org/2001/XMLSchema-instance',
+                        'xmlns:tns': 'http://hostco.ru/iemk'
+                    }
+                },
+                exclude(data.form)
+            )
         },
-        [data.root]: Object.assign({
-            _attributes: {
-                'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
-                'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-                'xmlns:tns': 'http://hostco.ru/iemk'
-            }
-        }, exclude(data.form))
-    }, {
-        compact: true,
-        elementNameFn: val => `tns:${val}`
-    });
+        {
+            compact: true,
+            elementNameFn: val => `tns:${val}`
+        }
+    );
 
 const missing = (uid, part) => {
     console.log(new Date().toString(), uid, `missing ${part}`);
@@ -39,9 +46,7 @@ const missing = (uid, part) => {
 };
 
 const forArray = async cb => {
-    let data = []
-        .concat(await cb())
-        .filter(i => !!i);
+    let data = [].concat(await cb()).filter(i => !!i);
     return data.length ? data : null;
 };
 

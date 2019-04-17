@@ -1,7 +1,4 @@
-const {
-    getRoom,
-    getRooms
-} = require('./collect');
+const { getRoom, getRooms } = require('./collect');
 
 exports.getDetailedRooms = async s => {
     try {

@@ -1,9 +1,5 @@
 const ss = require('string-similarity');
-const {
-    dateFormat,
-    getRefbookList,
-    getVersionList
-} = require('./collect');
+const { dateFormat, getRefbookList, getVersionList } = require('./collect');
 
 const moment = require('moment');
 const TimeSlot = require('../mongo/model/timeslot');

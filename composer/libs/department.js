@@ -1,7 +1,4 @@
-const {
-    getDepartment,
-    getDepartments
-} = require('./collect');
+const { getDepartment, getDepartments } = require('./collect');
 
 exports.getDetailedDepartments = async s => {
     try {

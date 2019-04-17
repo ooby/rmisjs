@@ -14,20 +14,20 @@ const _types = {
     Form066: uuid.setUUID('EFDE8450-7E37-4FF7-B084-E642E7EEAA4F')
 };
 
-const dateFromObjectId = id => new Date(Buffer.from(id, 'hex').readInt32BE() * 1000);
+const dateFromObjectId = id =>
+    new Date(Buffer.from(id, 'hex').readInt32BE() * 1000);
 
 module.exports = async s => {
     const synced = new Set([]);
-    const {
-        rmis,
-        integration
-    } = rmisjs(s);
-    const patient = await rmis.patient();
+    const { rmis, integration } = rmisjs(s);
     const { emk14 } = integration;
-    const prof = emk14.professional();
-    const ptnt = emk14.patient();
-    const docs = emk14.document();
-    const emds = await emd(s);
+    const [patient, prof, ptnt, docs, emds] = await Promise.all([
+        rmis.patient(),
+        emk14.professional(),
+        emk14.patient(),
+        emk14.document(),
+        emd(s)
+    ]);
 
     const syncIndividual = async (service, data) => {
         if (!data) return null;
@@ -61,12 +61,11 @@ module.exports = async s => {
         try {
             if (!form) return;
             if (Object.values(form).indexOf(null) > -1) return;
-            let doctor = form.doctors.find(i => !!i.specialityCode && !!i.postCode);
+            let doctor = form.doctors.find(
+                i => !!i.specialityCode && !!i.postCode
+            );
             if (!doctor) return null;
-            let {
-                specialityCode,
-                postCode
-            } = doctor;
+            let { specialityCode, postCode } = doctor;
             await Promise.all(
                 form.doctors
                     .map(doctor => {
@@ -99,48 +98,53 @@ module.exports = async s => {
             delete data.caseId;
             Object.assign(data, {
                 mcod: s.er14.muCode.toString(),
-                Date: moment(dateFromObjectId(id)).format('YYYY-MM-DD[T]HH:mm:ss'),
+                Date: moment(dateFromObjectId(id)).format(
+                    'YYYY-MM-DD[T]HH:mm:ss'
+                ),
                 CaseBegin: moment(data.CaseBegin).format('YYYY-MM-DD'),
                 CaseEnd: moment(data.CaseEnd).format('YYYY-MM-DD'),
                 DocumentId: id,
                 Type: {
-                    '$': uuid.getUUID(data.Type.buffer),
+                    $: uuid.getUUID(data.Type.buffer),
                     '@version': '1.0'
                 },
                 ProfessionalRole: {
-                    '$': 'DOC',
+                    $: 'DOC',
                     '@version': '1.0'
                 },
                 Confidentiality: {
-                    '$': 'V',
+                    $: 'V',
                     '@version': '1.0'
                 },
                 PatientConfidentiality: {
-                    '$': 'R',
+                    $: 'R',
                     '@version': '1.0'
                 },
                 AssigneeConfidentiality: {
-                    '$': 'R',
+                    $: 'R',
                     '@version': '1.0'
                 },
                 ProfessionalPost: {
-                    '$': postCode['_text'],
+                    $: postCode['_text'],
                     '@version': '1.0'
                 },
                 ProfessionalSpec: {
-                    '$': specialityCode['_text'],
+                    $: specialityCode['_text'],
                     '@version': '1.0'
                 },
-                StructuredBody: Buffer.from(emds.convertToXml(form)).toString('base64')
+                StructuredBody: Buffer.from(emds.convertToXml(form)).toString(
+                    'base64'
+                )
             });
             if (existing) {
-                existing = (
-                    [].concat(existing.DocumentList)
-                    .find(i =>
-                        i.documentId === data.documentId &&
-                        i.Type['$'].toUpperCase() === data.Type['$'].toUpperCase()
-                    )
-                );
+                existing = []
+                    .concat(existing.DocumentList)
+                    .find(
+                        i =>
+                            i.documentId === data.documentId &&
+                            i.Type['$'].toUpperCase() ===
+                                data.Type['$'].toUpperCase()
+                    );
                 if (existing) data.Id = existing.Id;
             }
             await docs.publish(data);
@@ -148,12 +152,15 @@ module.exports = async s => {
             error = e;
             console.error(e);
         } finally {
-            await Document.findOneAndUpdate({ _id: id }, {
-                $set: {
-                    UploadDate: new Date(),
-                    ErrorText: JSON.stringify(error)
+            await Document.findOneAndUpdate(
+                { _id: id },
+                {
+                    $set: {
+                        UploadDate: new Date(),
+                        ErrorText: JSON.stringify(error)
+                    }
                 }
-            });
+            );
         }
     };
 
@@ -164,7 +171,8 @@ module.exports = async s => {
             let forms = await emds.getForms(patient, lastDate);
             if (!forms) return;
             await Promise.all(
-                [].concat(forms)
+                []
+                    .concat(forms)
                     .map(form => syncForm(form).catch(console.error))
             );
             console.log(new Date().toString(), patient, 'finished');
@@ -219,7 +227,7 @@ module.exports = async s => {
                     page++;
                     await last;
                     last = syncPatients(data, lastDate);
-                };
+                }
                 await last;
                 await setLastDate(now);
             } catch (e) {

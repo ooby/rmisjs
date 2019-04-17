@@ -16,7 +16,7 @@ module.exports = class TimedQueue {
         this.active = true;
         while (this.tasks.length) {
             let start = time();
-            await (this.tasks.shift())();
+            await this.tasks.shift()();
             let delta = this.timeout - time() + start;
             if (delta > 0) await sleep(delta);
         }

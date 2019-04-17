@@ -22,10 +22,13 @@ const LocationSchema = new Schema({
     }
 });
 
-LocationSchema.statics.getById = function (_id, ...args) {
-    return this.findOne({
-        _id
-    }, ...args);
+LocationSchema.statics.getById = function(_id, ...args) {
+    return this.findOne(
+        {
+            _id
+        },
+        ...args
+    );
 };
 
 module.exports = mongoose.model('Location', LocationSchema);

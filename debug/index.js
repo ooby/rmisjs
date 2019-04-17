@@ -1,6 +1,6 @@
 const args = process.argv.slice(2);
 const command = args.shift();
-const config = require('../config').get('config');
+const config = require('../config').get();
 const time = () => {
     const [seconds, nanos] = process.hrtime();
     return Math.trunc(seconds * 1000 + nanos / 1000000);

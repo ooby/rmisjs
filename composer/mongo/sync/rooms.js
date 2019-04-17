@@ -12,29 +12,35 @@ module.exports = async s => {
         Location.distinct('rooms').exec()
     ]);
     await Promise.all(
-        [].concat(
-            Room.remove({
-                _id: {
-                    $nin: rooms
-                }
-            }).exec()
-        ).concat(
-            rooms.map(async roomId => {
-                try {
-                    let room = await roomService.getRoom({
-                        roomId
-                    });
-                    room = room.room;
-                    room._id = roomId;
-                    await Room.update({
-                        _id: roomId
-                    }, room, {
-                        upsert: true
-                    }).exec();
-                } catch (e) {
-                    console.error(e);
-                }
-            })
-        )
+        []
+            .concat(
+                Room.remove({
+                    _id: {
+                        $nin: rooms
+                    }
+                }).exec()
+            )
+            .concat(
+                rooms.map(async roomId => {
+                    try {
+                        let room = await roomService.getRoom({
+                            roomId
+                        });
+                        room = room.room;
+                        room._id = roomId;
+                        await Room.update(
+                            {
+                                _id: roomId
+                            },
+                            room,
+                            {
+                                upsert: true
+                            }
+                        ).exec();
+                    } catch (e) {
+                        console.error(e);
+                    }
+                })
+            )
     );
 };

@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const {
-    getUUID,
-    setUUID,
-    generateUUID
-} = require('../uuid');
+const { getUUID, setUUID, generateUUID } = require('../uuid');
 
 const DocumentSchema = new Schema({
     Type: {
@@ -40,12 +36,15 @@ const DocumentSchema = new Schema({
     ErrorText: String
 });
 
-DocumentSchema.index({
-    Type: 1,
-    caseId: 1,
-    CaseBegin: 1,
-    PatientSnils: 1,
-    ProfessionalSnils: 1,
-}, { unique: true });
+DocumentSchema.index(
+    {
+        Type: 1,
+        caseId: 1,
+        CaseBegin: 1,
+        PatientSnils: 1,
+        ProfessionalSnils: 1
+    },
+    { unique: true }
+);
 
 module.exports = mongoose.model('Document', DocumentSchema);

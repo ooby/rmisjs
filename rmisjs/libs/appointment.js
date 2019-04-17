@@ -2,7 +2,7 @@ const createClient = require('../client');
 const wrap = require('../../libs/wrap');
 
 module.exports = async (s, q) => {
-    let c = await createClient(s, 'appointment');
+    let c = await q.push(() => createClient(s, 'appointment'));
     return {
         describe: () => c.describe(),
         getTimes: d => wrap(q, () => c.getTimesAsync(d)),

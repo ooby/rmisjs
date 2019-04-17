@@ -3,7 +3,8 @@ const visit = {
     properties: {
         dateTime: {
             type: 'string',
-            pattern: /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}\+\d{2}:\d{2}/.source,
+            pattern: /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}\+\d{2}:\d{2}/
+                .source
         },
         placeServicesCode: {
             type: 'string',

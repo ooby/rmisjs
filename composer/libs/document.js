@@ -18,7 +18,12 @@ module.exports = async s => {
         for (let doc of docs) {
             doc = await individual.getDocument(doc);
             if (!doc) continue;
-            if (doc.type !== type || !pattern.test(doc.number) || doc.active !== 'true') continue;
+            if (
+                doc.type !== type ||
+                !pattern.test(doc.number) ||
+                doc.active !== 'true'
+            )
+                continue;
             if (caching) cache.set(uid, doc);
             return doc;
         }
@@ -41,8 +46,12 @@ module.exports = async s => {
          * @return {Promise<Object | null>}
          */
         searchSnils: (uid, caching) =>
-            searchDocuments(uid, '19', /^(\d{11}|\d{3}-\d{3}-\d{3}\s\d{2})$/, caching)
-                .catch(console.error),
+            searchDocuments(
+                uid,
+                '19',
+                /^(\d{11}|\d{3}-\d{3}-\d{3}\s\d{2})$/,
+                caching
+            ).catch(console.error),
 
         /**
          * Поиск полиса ОМС по UID владельца.
@@ -52,8 +61,9 @@ module.exports = async s => {
          * @return {Promise<Object>}
          */
         searchPolis: (uid, caching) =>
-            searchDocuments(uid, '26', /^\d{16}$/, caching)
-                .catch(console.error),
+            searchDocuments(uid, '26', /^\d{16}$/, caching).catch(
+                console.error
+            ),
 
         /**
          * Поиск документа по типу и UID владельца.
@@ -64,8 +74,7 @@ module.exports = async s => {
          * @return {Promise<Object>}
          */
         searchDocument: (uid, type, caching) =>
-            searchDocuments(uid, type, /.*/, caching)
-                .catch(console.error),
+            searchDocuments(uid, type, /.*/, caching).catch(console.error),
 
         /**
          * Возвращает дату рождения по UID пациента.

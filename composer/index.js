@@ -25,10 +25,7 @@ const {
     searchVisit,
     validatePatient
 } = require('./libs/patient');
-const {
-    getLocations,
-    getDetailedLocations
-} = require('./libs/resource');
+const { getLocations, getDetailedLocations } = require('./libs/resource');
 const {
     getPortalDepartments,
     getDetailedDepartments

@@ -24,11 +24,9 @@ module.exports = async s => {
         if (codes.has(code)) return codes.get(code);
         try {
             let list = await rmb.getRefbookList();
-            let result = (
-                mapRMIS(list, 'refbook')
-                    .find(i => i.TABLE_NAME === code)
-                    .CODE
-            );
+            let result = mapRMIS(list, 'refbook').find(
+                i => i.TABLE_NAME === code
+            ).CODE;
             codes.set(code, result);
             return result;
         } catch (e) {
