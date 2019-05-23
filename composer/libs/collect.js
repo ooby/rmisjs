@@ -1,5 +1,5 @@
-const moment = require('moment');
-const rmisjs = require('../../index');
+const moment = require('moment')
+const rmisjs = require('../../index')
 
 /**
  * Получение сведений об услуге
@@ -8,17 +8,17 @@ const rmisjs = require('../../index');
  * @return {Promise<Object>} - сведения об услуге
  */
 exports.getService = async (s, serviceId) => {
-    try {
-        const services = await rmisjs(s).rmis.services();
-        let data = await services.getService({
-            serviceId
-        });
-        return data.service;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    const services = await rmisjs(s).rmis.services()
+    let data = await services.getService({
+      serviceId
+    })
+    return data.service
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Получение списка услуг
@@ -26,12 +26,12 @@ exports.getService = async (s, serviceId) => {
  * @return {Promise<Object>} - список услуг
  */
 exports.getServices = async s => {
-    const services = await rmisjs(s).rmis.services();
-    let data = await services.getServices({
-        clinic: s.rmis.clinicId
-    });
-    return data.services;
-};
+  const services = await rmisjs(s).rmis.services()
+  let data = await services.getServices({
+    clinic: s.rmis.clinicId
+  })
+  return data.services
+}
 
 /**
  * Создание талона по данным пациента
@@ -40,16 +40,16 @@ exports.getServices = async s => {
  * @return {object}
  */
 exports.postReserve = async (s, d) => {
-    try {
-        let r = await rmisjs(s).rmis.appointment();
-        r = await r.postReserve(d);
-        r = r ? r.slot : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.appointment()
+    r = await r.postReserve(d)
+    r = r ? r.slot : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Получение списка записей по данным пациента
@@ -58,16 +58,16 @@ exports.postReserve = async (s, d) => {
  * @return {object}
  */
 exports.getReserve = async (s, d) => {
-    try {
-        let r = await rmisjs(s).rmis.appointment();
-        r = await r.getReserve(d);
-        r = r ? r.slot : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.appointment()
+    r = await r.getReserve(d)
+    r = r ? r.slot : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Получение информации талона по id
@@ -76,16 +76,16 @@ exports.getReserve = async (s, d) => {
  * @return {object}
  */
 exports.getSlot = async (s, d) => {
-    try {
-        let r = await rmisjs(s).rmis.appointment();
-        r = await r.getSlot(d);
-        // r = (r) ? r.slot : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.appointment()
+    r = await r.getSlot(d)
+    // r = (r) ? r.slot : null;
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Освобождение талона по отказу пациента
@@ -94,18 +94,18 @@ exports.getSlot = async (s, d) => {
  * @return {object}
  */
 exports.deleteSlotByRefusal = async (s, d) => {
-    try {
-        let r = await rmisjs(s).rmis.appointment();
-        r = await r.deleteSlot({
-            slot: d,
-            cause: 0
-        });
-        return r;
-    } catch (e) {
-        console.error(e);
-        return r;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.appointment()
+    r = await r.deleteSlot({
+      slot: d,
+      cause: 0
+    })
+    return r
+  } catch (e) {
+    console.error(e)
+    return r
+  }
+}
 
 /**
  * Создание записи пациента по номеру физлица
@@ -114,16 +114,16 @@ exports.deleteSlotByRefusal = async (s, d) => {
  * @return {object}
  */
 exports.createPatient = async (s, d) => {
-    try {
-        let r = await rmisjs(s).rmis.patient();
-        r = await r.createPatient(d);
-        // r = (r) ? r.note : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.patient()
+    r = await r.createPatient(d)
+    // r = (r) ? r.note : null;
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Получение пациента по номеру физлица
@@ -132,16 +132,16 @@ exports.createPatient = async (s, d) => {
  * @return {object}
  */
 exports.getPatient = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.patient();
-        r = await r.getPatient(id);
-        // r = (r) ? r.note : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.patient()
+    r = await r.getPatient(id)
+    // r = (r) ? r.note : null;
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Получение информации о прикреплениях пациента
@@ -150,16 +150,16 @@ exports.getPatient = async (s, id) => {
  * @return {object}
  */
 exports.getPatientRegs = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.patient();
-        r = await r.getPatientRegs(id);
-        r = r ? r.registration : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.patient()
+    r = await r.getPatientRegs(id)
+    r = r ? r.registration : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Получение информации о прикреплении пациента
@@ -168,15 +168,15 @@ exports.getPatientRegs = async (s, id) => {
  * @return {object}
  */
 exports.getPatientReg = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.patient();
-        r = await r.getPatientReg(id);
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.patient()
+    r = await r.getPatientReg(id)
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Поиск физического лица по параметрам
@@ -185,16 +185,16 @@ exports.getPatientReg = async (s, id) => {
  * @return {object}
  */
 exports.searchIndividual = async (s, params) => {
-    try {
-        let r = await rmisjs(s).rmis.individual();
-        r = await r.searchIndividual(params);
-        r = r ? r.individual : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.individual()
+    r = await r.searchIndividual(params)
+    r = r ? r.individual : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает подразделение по идентификатору
@@ -203,18 +203,18 @@ exports.searchIndividual = async (s, params) => {
  * @return {object}
  */
 exports.getDepartment = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.department();
-        r = await r.getDepartment({
-            departmentId: id
-        });
-        r = r ? r.department : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.department()
+    r = await r.getDepartment({
+      departmentId: id
+    })
+    r = r ? r.department : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список подразделений
@@ -222,70 +222,70 @@ exports.getDepartment = async (s, id) => {
  * @return {object}
  */
 exports.getDepartments = async s => {
-    try {
-        return {
-            department: [
-                '3',
-                '4',
-                '5',
-                '6',
-                '7',
-                '8',
-                '9',
-                '10',
-                '11',
-                '12',
-                '13',
-                '14',
-                '15',
-                '16',
-                '17',
-                '18',
-                '19',
-                '20',
-                '21',
-                '22',
-                '23',
-                '24',
-                '25',
-                '26',
-                '27',
-                '28',
-                '29',
-                '30',
-                '31',
-                '32',
-                '33',
-                '34',
-                '35',
-                '36',
-                '37',
-                '38',
-                '39',
-                '40',
-                '41',
-                '42',
-                '44',
-                '46',
-                '47',
-                '48',
-                '50',
-                '51',
-                '53',
-                '54',
-                '55'
-            ]
-        };
-        // let r = await rmisjs(s).rmis.department();
-        // r = await r.getDepartments({
-        //     clinic: s.rmis.clinicId
-        // });
-        // return r;
-    } catch (e) {
-        console.error(e);
-        return e;
+  try {
+    return {
+      department: [
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+        '8',
+        '9',
+        '10',
+        '11',
+        '12',
+        '13',
+        '14',
+        '15',
+        '16',
+        '17',
+        '18',
+        '19',
+        '20',
+        '21',
+        '22',
+        '23',
+        '24',
+        '25',
+        '26',
+        '27',
+        '28',
+        '29',
+        '30',
+        '31',
+        '32',
+        '33',
+        '34',
+        '35',
+        '36',
+        '37',
+        '38',
+        '39',
+        '40',
+        '41',
+        '42',
+        '44',
+        '46',
+        '47',
+        '48',
+        '50',
+        '51',
+        '53',
+        '54',
+        '55'
+      ]
     }
-};
+    // let r = await rmisjs(s).rmis.department();
+    // r = await r.getDepartments({
+    //     clinic: s.rmis.clinicId
+    // });
+    // return r;
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает справочник по коду и версии
@@ -294,18 +294,18 @@ exports.getDepartments = async s => {
  * @return {object}
  */
 exports.getRefbook = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.refbook();
-        r = await r.getRefbook({
-            refbookCode: id.code,
-            version: id.version
-        });
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.refbook()
+    r = await r.getRefbook({
+      refbookCode: id.code,
+      version: id.version
+    })
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список справочников
@@ -313,15 +313,15 @@ exports.getRefbook = async (s, id) => {
  * @return {object}
  */
 exports.getRefbookList = async s => {
-    try {
-        let r = await rmisjs(s).rmis.refbook();
-        r = await r.getRefbookList();
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.refbook()
+    r = await r.getRefbookList()
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список версий справочника по коду
@@ -330,18 +330,18 @@ exports.getRefbookList = async s => {
  * @return {object}
  */
 exports.getVersionList = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.refbook();
-        r = await r.getVersionList({
-            refbookCode: id
-        });
-        r = r ? r.version : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.refbook()
+    r = await r.getVersionList({
+      refbookCode: id
+    })
+    r = r ? r.version : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает ресурс по идентификатору
@@ -350,18 +350,18 @@ exports.getVersionList = async (s, id) => {
  * @return {object}
  */
 exports.getLocation = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.resource();
-        r = await r.getLocation({
-            location: id
-        });
-        r = r ? r.location : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.resource()
+    r = await r.getLocation({
+      location: id
+    })
+    r = r ? r.location : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список идентификаторов ресурсов
@@ -369,16 +369,16 @@ exports.getLocation = async (s, id) => {
  * @return {object}
  */
 exports.getLocations = async s => {
-    try {
-        let r = await rmisjs(s).rmis.resource();
-        r = await r.getLocations({
-            clinic: s.rmis.clinicId
-        });
-        return r;
-    } catch (e) {
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.resource()
+    r = await r.getLocations({
+      clinic: s.rmis.clinicId
+    })
+    return r
+  } catch (e) {
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список идентификаторов ресурсов
@@ -387,14 +387,14 @@ exports.getLocations = async s => {
  * @return {object}
  */
 exports.getLocationsWithOptions = async (s, d) => {
-    try {
-        let r = await rmisjs(s).rmis.resource();
-        r = await r.getLocations(d);
-        return r;
-    } catch (e) {
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.resource()
+    r = await r.getLocations(d)
+    return r
+  } catch (e) {
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список таймслотов для расписания
@@ -405,33 +405,33 @@ exports.getLocationsWithOptions = async (s, d) => {
  * @return {object}
  */
 exports.getTimes = async (s, id, date) => {
-    try {
-        let r = await rmisjs(s).rmis.appointment();
-        r = await r.getTimes({
-            location: id,
-            date: date
-        });
-        r = r ? r.interval : null;
-        return r;
-    } catch (e) {
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.appointment()
+    r = await r.getTimes({
+      location: id,
+      date: date
+    })
+    r = r ? r.interval : null
+    return r
+  } catch (e) {
+    return e
+  }
+}
 
 exports.getReserveFiltered = async (s, date, location) => {
-    try {
-        let r = await rmisjs(s).rmis.appointment();
-        r = await r.getReserveFiltered({
-            date,
-            organization: s.rmis.clinicId,
-            location
-        });
-        r = r ? r.slot : null;
-        return r;
-    } catch (e) {
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.appointment()
+    r = await r.getReserveFiltered({
+      date,
+      organization: s.rmis.clinicId,
+      location
+    })
+    r = r ? r.slot : null
+    return r
+  } catch (e) {
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает кабинет приема по идентификатору
@@ -440,18 +440,18 @@ exports.getReserveFiltered = async (s, date, location) => {
  * @return {object}
  */
 exports.getRoom = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.room();
-        r = await r.getRoom({
-            roomId: id
-        });
-        r = r ? r.room : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.room()
+    r = await r.getRoom({
+      roomId: id
+    })
+    r = r ? r.room : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список идентификаторов кабинетов приема
@@ -459,16 +459,16 @@ exports.getRoom = async (s, id) => {
  * @return {object}
  */
 exports.getRooms = async s => {
-    try {
-        let r = await rmisjs(s).rmis.room();
-        r = await r.getRooms({
-            clinic: s.rmis.clinicId
-        });
-        return r;
-    } catch (e) {
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.room()
+    r = await r.getRooms({
+      clinic: s.rmis.clinicId
+    })
+    return r
+  } catch (e) {
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает сотрудника по идентификатору
@@ -477,18 +477,18 @@ exports.getRooms = async s => {
  * @return {object}
  */
 exports.getEmployee = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.employee();
-        r = await r.getEmployee({
-            id: id
-        });
-        r = r ? r.employee : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.employee()
+    r = await r.getEmployee({
+      id: id
+    })
+    r = r ? r.employee : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список идентификаторов сотрудников
@@ -496,16 +496,16 @@ exports.getEmployee = async (s, id) => {
  * @return {object}
  */
 exports.getEmployees = async s => {
-    try {
-        let r = await rmisjs(s).rmis.employee();
-        r = await r.getEmployees({
-            organization: s.rmis.clinicId
-        });
-        return r;
-    } catch (e) {
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.employee()
+    r = await r.getEmployees({
+      organization: s.rmis.clinicId
+    })
+    return r
+  } catch (e) {
+    return e
+  }
+}
 
 /**
  * Запрышивает и возвращает сведения о должности
@@ -514,17 +514,17 @@ exports.getEmployees = async s => {
  * @return {Object} - сведения о должности
  */
 exports.getPosition = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.employee();
-        r = await r.getPosition({
-            id
-        });
-        r = r ? r.position : null;
-        return r;
-    } catch (e) {
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.employee()
+    r = await r.getPosition({
+      id
+    })
+    r = r ? r.position : null
+    return r
+  } catch (e) {
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает должность сотрудника по идентификатору должности
@@ -533,18 +533,18 @@ exports.getPosition = async (s, id) => {
  * @return {object}
  */
 exports.getEmployeePosition = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.employee();
-        r = await r.getEmployeePosition({
-            id: id
-        });
-        r = r ? r.employeePosition : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.employee()
+    r = await r.getEmployeePosition({
+      id: id
+    })
+    r = r ? r.employeePosition : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список идентификаторов должностей сотрудника
@@ -554,17 +554,17 @@ exports.getEmployeePosition = async (s, id) => {
  * @return {object}
  */
 exports.getEmployeePositions = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.employee();
-        r = await r.getEmployeePositions({
-            employee: id
-        });
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.employee()
+    r = await r.getEmployeePositions({
+      employee: id
+    })
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список идентификаторов специальностей сотрудника
@@ -574,17 +574,17 @@ exports.getEmployeePositions = async (s, id) => {
  * @return {object}
  */
 exports.getEmployeeSpecialities = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.employee();
-        r = await r.getEmployeeSpecialities({
-            employee: id
-        });
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.employee()
+    r = await r.getEmployeeSpecialities({
+      employee: id
+    })
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает информацию о физическом лице
@@ -594,16 +594,16 @@ exports.getEmployeeSpecialities = async (s, id) => {
  * @return {object}
  */
 exports.getIndividual = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.individual();
-        r = await r.getIndividual(id);
-        r = r ? r : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.individual()
+    r = await r.getIndividual(id)
+    r = r ? r : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает информацию о документе по идентификатору
@@ -612,16 +612,16 @@ exports.getIndividual = async (s, id) => {
  * @return {object}
  */
 exports.getDocument = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.individual();
-        r = await r.getDocument(id);
-        r = r ? r : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.individual()
+    r = await r.getDocument(id)
+    r = r ? r : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Запрашивает и возвращает список идентификаторов документов
@@ -631,16 +631,16 @@ exports.getDocument = async (s, id) => {
  * @return {object}
  */
 exports.getIndividualDocuments = async (s, id) => {
-    try {
-        let r = await rmisjs(s).rmis.individual();
-        r = await r.getIndividualDocuments(id);
-        r = r ? r.document : null;
-        return r;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await rmisjs(s).rmis.individual()
+    r = await r.getIndividualDocuments(id)
+    r = r ? r.document : null
+    return r
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Формирует и возвращает список дат в формате YYYY-MM-DD
@@ -649,36 +649,36 @@ exports.getIndividualDocuments = async (s, id) => {
  * @return {array}
  */
 exports.createDates = (from = 0, to = 14) => {
-    let dates = [];
-    for (let i = from; i < to; i++) {
-        let d = moment().add(i, 'd');
-        if (d.isoWeekday() !== 6 && d.isoWeekday() !== 7) {
-            dates.push(d.format('YYYY-MM-DD'));
-        }
+  let dates = []
+  for (let i = from; i < to; i++) {
+    let d = moment().add(i, 'd')
+    if (d.isoWeekday() !== 6 && d.isoWeekday() !== 7) {
+      dates.push(d.format('YYYY-MM-DD'))
     }
-    return dates;
-};
+  }
+  return dates
+}
 
 /**
  * Форматирует время
  * @param {string} t - время
  * @return {string}
  */
-exports.timeFormat = t => moment(t).format('HH:mm:ss');
+exports.timeFormat = t => moment(t).format('HH:mm:ss')
 
 /**
  * Форматирует дату
  * @param {string} t - дата
  * @return {string}
  */
-exports.dateFormat = t => moment(t).format('YYYY-MM-DD');
+exports.dateFormat = t => moment(t).format('YYYY-MM-DD')
 
 /**
  * Форматирует дату
  * @param {string} t - дата
  * @return {string}
  */
-exports.isoTimeFormat = t => moment(t).format();
+exports.isoTimeFormat = t => moment(t).format()
 
 /**
  * Проверяет равна ли длина строки 11 символам
@@ -687,11 +687,11 @@ exports.isoTimeFormat = t => moment(t).format();
  * @return {boolean}
  */
 exports.isSnils = s =>
-    s.replace(/-/g, '').replace(/ /g, '').length === 11 ? true : false;
+  s.replace(/-/g, '').replace(/ /g, '').length === 11 ? true : false
 
 /**
  * Убирает из строки все символы '-' и ' '
  * @param {string} s
  * @return {string}
  */
-exports.snils = s => s.replace(/-/g, '').replace(/ /g, '');
+exports.snils = s => s.replace(/-/g, '').replace(/ /g, '')

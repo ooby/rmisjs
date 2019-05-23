@@ -1,1 +1,1 @@
-module.exports = (q, cb) => q.push(cb).then(d => d.shift());
+module.exports = (q, cb) => q.push(cb).then(d => d.shift())

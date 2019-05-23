@@ -1,15 +1,15 @@
 const {
-    getPatientReg,
-    getPatientRegs,
-    getReserve,
-    getSlot,
-    deleteSlotByRefusal,
-    postReserve,
-    searchIndividual
-} = require('./collect');
-const appointmentHelper = require('./appointmentHelper');
-const moment = require('moment');
-const TimeSlot = require('../mongo/model/timeslot');
+  getPatientReg,
+  getPatientRegs,
+  getReserve,
+  getSlot,
+  deleteSlotByRefusal,
+  postReserve,
+  searchIndividual
+} = require('./collect')
+const appointmentHelper = require('./appointmentHelper')
+const moment = require('moment')
+const TimeSlot = require('../mongo/model/timeslot')
 
 /**
  * Валидация пациента о наличии и прикреплении в больнице
@@ -23,16 +23,16 @@ const TimeSlot = require('../mongo/model/timeslot');
  * @return {Promise<{} | null>}
  */
 exports.validatePatient = async (s, m) => {
-    try {
-        let r = await searchIndividual(s, m);
-        r = await getPatientRegs(s, r);
-        r = await getPatientReg(s, Array.isArray(r) ? r[0] : r);
-        return r ? r : null;
-    } catch (e) {
-        console.error(e);
-        return e;
-    }
-};
+  try {
+    let r = await searchIndividual(s, m)
+    r = await getPatientRegs(s, r)
+    r = await getPatientReg(s, Array.isArray(r) ? r[0] : r)
+    return r ? r : null
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Поиск записи к врачу.
@@ -48,37 +48,37 @@ exports.validatePatient = async (s, m) => {
  * @return {Promise<{} | null>}
  */
 exports.searchVisit = async (s, m) => {
-    try {
-        let timeslot = await TimeSlot.getByUUID(m.GUID).exec();
-        if (!timeslot) return '';
-        const from = timeslot.from.valueOf();
-        const location = timeslot.location.toString();
-        let patient =
-            m.patientUid ||
-            (await searchIndividual(s, {
-                birthDate: m.birthDate,
-                searchDocument: m.searchDocument
-            }));
-        let slots = await getReserve(s, { patient });
-        for (let id of slots.reverse()) {
-            let slot = await getSlot(s, { slot: id });
-            if (
-                slot.locationId !== location ||
-                new Date(slot.date).valueOf() !== from
-            )
-                continue;
-            slot.id = id;
-            return {
-                slot,
-                timeslot
-            };
-        }
-        return null;
-    } catch (e) {
-        console.error(e);
-        return e;
+  try {
+    let timeslot = await TimeSlot.getByUUID(m.GUID).exec()
+    if (!timeslot) return ''
+    const from = timeslot.from.valueOf()
+    const location = timeslot.location.toString()
+    let patient =
+      m.patientUid ||
+      (await searchIndividual(s, {
+        birthDate: m.birthDate,
+        searchDocument: m.searchDocument
+      }))
+    let slots = await getReserve(s, { patient })
+    for (let id of slots.reverse()) {
+      let slot = await getSlot(s, { slot: id })
+      if (
+        slot.locationId !== location ||
+        new Date(slot.date).valueOf() !== from
+      )
+        continue
+      slot.id = id
+      return {
+        slot,
+        timeslot
+      }
     }
-};
+    return null
+  } catch (e) {
+    console.error(e)
+    return e
+  }
+}
 
 /**
  * Удаление записи к врачу.
@@ -94,23 +94,23 @@ exports.searchVisit = async (s, m) => {
  * @return {Promise<String>}
  */
 exports.deleteVisit = async (s, m) => {
-    try {
-        let [appointmentService, visit] = await Promise.all([
-            appointmentHelper(s),
-            exports.searchVisit(s, m)
-        ]);
-        let slip = await appointmentService.getAppointmentNumber(visit.slot.id);
-        await deleteSlotByRefusal(s, visit.slot.id);
-        let slot = await getSlot(s, {
-            slot: visit.slot.id
-        });
-        await visit.timeslot.updateStatus(slot.status);
-        return slip;
-    } catch (e) {
-        console.error(e);
-        return '';
-    }
-};
+  try {
+    let [appointmentService, visit] = await Promise.all([
+      appointmentHelper(s),
+      exports.searchVisit(s, m)
+    ])
+    let slip = await appointmentService.getAppointmentNumber(visit.slot.id)
+    await deleteSlotByRefusal(s, visit.slot.id)
+    let slot = await getSlot(s, {
+      slot: visit.slot.id
+    })
+    await visit.timeslot.updateStatus(slot.status)
+    return slip
+  } catch (e) {
+    console.error(e)
+    return ''
+  }
+}
 
 /**
  * Создание записи к врачу.
@@ -126,34 +126,34 @@ exports.deleteVisit = async (s, m) => {
  * @return {Promise<String>}
  */
 exports.createVisit = async (s, m) => {
-    try {
-        let appointment = await appointmentHelper(s);
-        let timeslot = await TimeSlot.getByUUID(m.GUID).exec();
-        let patient = m.patientUid;
-        if (!patient) {
-            patient = await searchIndividual(s, {
-                birthDate: m.birthDate,
-                searchDocument: {
-                    docTypeId: m.searchDocument.docTypeId,
-                    docNumber: m.searchDocument.docNumber
-                }
-            });
+  try {
+    let appointment = await appointmentHelper(s)
+    let timeslot = await TimeSlot.getByUUID(m.GUID).exec()
+    let patient = m.patientUid
+    if (!patient) {
+      patient = await searchIndividual(s, {
+        birthDate: m.birthDate,
+        searchDocument: {
+          docTypeId: m.searchDocument.docTypeId,
+          docNumber: m.searchDocument.docNumber
         }
-        let slotId = await postReserve(s, {
-            location: timeslot.location,
-            dateTime: moment(timeslot.from).format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
-            service: timeslot.services[0],
-            urgency: false,
-            patient
-        });
-        let slot = await getSlot(s, { slot: slotId });
-        await timeslot.updateStatus(slot.status);
-        return await appointment.getAppointmentNumber(slotId);
-    } catch (e) {
-        console.error(e);
-        return '';
+      })
     }
-};
+    let slotId = await postReserve(s, {
+      location: timeslot.location,
+      dateTime: moment(timeslot.from).format('YYYY-MM-DDTHH:mm:ss.SSSZ'),
+      service: timeslot.services[0],
+      urgency: false,
+      patient
+    })
+    let slot = await getSlot(s, { slot: slotId })
+    await timeslot.updateStatus(slot.status)
+    return await appointment.getAppointmentNumber(slotId)
+  } catch (e) {
+    console.error(e)
+    return ''
+  }
+}
 
 /**
  * Получение номера талона
@@ -167,14 +167,14 @@ exports.createVisit = async (s, m) => {
  * @return {Promise<String>}
  */
 exports.getVisit = async (s, m) => {
-    try {
-        let [appointmentService, visit] = await Promise.all([
-            appointmentHelper(s),
-            exports.searchVisit(s, m)
-        ]);
-        return await appointmentService.getAppointmentNumber(visit.slot.id);
-    } catch (e) {
-        console.error(e);
-        return '';
-    }
-};
+  try {
+    let [appointmentService, visit] = await Promise.all([
+      appointmentHelper(s),
+      exports.searchVisit(s, m)
+    ])
+    return await appointmentService.getAppointmentNumber(visit.slot.id)
+  } catch (e) {
+    console.error(e)
+    return ''
+  }
+}

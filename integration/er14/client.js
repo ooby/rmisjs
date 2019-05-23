@@ -1,3 +1,3 @@
-const soap = require('soap');
+const soap = require('soap')
 
-module.exports = s => soap.createClientAsync(s.er14.path);
+module.exports = s => soap.createClientAsync(s.er14.path)
