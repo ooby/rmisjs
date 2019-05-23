@@ -1,8 +1,8 @@
 {
   "name": "rmisjs",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "engines": {
-    "node": ">=8"
+    "node": ">=10"
   },
   "description": "RMIS javascript libraries",
   "main": "index.js",
@@ -17,14 +17,7 @@
   "scripts": {
     "test": "mocha test --timeout 100000",
     "debug": "node ./debug",
-    "format": "prettier --write \"**/*.js\""
-  },
-  "lint-staged": {
-    "**/*.js": [
-      "eslint . --ext .js",
-      "prettier --write",
-      "git add"
-    ]
+    "format": "prettier --write '**/*.js' '*.js'"
   },
   "repository": {
     "type": "git",
@@ -42,33 +35,26 @@
   },
   "homepage": "https://github.com/ooby/rmisjs#readme",
   "dependencies": {
-    "jsdom": "^14.0.0",
+    "jsdom": "^15.1.0",
     "lodash": "^4.17.11",
     "moment": "^2.24.0",
-    "mongoose": "^5.5.2",
+    "mongoose": "^5.5.10",
     "nconf": "^0.10.0",
     "refbooks": "^0.0.8",
-    "soap": "^0.26.0",
+    "soap": "^0.27.1",
     "string-similarity": "^3.0.0",
     "uuid": "^3.3.2",
-    "xlsx": "^0.14.2",
+    "xlsx": "^0.14.3",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
     "ajv": "^6.10.0",
     "chai": "^4.2.0",
-    "chai-http": "^4.2.1",
+    "chai-http": "^4.3.0",
     "eslint": "^5.16.0",
-    "eslint-config-prettier": "^4.1.0",
-    "eslint-plugin-prettier": "^3.0.1",
-    "husky": "^1.3.1",
-    "lint-staged": "^8.1.5",
-    "mocha": "^6.1.3",
-    "prettier": "^1.17.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+    "eslint-config-prettier": "^4.3.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "mocha": "^6.1.4",
+    "prettier": "^1.17.1"
   }
 }

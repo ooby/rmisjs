@@ -1,7 +1,7 @@
-const mu = require('./libs/mu');
+const mu = require('./libs/mu')
 
 module.exports = s => {
-    return {
-        process: () => mu(s)
-    };
-};
+  return {
+    process: () => mu(s)
+  }
+}
