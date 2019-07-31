@@ -110,7 +110,7 @@ exports.deleteSchedulesForDates = async (s, ...dates) => {
             docCode: j.docCode,
             specCode: j.specCode,
             positionCode: j.positionCode,
-            docSNILS: j.docCode
+            docSNILS: j.docSNILS
           })
         )
         if (!log) continue
