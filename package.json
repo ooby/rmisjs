@@ -1,6 +1,6 @@
 {
   "name": "rmisjs",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "engines": {
     "node": ">=10"
   },
@@ -35,26 +35,26 @@
   },
   "homepage": "https://github.com/ooby/rmisjs#readme",
   "dependencies": {
-    "jsdom": "^15.1.0",
-    "lodash": "^4.17.11",
+    "jsdom": "^15.1.1",
+    "lodash": "^4.17.15",
     "moment": "^2.24.0",
-    "mongoose": "^5.5.10",
+    "mongoose": "^5.6.7",
     "nconf": "^0.10.0",
     "refbooks": "^0.0.8",
-    "soap": "^0.27.1",
+    "soap": "^0.29.0",
     "string-similarity": "^3.0.0",
     "uuid": "^3.3.2",
-    "xlsx": "^0.14.3",
+    "xlsx": "^0.14.4",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
-    "ajv": "^6.10.0",
+    "ajv": "^6.10.2",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
-    "eslint": "^5.16.0",
-    "eslint-config-prettier": "^4.3.0",
+    "eslint": "^6.1.0",
+    "eslint-config-prettier": "^6.0.0",
     "eslint-plugin-prettier": "^3.1.0",
-    "mocha": "^6.1.4",
-    "prettier": "^1.17.1"
+    "mocha": "^6.2.0",
+    "prettier": "^1.18.2"
   }
 }
