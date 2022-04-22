@@ -39,7 +39,7 @@
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "mongoose": "^5.6.7",
-    "nconf": "^0.10.0",
+    "nconf": "^0.11.4",
     "refbooks": "^0.0.8",
     "soap": "^0.29.0",
     "string-similarity": "^3.0.0",
